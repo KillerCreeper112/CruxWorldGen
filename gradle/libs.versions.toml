@@ -1,0 +1,17 @@
+[plugins]
+kotlin = {id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+runPaper = { id = "xyz.jpenilla.run-paper", version.ref = "run_paper" }
+paperweight = { id = "io.papermc.paperweight.userdev", version.ref = "paperweight" }
+shadow = { id = "io.github.goooler.shadow", version.ref = "shadow" }
+
+[libraries]
+paper = { group = "io.papermc.paper", name = "paper-api", version.ref = "paper" }
+crunch = { group = "com.github.Redempt", name = "Crunch", version.ref = "crunch" }
+
+[versions]
+shadow = "8.1.8"
+paperweight = "2.0.0-beta.13"
+paper = "1.21.4-R0.1-SNAPSHOT"
+kotlin = "1.9.23"
+run_paper = "2.3.1"
+crunch = "2.0.3"

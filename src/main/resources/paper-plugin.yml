@@ -1,0 +1,10 @@
+name: CruxWorldGen
+version: '1.0'
+author: killercreepr
+main: killercreepr.cruxworldgen.core.CruxWorldGenPlugin
+api-version: '1.21'
+dependencies:
+  server:
+    CruxCore:
+      load: BEFORE
+      required: true
