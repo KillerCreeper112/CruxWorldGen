@@ -1,25 +1,16 @@
 package killercreepr.cruxworldgen.test2.biome
 
 import killercreepr.cruxworldgen.test2.BaseBiome
-import killercreepr.cruxworldgen.test2.biome.feature.CaveFeature
 import killercreepr.cruxworldgen.test2.biome.feature.CharredSurfaceFeature
-import killercreepr.cruxworldgen.test2.biome.feature.EmberDepositFeature
-import killercreepr.cruxworldgen.test2.biome.feature.HollowRockFeature
-import org.bukkit.Material
 import kotlin.math.cos
 import kotlin.math.sin
 
 class CharredWastesBiome : BaseBiome() {
 
     init {
-        // Add modular features
-        //features.add(CaveFeature())
         features.add(CharredSurfaceFeature())
-        //features.add(EmberDepositFeature())
-        //features.add(HollowRockFeature())
     }
 
-    // Low, jagged hills with cracks
     override fun baseHeight(x: Int, z: Int): Double {
         // Low amplitude hills
         val smallHills = sin(x * 0.02) * 2 + cos(z * 0.02) * 2

@@ -117,10 +117,7 @@ class CruxWorldGenPlugin : CruxPlugin() {
                   CruxWorldUtil.deleteWorld(name)
                   WorldCreator(name).generator(
                     CruxChunkGenerator(
-                      DensityEngine(
-                        Worley3D(1234),
-                        BiomeRegistry(123456)
-                      )
+                      BiomeRegistry(123456)
                     )
                   ).createWorld()
                   sender.sendMessage("Deeeed it")

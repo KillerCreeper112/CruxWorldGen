@@ -1,7 +1,7 @@
 package killercreepr.cruxworldgen.test2.biome
 
 import killercreepr.cruxworldgen.test2.BaseBiome
-import killercreepr.cruxworldgen.test2.biome.feature.CaveFeature
+import killercreepr.cruxworldgen.test2.biome.decoration.SimpleTreeFeature
 import killercreepr.cruxworldgen.test2.biome.feature.FungalSurfaceFeature
 import kotlin.math.cos
 import kotlin.math.sin
@@ -9,12 +9,8 @@ import kotlin.math.sin
 class PlagueAbyssBiome : BaseBiome() {
 
     init {
-        // Modular features
         features.add(FungalSurfaceFeature())
-        //features.add(CaveFeature())
-        //features.add(AbyssLayerFeature())
-        //features.add(BoneSpikeFeature())
-        //features.add(RiverFeature())
+        decorators.add(SimpleTreeFeature())
 
         heightNoise.frequency(0.01)
         terrainNoiseGen.frequency(0.05)
