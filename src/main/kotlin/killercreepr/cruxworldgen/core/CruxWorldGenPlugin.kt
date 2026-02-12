@@ -6,11 +6,12 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
 import killercreepr.crux.core.util.CruxWorldUtil
 import killercreepr.cruxgeneration.util.CruxNoise
+import killercreepr.cruxworldgen.better.BetterWorldGen
 import killercreepr.cruxworldgen.core.world.CruxNoiseProvider
 import killercreepr.cruxworldgen.test.*
-import killercreepr.cruxworldgen.test2.BiomeRegistry
-import killercreepr.cruxworldgen.test2.CruxChunkGenerator
+import net.minecraft.world.level.levelgen.WorldGenSettings
 import org.bukkit.WorldCreator
+import org.bukkit.entity.Player
 
 class CruxWorldGenPlugin : CruxPlugin() {
   override fun onLoad() {
@@ -114,12 +115,23 @@ class CruxWorldGenPlugin : CruxPlugin() {
 
 
                   val name = ctx.getArgument("name", String::class.java)
+                  val got = server.getWorld(name)
+                  if(got != null){
+                    for (player in got.players) {
+                      player.teleport(server.getWorld("world")!!.spawnLocation)
+                    }
+                  }
                   CruxWorldUtil.deleteWorld(name)
-                  WorldCreator(name).generator(
-                    CruxChunkGenerator(
+                  /*CruxChunkGenerator(
                       BiomeRegistry(123456)
+                    )*/
+
+                  val world = WorldCreator(name).generator(
+                    BetterWorldGen(
+                      BetterWorldGen.Settings()
                     )
                   ).createWorld()
+                  (sender as? Player)?.teleport(world!!.spawnLocation)
                   sender.sendMessage("Deeeed it")
                   1
                 }
