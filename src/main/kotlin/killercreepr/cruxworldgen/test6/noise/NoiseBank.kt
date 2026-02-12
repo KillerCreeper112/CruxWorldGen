@@ -133,6 +133,55 @@ class NoiseBank(
     return fjordLines2D.noise(worldX.toDouble(), worldZ.toDouble()) // ~[-1..1]
   }
 
+  // NoiseBank additions
+
+  private val caveWarp3D: CruxNoise = CruxNoise.fast(seed.toInt() xor 0x51C0FFEE)
+    .frequency(0.018)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(2)
+
+  private val caveWorm3D: CruxNoise = CruxNoise.fast(seed.toInt() xor 0xC0A7E123.toInt())
+    .frequency(0.008)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  private val cavern3D: CruxNoise = CruxNoise.fast(seed.toInt() xor 0xCA7E0001.toInt())
+    .frequency(0.005) // lower frequency = bigger rooms
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  fun caveWarp3D(worldX: Int, y: Int, worldZ: Int): Double =
+    caveWarp3D.noise(worldX.toDouble(), y.toDouble(), worldZ.toDouble()) // ~[-1..1]
+
+  fun caveWorm3D(worldX: Int, y: Int, worldZ: Int): Double =
+    caveWorm3D.noise(worldX.toDouble(), y.toDouble(), worldZ.toDouble()) // ~[-1..1]
+
+  fun cavern3D(worldX: Int, y: Int, worldZ: Int): Double =
+    cavern3D.noise(worldX.toDouble(), y.toDouble(), worldZ.toDouble()) // ~[-1..1]
+
+  private val spaghettiHeight2D: CruxNoise =
+    CruxNoise.fast(seed.toInt() xor 0x5A6A771)
+      .frequency(0.0025)
+      .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+      .fractalType(CruxNoise.FractalType.FBm)
+      .fractalOctaves(2)
+  fun spaghettiHeight2D(x: Int, z: Int): Double =
+    spaghettiHeight2D.noise(x.toDouble(), z.toDouble())
+
+  private val cheese3D: CruxNoise =
+    CruxNoise.fast(seed.toInt() xor 0x0CEE5EED)
+      .frequency(0.010)
+      .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+      .fractalType(CruxNoise.FractalType.FBm)
+      .fractalOctaves(1)
+
+  fun cheese3D(x: Int, y: Int, z: Int): Double =
+    cheese3D.noise(x.toDouble(), y.toDouble(), z.toDouble())
+
+
 
   data class SwirlCenter(val centerX: Int, val centerZ: Int)
 

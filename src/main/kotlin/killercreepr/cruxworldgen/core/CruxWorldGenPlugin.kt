@@ -9,7 +9,9 @@ import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.core.world.CruxNoiseProvider
 import killercreepr.cruxworldgen.test.*
 import killercreepr.cruxworldgen.test6.BukkitGen
+import killercreepr.cruxworldgen.test6.DecorationPipeline
 import killercreepr.cruxworldgen.test6.GenerationPipeline
+import killercreepr.cruxworldgen.test6.prop.PropPointGrid
 import killercreepr.cruxworldgen.test6.zone.TestZone
 import killercreepr.cruxworldgen.test6.zone.ZoneRegistry
 import org.bukkit.WorldCreator
@@ -134,7 +136,8 @@ class CruxWorldGenPlugin : CruxPlugin() {
                         ZoneRegistry(listOf(
                           TestZone()
                         ))
-                      )
+                      ),
+                      DecorationPipeline(PropPointGrid())
                     )
                   ).createWorld()
                   (sender as? Player)?.teleport(world!!.spawnLocation)

@@ -1,10 +1,14 @@
 package killercreepr.cruxworldgen.test6.biome
 
+import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.test6.decor.Decoration
 import killercreepr.cruxworldgen.test6.density.DensityStack
 import killercreepr.cruxworldgen.test6.material.MaterialContext
 import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
+import kotlin.Double
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.floor
@@ -15,11 +19,41 @@ import kotlin.math.sqrt
 interface Biome {
   val shape: BiomeShape
   val materialProvider: MaterialProvider
-  //todo later val props: List<PropRule>
+  val caves: CaveShape
+  val decorations: List<Decoration>
+    get() = listOf()
 }
+
+val gCaves: CaveShape = CaveProfile(
+  listOf(
+    /*LavaTubes(
+      noodleRadius = 5.0,
+      verticalRadiusBlocks = 10.0
+    )*/
+    CheeseCaves(
+      threshold01 = 0.3
+    )
+  )
+)
+
+/*val gCaves: CaveShape = CaveProfile(
+  listOf(
+    SpaghettiCaves(
+      baseDepthBelowSurface = 28.0,
+      depthVariationBlocks = 14.0
+    )
+    *//*SpaghettiCaves(
+      baseDepthBelowSurface = 50.0,
+      depthVariationBlocks = 10.0
+    )*//*
+  )
+)*/
 
 
 class Plains : Biome{
+  override val caves: CaveShape = gCaves
+  override val decorations = listOf(SimpleTreeDecoration())
+
   override val materialProvider = object : MaterialProvider{
     override fun chooseMaterial(context: MaterialContext): Material {
       if(context.isSolid){
@@ -57,7 +91,7 @@ class Plains : Biome{
 
 }
 class Mountains : Biome {
-
+  override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): Material {
       return if (context.isSolid) Material.GREEN_CONCRETE else Material.AIR
@@ -88,7 +122,7 @@ class Mountains : Biome {
       val upliftHeightBlocks = uplift01 * mountainAmplitudeBlocks
 
       val ridgeNoiseValue = ctx.noise.mountainRidge2D(worldX, worldZ) // [-1..1]
-      val ridge01 = 1.0 - kotlin.math.abs(ridgeNoiseValue)           // [0..1]
+      val ridge01 = 1.0 - abs(ridgeNoiseValue)           // [0..1]
       val ridgeHeightBlocks = ridge01.pow(3.0) * ridgeAmplitudeBlocks
 
       val mountainExtraHeightBlocks = upliftHeightBlocks + ridgeHeightBlocks
@@ -118,7 +152,7 @@ class Mountains : Biome {
 }
 
 class Plateaus : Biome {
-
+  override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): Material {
       return if (context.isSolid) Material.TERRACOTTA else Material.AIR
@@ -187,7 +221,7 @@ class Plateaus : Biome {
 }
 
 class SpiralHills : Biome {
-
+  override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): Material {
       return if (context.isSolid) Material.BLACK_CONCRETE else Material.AIR
@@ -262,7 +296,7 @@ class SpiralHills : Biome {
 }
 
 class FjordIce : Biome {
-
+  override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): Material {
       // For now: simple debug-friendly.
