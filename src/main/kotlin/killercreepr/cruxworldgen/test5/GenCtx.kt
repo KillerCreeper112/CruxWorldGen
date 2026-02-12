@@ -516,12 +516,12 @@ class BetterWorldGen(
 
       override fun height(ctx: Ctx, x: Int, z: Int): Double {
         val base = fields.globalBaseHeight(x, z)
-        val (wx, wz) = noise.warp2("mountWarp", x, z, freq = 0.0010, strength = 160.0)
+        val (wx, wz) = noise.warp2("mountWarp", x, z, freq = 0.01, strength = 160.0)
         val xx = wx.toInt()
         val zz = wz.toInt()
 
         val broad = noise.fbm2("mountBroad", xx, zz, freq = 0.0008, octaves = 4)
-        val ridge = noise.ridged2("mountRidge", xx, zz, freq = 0.0018, octaves = 4)
+        val ridge = noise.ridged2("mountRidge", xx, zz, freq = 0.003, octaves = 4)
         val peaks = ridge * 70.0 + broad * 35.0
 
         // light terracing for plateaus
@@ -551,7 +551,7 @@ class BetterWorldGen(
 
     override val terrain: TerrainProfile = object : TerrainProfile {
       override fun suitability2D(ctx: Ctx, x: Int, z: Int): Double {
-        val m = noise.fbm2("spikeCaveMask", x, z, freq = 0.0010, octaves = 2) * 0.5 + 0.5
+        val m = noise.fbm2("spikeCaveMask", x, z, freq = 0.05, octaves = 2) * 0.5 + 0.5
         return (0.2 + 0.8 * m).coerceIn(0.0, 1.0)
       }
 
@@ -712,7 +712,7 @@ class BetterWorldGen(
       val a = abs(n)
 
       // band controls "how open" caves are: higher => more caves
-      val band = 0.20
+      val band = 0.1//0.2
       val carve = 1.0 - smoothstep(band, band + 0.10, a)
 
       val depthT = ((ceiling - y).toDouble() / 45.0).coerceIn(0.0, 1.0)
