@@ -6,10 +6,12 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
 import killercreepr.crux.core.util.CruxWorldUtil
 import killercreepr.cruxgeneration.util.CruxNoise
-import killercreepr.cruxworldgen.better.BetterWorldGen
 import killercreepr.cruxworldgen.core.world.CruxNoiseProvider
 import killercreepr.cruxworldgen.test.*
-import net.minecraft.world.level.levelgen.WorldGenSettings
+import killercreepr.cruxworldgen.test6.BukkitGen
+import killercreepr.cruxworldgen.test6.GenerationPipeline
+import killercreepr.cruxworldgen.test6.zone.TestZone
+import killercreepr.cruxworldgen.test6.zone.ZoneRegistry
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
 
@@ -127,8 +129,12 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     )*/
 
                   val world = WorldCreator(name).generator(
-                    BetterWorldGen(
-                      BetterWorldGen.Settings()
+                    BukkitGen(
+                      GenerationPipeline(
+                        ZoneRegistry(listOf(
+                          TestZone()
+                        ))
+                      )
                     )
                   ).createWorld()
                   (sender as? Player)?.teleport(world!!.spawnLocation)

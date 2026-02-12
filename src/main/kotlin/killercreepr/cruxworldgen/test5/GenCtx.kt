@@ -1,3 +1,4 @@
+/*
 @file:Suppress("MemberVisibilityCanBePrivate", "unused")
 
 package killercreepr.cruxworldgen.better
@@ -6,10 +7,13 @@ import killercreepr.cruxgeneration.util.CruxNoise
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
-import java.util.ArrayDeque
-import java.util.Random
-import kotlin.math.*
+import java.util.*
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.pow
 
+*/
 /**
  * Single-file modular worldgen system (code-only, no configs):
  * - Seamless biome blending (2D weights) + optional 3D underground biome influence
@@ -20,7 +24,8 @@ import kotlin.math.*
  * Minecraft constraint note:
  * ChunkData.setBlock expects x,z in 0..15. You can keep chunkWidth in settings,
  * but it must be 16 when placing blocks.
- */
+ *//*
+
 class BetterWorldGen(
   private val settings: Settings = Settings()
 ) : ChunkGenerator() {
@@ -105,9 +110,31 @@ class BetterWorldGen(
         return (yy * w + lz) * w + lx
       }
 
+      fun trySeed(lx: Int, y: Int, lz: Int) {
+        val i = index(lx, y, lz)
+        if (!air[i] || seaFill[i]) return
+        seaFill[i] = true
+        queue.add(i)
+      }
+
       // Build air mask (below sea): include air; ignore stone/water for now
       for (lx in 0 until w) {
         for (lz in 0 until w) {
+
+          // Seed: open-to-sky columns down to sea
+          for (lx in 0 until w) for (lz in 0 until w) {
+            var openToSky = true
+            for (yy in maxY downTo (sea + 1)) {
+              if (chunkData.getType(lx, yy, lz) != Material.AIR) { openToSky = false; break }
+            }
+            if (!openToSky) continue
+
+            for (yy in sea downTo minY) {
+              if (chunkData.getType(lx, yy, lz) == Material.AIR) { trySeed(lx, yy, lz); break }
+            }
+          }
+
+
           for (y in minY..sea) {
             val m = chunkData.getType(lx, y, lz)
             if (m == Material.AIR) air[index(lx, y, lz)] = true
@@ -120,12 +147,6 @@ class BetterWorldGen(
       // 2) columns open-to-sky down to sea (connected via sky water surface)
       //
       // This is not a perfect "ocean network" across chunks, but it produces the right feel and is stable.
-      fun trySeed(lx: Int, y: Int, lz: Int) {
-        val i = index(lx, y, lz)
-        if (!air[i] || seaFill[i]) return
-        seaFill[i] = true
-        queue.add(i)
-      }
 
       // Seed #1: borders at/below sea
       for (y in minY..sea) {
@@ -244,9 +265,11 @@ class BetterWorldGen(
     }
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Settings / Context
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   data class Settings(
     val chunkWidth: Int = 16,
@@ -265,27 +288,32 @@ class BetterWorldGen(
     val maxY: Int
   )
 
-  /* ============================================================
+  */
+/* ============================================================
    * WorldGraph: composition root
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   class WorldGraph(seed: Long, settings: Settings) {
     val noise = CruxNoiseBank(seed)
     val fields = Fields(noise, settings.seaLevel)
+    val caves: CaveEngine = CaveEngine(noise)
     val biomes: List<Biome> = listOf(
       PlainsBiome(noise, fields),
       MountainBiome(noise, fields),
-      SpikyCavernsBiome(noise, fields) // 3D underground influence; also controls wet caves/spikes
+      //SpikyCavernsBiome(noise, fields) // 3D underground influence; also controls wet caves/spikes
     )
 
     val resolver: BiomeResolver = DefaultResolver(fields, biomes)
-    val density: DensityEngine = DensityEngine(fields, noise)
+    val density: DensityEngine = DensityEngine(fields, noise, caves)
     val hydro: HydrologyEngine = HydrologyEngine(noise)
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Noise (deterministic keyed fbm)
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   class CruxNoiseBank(private val worldSeed: Long) {
     private val cache = HashMap<String, CruxNoise>()
@@ -303,7 +331,9 @@ class BetterWorldGen(
     fun n3(key: String, x: Int, y: Int, z: Int, configure: CruxNoise.() -> Unit): Double =
       get(key, configure).noise(x.toDouble(), y.toDouble(), z.toDouble())
 
-    /** Convenience: FBm 2D */
+    */
+/** Convenience: FBm 2D *//*
+
     fun fbm2(key: String, x: Int, z: Int, freq: Double, octaves: Int, type: CruxNoise.NoiseType = CruxNoise.NoiseType.OpenSimplex2): Double =
       n2(key, x, z) {
         noiseType(type)
@@ -314,7 +344,9 @@ class BetterWorldGen(
         fractalGain(0.5)
       }
 
-    /** Convenience: FBm 3D */
+    */
+/** Convenience: FBm 3D *//*
+
     fun fbm3(key: String, x: Int, y: Int, z: Int, freq: Double, octaves: Int, type: CruxNoise.NoiseType = CruxNoise.NoiseType.OpenSimplex2S): Double =
       n3(key, x, y, z) {
         noiseType(type)
@@ -325,7 +357,9 @@ class BetterWorldGen(
         fractalGain(0.5)
       }
 
-    /** Convenience: Ridged 2D (returns ~[-1,1] from the library; we convert to [0,1] ridge shape) */
+    */
+/** Convenience: Ridged 2D (returns ~[-1,1] from the library; we convert to [0,1] ridge shape) *//*
+
     fun ridged2(key: String, x: Int, z: Int, freq: Double, octaves: Int, type: CruxNoise.NoiseType = CruxNoise.NoiseType.OpenSimplex2S): Double {
       val n = n2(key, x, z) {
         noiseType(type)
@@ -340,7 +374,9 @@ class BetterWorldGen(
       return (r * r).coerceIn(0.0, 1.0)
     }
 
-    /** Domain warp a 2D point and return warped coords */
+    */
+/** Domain warp a 2D point and return warped coords *//*
+
     fun warp2(key: String, x: Int, z: Int, freq: Double, strength: Double): Pair<Double, Double> {
       val v = CruxNoise.Vector2(x.toDouble(), z.toDouble())
       get(key) {
@@ -363,11 +399,13 @@ class BetterWorldGen(
   }
 
 
-  /* ============================================================
+  */
+/* ============================================================
    * Fields: global continuity signals
-   * ============================================================ */
+   * ============================================================ *//*
 
-  class Fields(private val bank: CruxNoiseBank, private val seaLevel: Int) {
+
+  class Fields(val bank: CruxNoiseBank, val seaLevel: Int) {
 
     fun continental(x: Int, z: Int): Double {
       // Use domain warp by warping a vector, then sampling.
@@ -422,9 +460,11 @@ class BetterWorldGen(
     }
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Biomes / Profiles
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   data class HydrologyProfile(
     val wetness: Double,          // 0..1 (higher -> more aquifer water)
@@ -459,6 +499,7 @@ class BetterWorldGen(
     val terrain: TerrainProfile
     val materials: MaterialProfile
     val hydrology: HydrologyProfile
+    val caves: CaveProfile?
   }
 
   class PlainsBiome(noise: CruxNoiseBank, fields: Fields) : Biome {
@@ -467,9 +508,18 @@ class BetterWorldGen(
 
     override val hydrology = HydrologyProfile(wetness = 0.35, floodsFromSea = true)
 
+    override val caves = CaveProfile(
+      strengthMin = 1.4, strengthMax = 10.0,
+      bandShallow = 0.33, bandDeep = 0.26, bandWidth = 0.1,
+      freq = 0.030, octaves = 3,
+      surfaceBuffer = 26.0,
+      depthTop = fields.seaLevel + 10,
+      depthBottom = fields.seaLevel - 150
+    )
+
     override val materials: MaterialProfile = SimpleSurface(
-      top = Material.GRASS_BLOCK,
-      under = Material.DIRT,
+      top = Material.LIME_TERRACOTTA,
+      under = Material.GREEN_WOOL,
       underDepth = 4
     )
 
@@ -500,6 +550,15 @@ class BetterWorldGen(
     override val isSurfaceBiome = true
 
     override val hydrology = HydrologyProfile(wetness = 0.25, floodsFromSea = true)
+
+    override val caves = CaveProfile(
+      strengthMin = 1.0, strengthMax = 14.0,
+      bandShallow = 0.30, bandDeep = 0.18, bandWidth = 0.10,
+      freq = 0.020, octaves = 2,
+      surfaceBuffer = 34.0,
+      depthTop = fields.seaLevel + 5,
+      depthBottom = -64 + 10//todo make -64 minY level from fields
+    )
 
     override val materials: MaterialProfile = MountainSurface(
       dirtDepth = 3,
@@ -536,11 +595,13 @@ class BetterWorldGen(
     }
   }
 
-  /**
+  */
+/**
    * Underground 3D biome influence:
    * - Contributes extra cavern carving + spike additives.
    * - Has high wetness, so it tends to form aquifer lakes even when not sea-connected.
-   */
+   *//*
+
   class SpikyCavernsBiome(private val noise: CruxNoiseBank, private val fields: Fields) : Biome {
     override val id = "spiky_caverns"
     override val isSurfaceBiome = false
@@ -548,6 +609,7 @@ class BetterWorldGen(
     override val hydrology = HydrologyProfile(wetness = 0.85, floodsFromSea = true)
 
     override val materials: MaterialProfile = NoSurface()
+    override val caves = null
 
     override val terrain: TerrainProfile = object : TerrainProfile {
       override fun suitability2D(ctx: Ctx, x: Int, z: Int): Double {
@@ -592,9 +654,11 @@ class BetterWorldGen(
     }
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Resolver + Weights
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   data class WeightedBiome(val biome: Biome, val w: Double)
 
@@ -672,13 +736,16 @@ class BetterWorldGen(
     }
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Density (terrain + caves)
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   class DensityEngine(
-    private val fields: Fields,
-    private val noise: CruxNoiseBank
+    val fields: Fields,
+    val noise: CruxNoiseBank,
+    val caves: CaveEngine
   ) {
     fun blendedHeight(ctx: Ctx, w: BiomeWeights, x: Int, z: Int): Double {
       // NOTE: Always base on a global field to guarantee continuity
@@ -694,7 +761,8 @@ class BetterWorldGen(
       d += w.blendedDetail(ctx, x, y, z)
 
       // global caves (subtractive)
-      d -= globalCaves(ctx, x, y, z)
+      //d -= globalCaves(ctx, height, x, y, z)
+      d -= caves.carve(ctx, w, height, x, y, z)
 
       // biome carvers (subtractive) + additives (spikes etc)
       d -= w.blendedCarve(ctx, x, y, z)
@@ -703,37 +771,114 @@ class BetterWorldGen(
       return d
     }
 
-    private fun globalCaves(ctx: Ctx, x: Int, y: Int, z: Int): Double {
-      // Lower-level caves: start below sea-12, ramp up deeper
-      val ceiling = (ctx.settings.seaLevel - 12).coerceAtLeast(ctx.minY + 8)
-      if (y > ceiling) return 0.0
+    private fun globalCaves(ctx: Ctx, surfaceY: Double, x: Int, y: Int, z: Int): Double {
+      val n = noise.fbm3("globalCaves", x, y, z, freq = 0.028, octaves = 3)
+      val a = kotlin.math.abs(n)
 
-      val n = noise.fbm3("globalCaves", x, y, z, freq = 0.035, octaves = 3)
-      val a = abs(n)
+      // How far below the terrain surface are we?
+      val below = (surfaceY - y.toDouble())
 
-      // band controls "how open" caves are: higher => more caves
-      val band = 0.1//0.2
-      val carve = 1.0 - smoothstep(band, band + 0.10, a)
+      // Fade caves out near the surface (prevents “messed up land”)
+      val surfaceBuffer = 18.0 // blocks: increase to protect surface more
+      val surfaceGate = smoothstep(0.0, surfaceBuffer, below).coerceIn(0.0, 1.0)
+      // surfaceGate = 0 at/above surface, ramps to 1 when you're ~18 blocks underground
 
-      val depthT = ((ceiling - y).toDouble() / 45.0).coerceIn(0.0, 1.0)
-      val boost = 0.4 + depthT * 1.0
+      // Depth ramp (still makes deeper caves more common)
+      val top = ctx.settings.seaLevel + 10
+      val bottom = ctx.settings.seaLevel - 96
+      val depthT = ((top - y).toDouble() / (top - bottom).toDouble()).coerceIn(0.0, 1.0)
+      val depth = depthT * depthT
 
-      // Strength matters: must compete with (height - y)/verticalScale
-      val strength = 10.0
-      return carve * boost * strength
+      val band = 0.30 + (0.20 - 0.30) * depth
+      val mask = 1.0 - smoothstep(band, band + 0.06, a)
+
+      val minStrength = 1.0
+      val maxStrength = 13.0
+      val strength = minStrength + (maxStrength - minStrength) * depth
+
+      return mask * strength * surfaceGate
+    }
+
+
+
+  }
+
+  data class CaveProfile(
+    val strengthMin: Double,
+    val strengthMax: Double,
+    val bandShallow: Double,
+    val bandDeep: Double,
+    val bandWidth: Double,
+    val freq: Double,
+    val octaves: Int,
+    val surfaceBuffer: Double,   // blocks under surface before caves “turn on”
+    val depthTop: Int,           // y where caves start ramping
+    val depthBottom: Int         // y where caves are at max
+  )
+
+
+  class CaveEngine(private val noise: CruxNoiseBank) {
+
+    fun carve(ctx: Ctx, w: BiomeWeights, surfaceY: Double, x: Int, y: Int, z: Int): Double {
+      var total = 0.0
+      for ((biome, bw) in w.list.map { it.biome to it.w }) {
+        val p = biome.caves ?: continue
+        if (bw <= 0.0001) continue
+        total += bw * sample(ctx, p, surfaceY, x, y, z)
+      }
+      return total
+    }
+
+    private fun sample(ctx: Ctx, p: CaveProfile, surfaceY: Double, x: Int, y: Int, z: Int): Double {
+      val n = noise.fbm3("caves_${p.freq}_${p.octaves}", x, y, z, p.freq, p.octaves)
+      // Convert noise to 0..1
+      val tNoise = n * 0.5 + 0.5
+
+      val depthT = ((p.depthTop - y).toDouble() / (p.depthTop - p.depthBottom).toDouble()).coerceIn(0.0, 1.0)
+      val depth = depthT * depthT
+
+      val threshold = 0.50 + (0.45 - 0.50) * depth   // much lower
+      val mask = smoothstep(threshold, threshold + p.bandWidth, tNoise)
+
+
+// carve when noise is ABOVE a threshold
+//      val threshold = 0.62 + (0.54 - 0.62) * depth   // lower threshold deep => more caves
+  //    val mask = smoothstep(threshold, threshold + p.bandWidth, tNoise)
+
+
+      // depth 0..1
+
+      // “more common deeper”
+      //val band = p.bandShallow + (p.bandDeep - p.bandShallow) * depth
+      //val mask = 1.0 - smoothstep(band, band + p.bandWidth, DefaultFontInfo.a)
+
+      // “stronger deeper”
+      val strength = p.strengthMin + (p.strengthMax - p.strengthMin) * depth
+
+      // protect surface terrain (prevents caves wrecking the landscape)
+      val below = surfaceY - y.toDouble()
+      val surfaceGate = smoothstep(0.0, p.surfaceBuffer, below).coerceIn(0.0, 1.0)
+
+      return mask * strength * surfaceGate
     }
   }
 
-  /* ============================================================
+
+
+  */
+/* ============================================================
    * Hydrology (aquifers)
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   class HydrologyEngine(private val noise: CruxNoiseBank) {
-    /**
+    */
+/**
      * Aquifer pockets:
      * - For enclosed caves, decide water by 3D "wetness field" + biome wetness.
      * - Returns true if this air cell should become water (independent of sea connectivity).
-     */
+     *//*
+
     fun isAquiferWater(ctx: Ctx, x: Int, y: Int, z: Int, wetness: Double): Boolean {
       if (wetness <= 0.01) return false
       if (y > ctx.settings.seaLevel - 6) return false // keep aquifers mostly underground
@@ -750,9 +895,11 @@ class BetterWorldGen(
     }
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Materials (surface painting)
-   * ============================================================ */
+   * ============================================================ *//*
+
 
   class SimpleSurface(
     private val top: Material,
@@ -799,19 +946,19 @@ class BetterWorldGen(
           if (y < ctx.minY) break
           val m = get(y)
           if (m == Material.AIR || m == ctx.settings.water) break
-          set(y, Material.STONE)
+          set(y, Material.RED_CONCRETE)
         }
         return
       }
 
       // rocky cap with dirt under
-      set(topY, Material.STONE)
+      set(topY, Material.RED_CONCRETE)
       for (i in 1..dirtDepth) {
         val y = topY - i
         if (y < ctx.minY) break
         val m = get(y)
         if (m == Material.AIR || m == ctx.settings.water) break
-        set(y, Material.DIRT)
+        set(y, Material.RED_TERRACOTTA)
       }
     }
   }
@@ -828,9 +975,11 @@ class BetterWorldGen(
     ) = Unit
   }
 
-  /* ============================================================
+  */
+/* ============================================================
    * Math helpers
-   * ============================================================ */
+   * ============================================================ *//*
+
 
 }
 fun terraced(h: Double, step: Double, sharpness: Double): Double {
@@ -846,3 +995,4 @@ fun smoothstep(edge0: Double, edge1: Double, x: Double): Double {
   val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0.0, 1.0)
   return t * t * (3 - 2 * t)
 }
+*/
