@@ -3,9 +3,11 @@ package killercreepr.cruxworldgen.test6.biome
 import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxworldgen.test6.context.GenerateContext
 import killercreepr.cruxworldgen.test6.decor.Decoration
+import killercreepr.cruxworldgen.test6.decor.DripstoneDecoration
 import killercreepr.cruxworldgen.test6.density.DensityStack
 import killercreepr.cruxworldgen.test6.material.MaterialContext
 import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.test6.prop.CavernPillarRule
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.Double
@@ -33,8 +35,9 @@ val gCaves: CaveShape = CaveProfile(
     CheeseCaves(
       threshold01 = 0.3
     )
+    //PillarAdditive(
+    )
   )
-)
 
 /*val gCaves: CaveShape = CaveProfile(
   listOf(
@@ -52,7 +55,7 @@ val gCaves: CaveShape = CaveProfile(
 
 class Plains : Biome{
   override val caves: CaveShape = gCaves
-  override val decorations = listOf(SimpleTreeDecoration())
+  override val decorations = listOf(SimpleTreeDecoration(), DripstoneDecoration())
 
   override val materialProvider = object : MaterialProvider{
     override fun chooseMaterial(context: MaterialContext): Material {

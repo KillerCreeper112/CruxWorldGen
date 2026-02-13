@@ -181,6 +181,37 @@ class NoiseBank(
   fun cheese3D(x: Int, y: Int, z: Int): Double =
     cheese3D.noise(x.toDouble(), y.toDouble(), z.toDouble())
 
+  // NoiseBank
+  val pillarPatch2D = CruxNoise.fast(seed.toInt() xor 0x71A12B3)
+    .frequency(0.004) // lower = bigger patches
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(2)
+
+  val pillarDetail3D = CruxNoise.fast(seed.toInt() xor 0x19C0D11)
+    .frequency(0.08) // higher = roughness
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+  val pillar2D = CruxNoise.fast(seed.toInt() xor 0x071A12B3)
+    .frequency(0.0025) // ⭐ bigger patches than 0.004
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(3) // ⭐ slightly richer blobs than 2
+
+
+  val pillarHeight2D = CruxNoise.fast(seed.toInt() xor 0x019C0D11)
+    .frequency(0.010) // ⭐ much lower than 0.08
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(2)
+
+
+
+  fun pillar2D(x: Int, z: Int): Double =
+    pillar2D.noise(x.toDouble(), z.toDouble())
+  fun pillarHeight2D(x: Int,  z: Int): Double =
+    pillarHeight2D.noise(x.toDouble(),  z.toDouble())
 
 
   data class SwirlCenter(val centerX: Int, val centerZ: Int)

@@ -1,9 +1,19 @@
 package killercreepr.cruxworldgen.test6.prop
 
+import killercreepr.cruxworldgen.test6.HashUtil
+import killercreepr.cruxworldgen.test6.HashUtil.HASH_MIX_1
+import killercreepr.cruxworldgen.test6.HashUtil.HASH_MIX_2
+import killercreepr.cruxworldgen.test6.HashUtil.HASH_MUL_X
+import killercreepr.cruxworldgen.test6.HashUtil.HASH_SALT
+import killercreepr.cruxworldgen.test6.HashUtil.hash01
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.ChunkContext
 import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.test6.decor.Decoration
+import killercreepr.cruxworldgen.test6.decor.DecorationPass
+import killercreepr.cruxworldgen.test6.decor.Placement
 import org.bukkit.Material
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 
@@ -285,18 +295,6 @@ class PropPointGrid(
     return points
   }
 
-  /*private fun hash2D(seed: Long, x: Int, z: Int): Long {
-    var value = seed xor (x.toLong() * 0x632BE59BD9B4E019L) xor (z.toLong() * 0x9E3779B97F4A7C15L)
-    value = (value xor (value ushr 30)) * 0xBF58476D1CE4E5B9L
-    value = (value xor (value ushr 27)) * 0x94D049BB133111EBL
-    return value xor (value ushr 31)
-  }*/
-
-  private val HASH_SALT: Long = -7046029254386353131L
-  private val HASH_MUL_X: Long = 7145483588892929177L
-  private val HASH_MIX_1: Long = -4658895280553007687L
-  private val HASH_MIX_2: Long = -7723592293110705685L
-
   private fun hash2D(seed: Long, x: Int, z: Int): Long {
     var value = seed
     value = value xor (x.toLong() * HASH_MUL_X)
@@ -307,24 +305,44 @@ class PropPointGrid(
   }
 }
 
+data class CavernPillarRulePlacement(
+  val cx: Int,
+  val cz: Int,
+  val yMin: Int,
+  val yMax: Int,
+
+  val baseRadius: Double,
+  val taperPower: Double,     // 0.8..2.5
+  val bulgeStrength: Double,  // 0..0.6
+  val roughness: Double,      // 0..0.5
+  val breakChance: Double,    // 0..0.25
+
+  val seed: Long
+) : Placement
+
 
 class CavernPillarRule(
   private val minGapBlocks: Int = 5,
-  private val maxGapBlocks: Int = 40,   // <-- 10 is way too small for most caves
-  private val minDepthBelowSurface: Int = 18,
-  private val cavernThreshold01: Double = 0.0
-) {
+  private val maxGapBlocks: Int = 40,
+  private val minDepthBelowSurface: Int = 18
+) : Decoration {
+  override val pass = DecorationPass.UNDERGROUND
 
-  fun tryPlace(ctx: GenerateContext, biomeBlend: BiomeBlendSample, point: PropPoint): Boolean {
+  /** Controls distribution. Examples: grid spacing, noise chance, biome-weight scaling */
+  override fun shouldTry(
+    ctx: GenerateContext,
+    point: PropPoint,
+    biomeBlend: BiomeBlendSample
+  ): Boolean {
     val chunk = ctx.chunkContext
     val minY = chunk.minHeight
     val maxY = chunk.maxHeight
 
     val surfaceY = estimateSurfaceY(chunk, point.localX, point.localZ, minY, maxY)
-    val depthBelowSurface = surfaceY - point.localX // ignore, just showing we computed surface
+    val depthBelowSurface = surfaceY - point.localX
 
     // Find an enclosed air pocket to pillar inside
-    val pocket = findCavePocket(
+    return findCavePocket(
       chunk = chunk,
       localX = point.localX,
       localZ = point.localZ,
@@ -334,26 +352,128 @@ class CavernPillarRule(
       minGap = minGapBlocks,
       maxGap = maxGapBlocks,
       searchDepthStartBelowSurface = 6
-    ) ?: return false
+    ) != null
+  }
+
+  /** Pattern scan: find an anchor/placement candidate */
+  override fun findPlacement(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val chunk = ctx.chunkContext
+    val minY = chunk.minHeight
+    val maxY = chunk.maxHeight
+
+    val surfaceY = estimateSurfaceY(chunk, point.localX, point.localZ, minY, maxY)
+
+    val pocket = findCavePocket(
+      chunk, point.localX, point.localZ,
+      minY, maxY, surfaceY,
+      minGapBlocks, maxGapBlocks,
+      searchDepthStartBelowSurface = 6
+    ) ?: return null
 
     val floorY = pocket.floorY
     val ceilingY = pocket.ceilingY
     val gap = pocket.gap
 
     val depth = surfaceY - floorY
-    if (depth < minDepthBelowSurface) return false
+    if (depth < minDepthBelowSurface) return null
 
-    // OPTIONAL GATE (turn off until working):
-    // val cavernNoise01 = (ctx.noise.cavern3D(point.worldX, floorY + gap / 2, point.worldZ) + 1.0) * 0.5
-    // val cavernMask01 = smoothstep01(((cavernNoise01 - cavernThreshold01) / (1.0 - cavernThreshold01)).coerceIn(0.0, 1.0))
-    // if (cavernMask01 < 0.55) return false
+    // --- 1) Cavern mask (only spawn in “open-ish” caves) ---
+    val midY = floorY + gap / 2
+    val cavern01 = ((ctx.noise.cavern3D(point.worldX, midY, point.worldZ) + 1.0) * 0.5)
+    // If you want pillars mainly in caverns, push this threshold up (0.65..0.85)
+    if (cavern01 < 0.4) return null
 
-    // For now, always place to prove it works:
-    val radius = 2.0
-    placePillar(chunk, point.localX, point.localZ, floorY + 1, ceilingY - 1, radius)
+    // --- 2) Patch noise: makes regions of many pillars ---
+    val patch01 = ((ctx.noise.pillarPatch2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5)
+    // Turn it into a “presence mask”
+    val patchMask = smoothstep01(((patch01 - 0.55) / (1.0 - 0.55)).coerceIn(0.0, 1.0))
+    if (patchMask < 0.2) return null
 
-    return true
+    // --- 3) Deterministic chance inside patch ---
+    val r01 = hash01(point.seed xor 0x5131AA77L)
+    val chance = (0.15 + 0.75 * patchMask) * cavern01 // 5%..50% depending on patch+cavern
+    if (r01 > chance) return null
+
+    // --- 4) Shape params ---
+    val baseRadius = (1.0 + 2.8 * patchMask).coerceIn(1.0, 3.5)
+    val taperPower = 1.0 + 1.5 * hash01(point.seed xor 0x2222L) // 1..2.5
+    val bulgeStrength = 0.10 + 0.45 * hash01(point.seed xor 0x3333L) // 0.1..0.55
+    val roughness = 0.10 + 0.35 * (1.0 - cavern01) // rougher when less “pure cavern”
+    val breakChance = 0.05 + 0.20 * (1.0 - patchMask) // sparse areas = more broken pillars
+
+    return CavernPillarRulePlacement(
+      cx = point.localX,
+      cz = point.localZ,
+      yMin = floorY + 1,
+      yMax = ceilingY - 1,
+      baseRadius = baseRadius,
+      taperPower = taperPower,
+      bulgeStrength = bulgeStrength,
+      roughness = roughness,
+      breakChance = breakChance,
+      seed = point.seed
+    )
   }
+
+
+  /** Apply: place blocks using placement info */
+  override fun place(ctx: GenerateContext, placement: Placement, biomeBlend: BiomeBlendSample) {
+    val p = placement as CavernPillarRulePlacement
+    val chunk = ctx.chunkContext
+
+    val height = (p.yMax - p.yMin + 1).coerceAtLeast(1)
+
+    val baseRadius = placement.baseRadius          // e.g. 2.5
+    val waistRadius = 0.8                      // minimum radius in the middle
+    val pinchPower = 2.2                       // 1.5..4.0 typical (bigger = thinner middle)
+
+    for (y in p.yMin..p.yMax) {
+      val t = (y - p.yMin).toDouble() / (p.yMax - p.yMin).coerceAtLeast(1).toDouble()
+
+      val f = hourglassFactor(t, pinchPower)   // 1 at ends, 0 at middle
+      var r = waistRadius + (baseRadius - waistRadius) * f
+
+      //val t = (y - p.yMin).toDouble() / height.toDouble() // 0..1 bottom->top
+
+      // Taper (thicker in middle, thinner at ends)
+      val endFade = (1.0 - kotlin.math.abs(t * 2.0 - 1.0)) // 0 at ends, 1 at middle
+      val bulge = 1.0 + p.bulgeStrength * (endFade * endFade) // bulge at mid
+
+      // Stronger taper => skinnier ends
+      val taper = endFade.coerceIn(0.0, 1.0).pow(p.taperPower).coerceIn(0.0, 1.0)
+
+      // Base radius at this y
+      //var r = p.baseRadius * (0.35 + 0.65 * taper) * bulge
+
+      // Roughness modulated by 3D noise (world coords for continuity)
+      val n = ctx.noise.pillarDetail3D.noise(ctx.chunkX * 16.0 + p.cx, y.toDouble(), ctx.chunkZ * 16.0 + p.cz) // [-1..1]
+      r *= (1.0 + n * p.roughness).coerceIn(0.6, 1.4)
+
+      // Random “breaks” -> missing rings / holes / snapped pillars
+      val ringR01 = HashUtil.hash01(p.seed xor (y.toLong() * HASH_SALT))
+      if (ringR01 < p.breakChance * 0.35) continue
+
+      placePillarDisc(chunk, p.cx, p.cz, y, r, Material.DRIPSTONE_BLOCK)
+    }
+  }
+
+  private fun placePillarDisc(chunk: ChunkContext, cx: Int, cz: Int, y: Int, radius: Double, mat: Material) {
+    val rInt = kotlin.math.ceil(radius).toInt()
+    for (dx in -rInt..rInt) for (dz in -rInt..rInt) {
+      val x = cx + dx
+      val z = cz + dz
+      if (x !in 0..15 || z !in 0..15) continue
+      if (!chunk.isAir(x, y, z)) continue
+
+      val dist2 = (dx * dx + dz * dz).toDouble()
+      if (dist2 <= radius * radius) {
+        chunk.setBlock(x, y, z, mat)
+      }
+    }
+  }
+
+  private fun smoothstep01(t: Double): Double = t * t * (3.0 - 2.0 * t)
+
 
   private fun estimateSurfaceY(chunk: ChunkContext, localX: Int, localZ: Int, minY: Int, maxY: Int): Int {
     for (y in (maxY - 2) downTo (minY + 1)) {
@@ -381,5 +501,12 @@ class CavernPillarRule(
       }
     }
   }
+
+  private fun hourglassFactor(t: Double, pinchPower: Double): Double {
+    // t in [0..1]
+    val s = kotlin.math.sin(Math.PI * t) // 0..1..0
+    return 1.0 - s.pow(pinchPower) // 1..0..1
+  }
+
 }
 

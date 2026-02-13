@@ -74,9 +74,21 @@ class BukkitGen(
 
         for (y in (maxHeight - 1) downTo minHeight) {
           val terrainDensity = pipeline.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ)
-          val caveCarve = pipeline.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainDensity)
+          /*val caveCarve = pipeline.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainDensity)
+          val caveAdd = pipeline.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainDensity)
 
-          val finalDensity = terrainDensity - caveCarve
+          val finalDensity = terrainDensity - caveCarve + caveAdd*/
+
+          val terrainMacro = pipeline.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
+
+          val detail = ctx.noise.detail3D(worldX, y, worldZ) * 3.0
+          val terrainFinal = terrainMacro + detail
+
+          val caveCarve = pipeline.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainMacro)
+          val caveAdd   = pipeline.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainMacro)
+
+          val finalDensity = terrainFinal - caveCarve + caveAdd
+
           val isSolid = finalDensity > 0.0
           val depthBelowSurface = surfaceY - y
 

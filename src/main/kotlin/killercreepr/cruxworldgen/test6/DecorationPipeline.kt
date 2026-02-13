@@ -36,15 +36,4 @@ class DecorationPipeline(
       }
     }
   }
-
-  private fun collectDecorations(blend: BiomeBlendSample, pass: DecorationPass): List<Decoration> {
-    // Simple and scalable: union from all weighted biomes (dedupe by id)
-    val out = mutableListOf<Decoration>()
-    for (wb in blend.weightedBiomes) {
-      for (d in wb.biome.decorations) {
-        if (d.pass == pass) out.add(d)
-      }
-    }
-    return out
-  }
 }

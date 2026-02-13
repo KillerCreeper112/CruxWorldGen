@@ -56,6 +56,42 @@ class GenerationPipeline(
     // Critical: prevent carve magnitude from shrinking in the middle of a border.
     return weightedSum / maxWeight
   }
+  fun blendedBiomeAdd(
+    ctx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double
+  ): Double {
+
+    var weightedSum = 0.0
+    var maxWeight = 0.0001
+
+    val depthBelowSurface = surfaceY - y
+
+    for (wb in biomeBlend.weightedBiomes) {
+      maxWeight = maxOf(maxWeight, wb.weight)
+
+      val caveContext = CaveContext(
+        worldX = worldX,
+        y = y,
+        worldZ = worldZ,
+        surfaceY = surfaceY,
+        depthBelowSurface = depthBelowSurface,
+        terrainDensity = terrainDensity,
+        edge = biomeBlend.edgeContext
+      )
+
+      val carve = wb.biome.caves.add(ctx, caveContext)
+      weightedSum += wb.weight * carve
+    }
+
+    // Critical: prevent carve magnitude from shrinking in the middle of a border.
+    return weightedSum / maxWeight
+  }
+
 
 
   fun blendedBiomeDensity(
