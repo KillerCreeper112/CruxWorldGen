@@ -67,6 +67,17 @@ class NoiseBank(
     return terrainDetailNoise.noise(worldX.toDouble(), y.toDouble(), worldZ.toDouble()) // ~[-1..1]
   }
 
+
+  private val terrainDetailNoise01 = CruxNoise.fast(seed.toInt())
+    .frequency(0.005)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  fun terrainDetailNoise01(worldX: Int, y: Int, worldZ: Int): Double {
+    return terrainDetailNoise01.noise(worldX.toDouble(), y.toDouble(), worldZ.toDouble()) // ~[-1..1]
+  }
+
   // In NoiseBank
 
   private val mountainBase2D = CruxNoise.fast(seed.toInt())
