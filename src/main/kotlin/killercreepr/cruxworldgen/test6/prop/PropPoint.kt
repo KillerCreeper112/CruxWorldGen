@@ -42,6 +42,34 @@ class TerrainQueries(
     return minY
   }
 
+  /** True surface for trees/etc: topmost solid block that has an open air column to the top of the world. */
+  fun skySurfaceY(localX: Int, localZ: Int, maxAirCheck: Int = 128): Int {
+    val minY = chunk.minHeight
+    val topY = chunk.maxHeight - 1
+
+    for (y in (topY - 1) downTo (minY + 1)) {
+      if (!chunk.isSolid(localX, y, localZ)) continue
+      if (!chunk.isAir(localX, y + 1, localZ)) continue
+
+      // ensure "sky exposure": above must remain air (up to some limit)
+      var air = 0
+      var yy = y + 1
+      while (yy <= topY && air < maxAirCheck) {
+        if (!chunk.isAir(localX, yy, localZ)) {
+          air = -999 // blocked
+          break
+        }
+        air++
+        yy++
+      }
+
+      if (air >= 0) return y
+    }
+    return minY
+  }
+
+
+
   /** Convenience: world coords -> local coords inside THIS chunk; returns null if not in chunk. */
   fun surfaceYWorld(worldX: Int, worldZ: Int): Int? {
     val chunkWorldX = ctx.chunkX * 16
@@ -79,6 +107,17 @@ class TerrainQueries(
     }
     return count
   }
+
+  fun slopeBlocks(localX: Int, localZ: Int): Double {
+    val sx1 = surfaceY((localX - 1).coerceIn(0, 15), localZ)
+    val sx2 = surfaceY((localX + 1).coerceIn(0, 15), localZ)
+    val sz1 = surfaceY(localX, (localZ - 1).coerceIn(0, 15))
+    val sz2 = surfaceY(localX, (localZ + 1).coerceIn(0, 15))
+    val dx = (sx2 - sx1).toDouble() * 0.5
+    val dz = (sz2 - sz1).toDouble() * 0.5
+    return kotlin.math.sqrt(dx*dx + dz*dz)
+  }
+
 
   /** A quick slope metric based on nearby surfaceY differences. Returns 0..1-ish. */
   fun slope01(localX: Int, localZ: Int): Double {
@@ -262,15 +301,15 @@ class PropPointGrid(
     val points = ArrayList<PropPoint>()
     val baseSeed = ctx.worldContext.seed
 
-    // cover a little outside chunk so features can straddle borders cleanly
     val startX = chunkWorldX - spacingBlocks
     val startZ = chunkWorldZ - spacingBlocks
     val endX = chunkWorldX + 16 + spacingBlocks
     val endZ = chunkWorldZ + 16 + spacingBlocks
 
-    var gridX = (startX / spacingBlocks) * spacingBlocks
+    var gridX = Math.floorDiv(startX, spacingBlocks) * spacingBlocks
     while (gridX <= endX) {
-      var gridZ = (startZ / spacingBlocks) * spacingBlocks
+
+      var gridZ = Math.floorDiv(startZ, spacingBlocks) * spacingBlocks
       while (gridZ <= endZ) {
 
         val pointSeed = hash2D(baseSeed, gridX, gridZ)
@@ -289,11 +328,13 @@ class PropPointGrid(
 
         gridZ += spacingBlocks
       }
+
       gridX += spacingBlocks
     }
 
     return points
   }
+
 
   private fun hash2D(seed: Long, x: Int, z: Int): Long {
     var value = seed

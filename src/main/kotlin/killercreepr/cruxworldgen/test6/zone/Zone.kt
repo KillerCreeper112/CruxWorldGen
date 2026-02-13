@@ -1,11 +1,15 @@
 package killercreepr.cruxworldgen.test6.zone
 
+import killercreepr.cruxworldgen.test6.FungalPillars
 import killercreepr.cruxworldgen.test6.biome.BiomeRegistry
 import killercreepr.cruxworldgen.test6.biome.FjordIce
 import killercreepr.cruxworldgen.test6.biome.Mountains
+import killercreepr.cruxworldgen.test6.biome.PlagueMire
+import killercreepr.cruxworldgen.test6.biome.PlagueMireHighlands
 import killercreepr.cruxworldgen.test6.biome.Plains
 import killercreepr.cruxworldgen.test6.biome.Plateaus
 import killercreepr.cruxworldgen.test6.biome.SpiralHills
+import killercreepr.cruxworldgen.test6.biome.ToxicFogBasins
 
 interface Zone{
   val biomes : BiomeRegistry
@@ -13,10 +17,11 @@ interface Zone{
 
 class TestZone : Zone{
   override val biomes: BiomeRegistry = BiomeRegistry(listOf(
-    Plains(),
-    Mountains(),
+    //Plains(),
+    PlagueMireHighlands()
+    /*Mountains(),
     Plateaus(),
     SpiralHills(),
-    FjordIce()
+    FjordIce()*/
   ))
 }

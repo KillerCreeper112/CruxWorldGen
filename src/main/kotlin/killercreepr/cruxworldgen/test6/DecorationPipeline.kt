@@ -25,7 +25,7 @@ class DecorationPipeline(
       // Collect decorations from the blend
 
       for (pass in DecorationPass.entries) {
-        val decorations = blend.primaryBiome().decorations//collectDecorations(blend, pass)
+        val decorations = blend.primaryBiome().decorations
 
         for (decoration in decorations) {
           if(decoration.pass != pass) continue

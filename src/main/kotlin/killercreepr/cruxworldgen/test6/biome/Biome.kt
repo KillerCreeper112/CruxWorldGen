@@ -32,9 +32,10 @@ val gCaves: CaveShape = CaveProfile(
       noodleRadius = 5.0,
       verticalRadiusBlocks = 10.0
     )*/
-    CheeseCaves(
+    //RavineCarver()
+    /*CheeseCaves(
       threshold01 = 0.3
-    )
+    )*/
     //PillarAdditive(
     )
   )
@@ -55,7 +56,9 @@ val gCaves: CaveShape = CaveProfile(
 
 class Plains : Biome{
   override val caves: CaveShape = gCaves
-  override val decorations = listOf(SimpleTreeDecoration(), DripstoneDecoration())
+  override val decorations = listOf(SimpleTreeDecoration(
+    chancePerPoint = 0.75
+  ), DripstoneDecoration())
 
   override val materialProvider = object : MaterialProvider{
     override fun chooseMaterial(context: MaterialContext): Material {
@@ -227,7 +230,7 @@ class SpiralHills : Biome {
   override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.BLACK_CONCRETE else Material.AIR
+      return if (context.isSolid) Material.CLAY else Material.AIR
     }
   }
 

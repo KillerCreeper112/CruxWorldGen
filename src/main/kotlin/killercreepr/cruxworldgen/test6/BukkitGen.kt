@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.test6
 
 import killercreepr.crux.api.block.CruxBlockWrapper.material
+import killercreepr.cruxworldgen.test6.biome.Biome
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.ChunkContext
 import killercreepr.cruxworldgen.test6.context.GenerateContext
@@ -12,6 +13,7 @@ import killercreepr.cruxworldgen.test6.noise.NoiseBank
 import killercreepr.cruxworldgen.test6.prop.CavernPillarRule
 import killercreepr.cruxworldgen.test6.prop.PropPointGrid
 import killercreepr.cruxworldgen.test6.prop.TerrainQueries
+import killercreepr.cruxworldgen.test6.structure.StructurePipeline
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
@@ -20,7 +22,8 @@ import java.util.*
 
 class BukkitGen(
   val pipeline: GenerationPipeline,
-  val decor : DecorationPipeline
+  val decor : DecorationPipeline,
+  val structures : StructurePipeline
 ) : ChunkGenerator() {
   fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
     val minY = ctx.chunkContext.minHeight
@@ -59,6 +62,7 @@ class BukkitGen(
       noise
     )
 
+    val cacheMap = mutableMapOf<Pair<Int, Int>, BiomeBlendSample>()
     val minHeight = ctx.chunkContext.minHeight
     val maxHeight = ctx.chunkContext.maxHeight
     for (localX in 0 until chunkWidth) {
@@ -70,10 +74,11 @@ class BukkitGen(
         val zone = pipeline.zones.sampleZone(ctx, worldX, worldZ)
 
         val biomeBlend = zone.biomes.sampleBiomeBlend(ctx, worldX, worldZ)
+        cacheMap[worldX to worldZ] = biomeBlend
         val surfaceY = findSurfaceY(ctx, biomeBlend, worldX, worldZ)
 
         for (y in (maxHeight - 1) downTo minHeight) {
-          val terrainDensity = pipeline.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ)
+          //val terrainDensity = pipeline.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ)
           /*val caveCarve = pipeline.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainDensity)
           val caveAdd = pipeline.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainDensity)
 
@@ -84,8 +89,8 @@ class BukkitGen(
           val detail = ctx.noise.detail3D(worldX, y, worldZ) * 3.0
           val terrainFinal = terrainMacro + detail
 
-          val caveCarve = pipeline.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainMacro)
-          val caveAdd   = pipeline.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainMacro)
+          val caveCarve = pipeline.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal)
+          val caveAdd   = pipeline.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal)//terrainMacro
 
           val finalDensity = terrainFinal - caveCarve + caveAdd
 
@@ -113,9 +118,12 @@ class BukkitGen(
       }
     }
 
+    structures.runForChunk(ctx, chunkX, chunkZ)
+
     decor.runAllPasses(ctx, chunkX, chunkZ) { wx, wz ->
-      val zone = pipeline.zones.sampleZone(ctx, wx, wz)
-      zone.biomes.sampleBiomeBlend(ctx, wx, wz)
+      cacheMap[wx to wz]!!
+      //val zone = pipeline.zones.sampleZone(ctx, wx, wz)
+      //zone.biomes.sampleBiomeBlend(ctx, wx, wz)
     }
   }
 }

@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.test6.prop.test
 
+import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.GenerateContext
 import killercreepr.cruxworldgen.test6.decor.Decoration
@@ -14,7 +15,7 @@ class SimpleTreeDecoration(
 
   private val chancePerPoint: Double = 0.18,
   private val minAirAbove: Int = 7,
-  private val maxSlope01: Double = 0.35,
+  private val maxSlope01: Double = 100.0,
 
   private val minHeight: Int = 4,
   private val maxHeight: Int = 7,
@@ -28,7 +29,12 @@ class SimpleTreeDecoration(
   override fun shouldTry(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     // If you later add biome-specific toggles, put them here.
     // For now: deterministic chance gate.
-    val r01 = hash01(point.seed xor TREE_SALT)
+    //val r01 = hash01(point.seed xor TREE_SALT)
+    val r01 = CruxNoise.fast(ctx.worldContext.seed.toInt())
+      .frequency(0.01)
+      .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+      .fractalType(CruxNoise.FractalType.FBm)
+      .fractalOctaves(1).noise(point.worldX.toDouble(), point.worldZ.toDouble())
     return r01 <= chancePerPoint
   }
 
@@ -39,8 +45,8 @@ class SimpleTreeDecoration(
     val localZ = point.localZ
 
     // Must be inside chunk bounds + padding (avoid cross-chunk canopy writes)
-    if (localX !in borderPadding..(15 - borderPadding)) return null
-    if (localZ !in borderPadding..(15 - borderPadding)) return null
+    //if (localX !in borderPadding..(15 - borderPadding)) return null
+    //if (localZ !in borderPadding..(15 - borderPadding)) return null
 
     val surfaceY = ctx.queries.surfaceY(localX, localZ)
     val baseY = surfaceY + 1
@@ -54,11 +60,6 @@ class SimpleTreeDecoration(
 // Need air above (LOCAL coords)
     val airAbove = ctx.queries.airBlocksAbove(localX, surfaceY, localZ, maxCount = 20)
     if (airAbove < minAirAbove) return null
-
-    // Don't plant underwater
-    if (ctx.queries.isUnderwater(surfaceY)) return null
-
-    if (ctx.queries.slope01(localX, localZ) > maxSlope01) return null
 
     // Must have solid ground below
     if (surfaceY < chunk.minHeight || surfaceY >= chunk.maxHeight) return null
