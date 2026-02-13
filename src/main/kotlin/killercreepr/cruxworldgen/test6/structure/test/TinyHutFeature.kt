@@ -1,14 +1,6 @@
 package killercreepr.cruxworldgen.test6.structure.test
 
-import killercreepr.cruxworldgen.test6.structure.BlockListTemplate
-import killercreepr.cruxworldgen.test6.structure.CellPlacementRule
-import killercreepr.cruxworldgen.test6.structure.FlattenPadTerraformer
-import killercreepr.cruxworldgen.test6.structure.NaturalPadTerraformer
-import killercreepr.cruxworldgen.test6.structure.RelBlock
-import killercreepr.cruxworldgen.test6.structure.StructureFeature
-import killercreepr.cruxworldgen.test6.structure.StructurePlacementRule
-import killercreepr.cruxworldgen.test6.structure.StructureTemplate
-import killercreepr.cruxworldgen.test6.structure.Terraformer
+import killercreepr.cruxworldgen.test6.structure.*
 import org.bukkit.Material
 
 class TinyHutFeature : StructureFeature {

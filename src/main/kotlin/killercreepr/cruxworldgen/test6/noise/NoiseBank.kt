@@ -78,6 +78,73 @@ class NoiseBank(
     return terrainDetailNoise01.noise(worldX.toDouble(), y.toDouble(), worldZ.toDouble()) // ~[-1..1]
   }
 
+  private val charredBase = CruxNoise.fast(s(0xC11A_7ED1))
+    .frequency(0.0014) // big rolling, ~700 block wavelength
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(2)
+    .fractalGain(0.5)
+    .fractalLacunarity(2.0)
+
+  // Ridgy uplift / knuckles (use ridged fractal so it naturally forms ridges)
+  private val charredRidge = CruxNoise.fast(s(0xA55E_0001))
+    .frequency(0.0024)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.Ridged)
+    .fractalOctaves(2)
+    .fractalGain(0.5)
+    .fractalLacunarity(2.0)
+
+  // ===== Cracks: warp + mask =====
+  private val charredCrackWarp = CruxNoise.fast(s(0xBADC_1201))
+    .frequency(0.0028)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  // Crack mask: slightly higher frequency to get lots of fracture lines
+  private val charredCrackMask = CruxNoise.fast(s(0xBADC_1202))
+    .frequency(0.018)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  // ===== Fissures: warp + mask =====
+  private val charredFissureWarp = CruxNoise.fast(s(0xF155_0001))
+    .frequency(0.0018)
+    .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  private fun s(salt: Long): Int = (seed xor salt).toInt()
+  // Fissure mask:
+  // Perlin often gives nicer long-ish “bands” when you do ridge = 1-abs(n)
+  private val charredFissureMask = CruxNoise.fast(s(0xF155_0002))
+    .frequency(0.0065) // lower = longer, fewer fissures
+    .noiseType(CruxNoise.NoiseType.Perlin)
+    .fractalType(CruxNoise.FractalType.FBm)
+    .fractalOctaves(1)
+
+  // ===== Public sampling functions (match what your biome expects) =====
+
+  fun charredBase2D(x: Int, z: Int): Double =
+    charredBase.noise(x.toDouble(), z.toDouble()) // [-1..1]
+
+  fun charredRidge2D(x: Int, z: Int): Double =
+    charredRidge.noise(x.toDouble(), z.toDouble()) // [-1..1]
+
+  fun charredCrackWarp2D(x: Double, z: Double): Double =
+    charredCrackWarp.noise(x, z) // [-1..1]
+
+  fun charredCrackMask2D(x: Double, z: Double): Double =
+    charredCrackMask.noise(x, z) // [-1..1]
+
+  fun charredFissureWarp2D(x: Double, z: Double): Double =
+    charredFissureWarp.noise(x, z) // [-1..1]
+
+  fun charredFissureMask2D(x: Double, z: Double): Double =
+    charredFissureMask.noise(x, z) // [-1..1]
+
   // In NoiseBank
 
   private val mountainBase2D = CruxNoise.fast(seed.toInt())

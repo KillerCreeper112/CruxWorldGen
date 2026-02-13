@@ -98,6 +98,7 @@ class BukkitGen(
           val depthBelowSurface = surfaceY - y
 
           val materialContext = MaterialContext(
+            ctx,
             worldX = worldX,
             y = y,
             worldZ = worldZ,
