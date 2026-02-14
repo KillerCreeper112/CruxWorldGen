@@ -1,7 +1,9 @@
 package killercreepr.cruxworldgen.bukkit.context
 
-import killercreepr.cruxworldgen.api.block.BlockState
+import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.ChunkContext
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 
@@ -15,16 +17,18 @@ class BukkitChunkContext(
     x: Int,
     y: Int,
     z: Int,
-    state: BlockState
+    data: BlockData
   ) {
-    TODO("Not yet implemented")
+    if(data !is BukkitBlockData) throw IllegalArgumentException("State must be of type BukkitBlockData")
+    data.setAt(this, x, y, z)
   }
 
-  override fun getBlock(x: Int, y: Int, z: Int): BlockState {
-    TODO("Not yet implemented")
+  override fun getBlock(x: Int, y: Int, z: Int): BlockSection {
+    val data = chunkData.getBlockData(x, y, z)
+    //todo
   }
 
-  override fun isAir(x: Int, y: Int, z: Int): Boolean = chunkData.getType(x, y, z).isAir
+  override fun isEmpty(x: Int, y: Int, z: Int): Boolean = chunkData.getType(x, y, z).isAir
 
   override fun isSolid(x: Int, y: Int, z: Int): Boolean = chunkData.getType(x, y, z).isSolid
 

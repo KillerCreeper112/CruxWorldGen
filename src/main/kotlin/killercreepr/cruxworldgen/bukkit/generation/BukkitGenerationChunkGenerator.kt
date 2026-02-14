@@ -1,6 +1,6 @@
 package killercreepr.cruxworldgen.bukkit.generation
 
-import killercreepr.cruxworldgen.api.block.BlockState
+import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
@@ -100,7 +100,7 @@ class BukkitGenerationChunkGenerator(
 
           val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
 
-          if (chosenMaterial != BlockState.NONE) {
+          if (chosenMaterial != BlockData.NONE) {
             ctx.chunkContext.setBlock(localX, y, localZ, chosenMaterial)
           }
         }

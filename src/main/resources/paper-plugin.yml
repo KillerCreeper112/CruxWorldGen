@@ -1,7 +1,7 @@
 name: CruxWorldGen
 version: '1.0'
 author: killercreepr
-main: killercreepr.cruxworldgen.core.CruxWorldGenPlugin
+main: killercreepr.cruxworldgen.bukkit.CruxWorldGenPlugin
 api-version: '1.21'
 dependencies:
   server:

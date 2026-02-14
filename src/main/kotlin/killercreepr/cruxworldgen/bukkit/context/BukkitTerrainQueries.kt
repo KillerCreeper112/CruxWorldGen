@@ -17,7 +17,7 @@ class BukkitTerrainQueries(override val ctx: GenerateContext) : TerrainQueries {
     val maxY = chunk.maxHeight - 1
 
     for (y in (maxY - 1) downTo (minY + 1)) {
-      if (chunk.isSolid(localX, y, localZ) && chunk.isAir(localX, y + 1, localZ)) {
+      if (chunk.isSolid(localX, y, localZ) && chunk.isEmpty(localX, y + 1, localZ)) {
         return y
       }
     }
@@ -31,13 +31,13 @@ class BukkitTerrainQueries(override val ctx: GenerateContext) : TerrainQueries {
 
     for (y in (topY - 1) downTo (minY + 1)) {
       if (!chunk.isSolid(localX, y, localZ)) continue
-      if (!chunk.isAir(localX, y + 1, localZ)) continue
+      if (!chunk.isEmpty(localX, y + 1, localZ)) continue
 
       // ensure "sky exposure": above must remain air (up to some limit)
       var air = 0
       var yy = y + 1
       while (yy <= topY && air < maxAirCheck) {
-        if (!chunk.isAir(localX, yy, localZ)) {
+        if (!chunk.isEmpty(localX, yy, localZ)) {
           air = -999 // blocked
           break
         }
@@ -70,7 +70,7 @@ class BukkitTerrainQueries(override val ctx: GenerateContext) : TerrainQueries {
     var count = 0
     var yy = y + 1
     while (yy <= maxY && count < maxCount) {
-      if (!chunk.isAir(localX, yy, localZ)) break
+      if (!chunk.isEmpty(localX, yy, localZ)) break
       count++
       yy++
     }
@@ -83,7 +83,7 @@ class BukkitTerrainQueries(override val ctx: GenerateContext) : TerrainQueries {
     var count = 0
     var yy = y - 1
     while (yy >= minY && count < maxCount) {
-      if (!chunk.isAir(localX, yy, localZ)) break
+      if (!chunk.isEmpty(localX, yy, localZ)) break
       count++
       yy--
     }
@@ -153,12 +153,12 @@ class BukkitTerrainQueries(override val ctx: GenerateContext) : TerrainQueries {
     while (y > minY + 2) {
 
       // air block with solid below => start of pocket
-      if (chunk.isAir(localX, y, localZ) && chunk.isSolid(localX, y - 1, localZ)) {
+      if (chunk.isEmpty(localX, y, localZ) && chunk.isSolid(localX, y - 1, localZ)) {
         val floorY = y - 1
 
         // walk upward through air
         var topAirY = y
-        while (topAirY < maxY && chunk.isAir(localX, topAirY, localZ)) {
+        while (topAirY < maxY && chunk.isEmpty(localX, topAirY, localZ)) {
           topAirY++
         }
 

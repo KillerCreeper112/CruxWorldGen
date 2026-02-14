@@ -287,62 +287,6 @@ fun findCeilingAbove(chunk: ChunkContext, localX: Int, localZ: Int, startY: Int,
 
 data class PropPoint(val worldX: Int, val worldZ: Int, val localX: Int, val localZ: Int, val seed: Long)
 
-class PropPointGrid(
-  private val spacingBlocks: Int = 8,  // 6..12 typical
-  private val jitterBlocks: Int = 3
-) {
-  fun pointsForChunk(ctx: GenerateContext, chunkX: Int, chunkZ: Int): List<PropPoint> {
-    val chunkWorldX = chunkX * 16
-    val chunkWorldZ = chunkZ * 16
-
-    val points = ArrayList<PropPoint>()
-    val baseSeed = ctx.worldContext.seed
-
-    val startX = chunkWorldX - spacingBlocks
-    val startZ = chunkWorldZ - spacingBlocks
-    val endX = chunkWorldX + 16 + spacingBlocks
-    val endZ = chunkWorldZ + 16 + spacingBlocks
-
-    var gridX = Math.floorDiv(startX, spacingBlocks) * spacingBlocks
-    while (gridX <= endX) {
-
-      var gridZ = Math.floorDiv(startZ, spacingBlocks) * spacingBlocks
-      while (gridZ <= endZ) {
-
-        val pointSeed = hash2D(baseSeed, gridX, gridZ)
-        val jitterX = ((pointSeed ushr 0).toInt() and 0x7FFFFFFF) % (jitterBlocks * 2 + 1) - jitterBlocks
-        val jitterZ = ((pointSeed ushr 21).toInt() and 0x7FFFFFFF) % (jitterBlocks * 2 + 1) - jitterBlocks
-
-        val worldX = gridX + jitterX
-        val worldZ = gridZ + jitterZ
-
-        val localX = worldX - chunkWorldX
-        val localZ = worldZ - chunkWorldZ
-
-        if (localX in 0..15 && localZ in 0..15) {
-          points.add(PropPoint(worldX, worldZ, localX, localZ, pointSeed))
-        }
-
-        gridZ += spacingBlocks
-      }
-
-      gridX += spacingBlocks
-    }
-
-    return points
-  }
-
-
-  private fun hash2D(seed: Long, x: Int, z: Int): Long {
-    var value = seed
-    value = value xor (x.toLong() * HASH_MUL_X)
-    value = value xor (z.toLong() * HASH_SALT)
-    value = (value xor (value ushr 30)) * HASH_MIX_1
-    value = (value xor (value ushr 27)) * HASH_MIX_2
-    return value xor (value ushr 31)
-  }
-}
-
 data class CavernPillarRulePlacement(
   val cx: Int,
   val cz: Int,

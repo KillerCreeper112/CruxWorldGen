@@ -1,6 +1,19 @@
 package killercreepr.cruxworldgen.api.structure
 
+import killercreepr.cruxworldgen.core.structure.SimpleAabb
+
 interface Aabb{
+  companion object{
+    fun aabb(
+      minX: Int,
+      minY: Int,
+      minZ: Int,
+      maxX: Int,
+      maxY: Int,
+      maxZ: Int
+    ) : Aabb = SimpleAabb(minX, minY, minZ, maxX, maxY, maxZ)
+  }
+
   val minX: Int
   val minY: Int
   val minZ: Int

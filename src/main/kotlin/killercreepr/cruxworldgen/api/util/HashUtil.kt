@@ -1,5 +1,11 @@
 package killercreepr.cruxworldgen.api.util
 
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_1
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_2
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MUL_X
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_SALT
+import killercreepr.cruxworldgen.api.util.HashUtil.hash01
+
 object HashUtil {
   const val HASH_SALT: Long = -7046029254386353131L //0x9E3779B97F4A7C15L
   const val HASH_MUL_X: Long = 7145483588892929177L
@@ -19,6 +25,16 @@ object HashUtil {
     val v = mix64(seed)
     val positive = v ushr 1 // keep it non-negative (0-Long.MAX_VALUE)
     return positive.toDouble() / (Long.MAX_VALUE.toDouble() + 1.0)
+  }
+
+  fun hashSigned01(seed: Long): Double {
+    var v = seed
+    v = (v xor (v ushr 30)) * -4658895280553007687L
+    v = (v xor (v ushr 27)) * -7723592293110705685L
+    v = v xor (v ushr 31)
+    // map to [-1,1]
+    val u = (v and Long.MAX_VALUE).toDouble() / Long.MAX_VALUE.toDouble()
+    return u * 2.0 - 1.0
   }
 
   /** Deterministic random integer in [min-max]. */
