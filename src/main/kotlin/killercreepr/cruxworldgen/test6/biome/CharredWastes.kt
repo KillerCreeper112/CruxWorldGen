@@ -1,7 +1,7 @@
 package killercreepr.cruxworldgen.test6.biome
 
 import killercreepr.cruxworldgen.test6.context.GenerateContext
-import killercreepr.cruxworldgen.test6.decor.Decoration
+import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.test6.density.DensityStack
 import killercreepr.cruxworldgen.test6.material.MaterialContext
 import killercreepr.cruxworldgen.test6.material.MaterialProvider

@@ -1,17 +1,18 @@
 package killercreepr.cruxworldgen.test6.prop
 
-import killercreepr.cruxworldgen.test6.HashUtil
-import killercreepr.cruxworldgen.test6.HashUtil.HASH_MIX_1
-import killercreepr.cruxworldgen.test6.HashUtil.HASH_MIX_2
-import killercreepr.cruxworldgen.test6.HashUtil.HASH_MUL_X
-import killercreepr.cruxworldgen.test6.HashUtil.HASH_SALT
-import killercreepr.cruxworldgen.test6.HashUtil.hash01
+import killercreepr.cruxworldgen.api.cave.CavePocket
+import killercreepr.cruxworldgen.api.util.HashUtil
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_1
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_2
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MUL_X
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_SALT
+import killercreepr.cruxworldgen.api.util.HashUtil.hash01
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.ChunkContext
 import killercreepr.cruxworldgen.test6.context.GenerateContext
-import killercreepr.cruxworldgen.test6.decor.Decoration
-import killercreepr.cruxworldgen.test6.decor.DecorationPass
-import killercreepr.cruxworldgen.test6.decor.Placement
+import killercreepr.cruxworldgen.api.decor.Decoration
+import killercreepr.cruxworldgen.api.decor.DecorationPass
+import killercreepr.cruxworldgen.api.decor.Placement
 import org.bukkit.Material
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -19,10 +20,6 @@ import kotlin.math.sqrt
 
 data class FloorHit(val y: Int)
 data class CeilingHit(val y: Int)
-
-data class CavePocket(val floorY: Int, val ceilingY: Int) {
-  val gap: Int get() = ceilingY - floorY - 1
-}
 
 class TerrainQueries(
   private val ctx: GenerateContext
@@ -491,7 +488,7 @@ class CavernPillarRule(
       r *= (1.0 + n * p.roughness).coerceIn(0.6, 1.4)
 
       // Random “breaks” -> missing rings / holes / snapped pillars
-      val ringR01 = HashUtil.hash01(p.seed xor (y.toLong() * HASH_SALT))
+      val ringR01 = hash01(p.seed xor (y.toLong() * HASH_SALT))
       if (ringR01 < p.breakChance * 0.35) continue
 
       placePillarDisc(chunk, p.cx, p.cz, y, r, Material.DRIPSTONE_BLOCK)

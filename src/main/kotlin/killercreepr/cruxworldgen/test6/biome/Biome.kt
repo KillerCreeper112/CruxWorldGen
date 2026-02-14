@@ -1,30 +1,22 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import io.papermc.paper.util.ItemComponentSanitizer.override
+import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.cave.CaveProfile
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.test6.context.GenerateContext
-import killercreepr.cruxworldgen.test6.decor.Decoration
 import killercreepr.cruxworldgen.test6.decor.DripstoneDecoration
 import killercreepr.cruxworldgen.test6.density.DensityStack
 import killercreepr.cruxworldgen.test6.material.MaterialContext
 import killercreepr.cruxworldgen.test6.material.MaterialProvider
-import killercreepr.cruxworldgen.test6.prop.CavernPillarRule
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
-import kotlin.Double
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
-
-interface Biome {
-  val shape: BiomeShape
-  val materialProvider: MaterialProvider
-  val caves: CaveShape
-  val decorations: List<Decoration>
-    get() = listOf()
-}
 
 val gCaves: CaveShape = CaveProfile(
   listOf(
@@ -37,8 +29,8 @@ val gCaves: CaveShape = CaveProfile(
       threshold01 = 0.3
     )*/
     //PillarAdditive(
-    )
   )
+)
 
 /*val gCaves: CaveShape = CaveProfile(
   listOf(

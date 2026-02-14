@@ -1,20 +1,12 @@
 package killercreepr.cruxworldgen.test6
 
-import killercreepr.crux.api.block.CruxBlockWrapper.material
-import killercreepr.cruxworldgen.test6.biome.Biome
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.ChunkContext
 import killercreepr.cruxworldgen.test6.context.GenerateContext
 import killercreepr.cruxworldgen.test6.context.WorldContext
-import killercreepr.cruxworldgen.test6.decor.DecorationPass
-import killercreepr.cruxworldgen.test6.density.DensityBank
 import killercreepr.cruxworldgen.test6.material.MaterialContext
 import killercreepr.cruxworldgen.test6.noise.NoiseBank
-import killercreepr.cruxworldgen.test6.prop.CavernPillarRule
-import killercreepr.cruxworldgen.test6.prop.PropPointGrid
-import killercreepr.cruxworldgen.test6.prop.TerrainQueries
 import killercreepr.cruxworldgen.test6.structure.StructurePipeline
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo

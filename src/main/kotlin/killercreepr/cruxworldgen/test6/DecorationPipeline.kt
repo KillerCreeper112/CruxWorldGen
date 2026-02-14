@@ -2,8 +2,7 @@ package killercreepr.cruxworldgen.test6
 
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.GenerateContext
-import killercreepr.cruxworldgen.test6.decor.Decoration
-import killercreepr.cruxworldgen.test6.decor.DecorationPass
+import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.test6.prop.PropPointGrid
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags.decorations
 

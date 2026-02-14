@@ -1,0 +1,126 @@
+package killercreepr.cruxworldgen.core.generation
+
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.api.generation.GenerationPipeline
+import killercreepr.cruxworldgen.api.zone.ZoneRegistry
+import killercreepr.cruxworldgen.core.context.SimpleCaveContext
+import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+
+class SimpleGenerationPipeline(
+  override val zones : ZoneRegistry
+) : GenerationPipeline {
+
+  override fun terrainDensityNoCaves(
+    ctx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int
+  ): Double {
+    val terrainStack = blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ)
+    val detailDensity = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+    //val detailDensity = ctx.noise.detail3D(worldX, y, worldZ) * 3.0  // keep or set 0 while tuning
+    return terrainStack.finalDensity() + detailDensity
+  }
+  override fun blendedBiomeCarve(
+    ctx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double
+  ): Double {
+
+    var weightedSum = 0.0
+    var maxWeight = 0.0001
+
+    val depthBelowSurface = surfaceY - y
+
+    for (wb in biomeBlend.weightedBiomes) {
+      val caves = wb.biome.caves ?: continue
+      maxWeight = maxOf(maxWeight, wb.weight)
+
+      val caveContext = SimpleCaveContext(
+        worldX = worldX,
+        y = y,
+        worldZ = worldZ,
+        surfaceY = surfaceY,
+        depthBelowSurface = depthBelowSurface,
+        terrainDensity = terrainDensity,
+        edge = biomeBlend.edgeContext
+      )
+
+      val carve = caves.carve(ctx, caveContext)
+      weightedSum += wb.weight * carve
+    }
+
+    // Critical: prevent carve magnitude from shrinking in the middle of a border.
+    return weightedSum / maxWeight
+  }
+  override fun blendedBiomeAdd(
+    ctx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double
+  ): Double {
+
+    var weightedSum = 0.0
+    var maxWeight = 0.0001
+
+    val depthBelowSurface = surfaceY - y
+
+    for (wb in biomeBlend.weightedBiomes) {
+      val caves = wb.biome.caves ?: continue
+      maxWeight = maxOf(maxWeight, wb.weight)
+
+      val caveContext = SimpleCaveContext(
+        worldX = worldX,
+        y = y,
+        worldZ = worldZ,
+        surfaceY = surfaceY,
+        depthBelowSurface = depthBelowSurface,
+        terrainDensity = terrainDensity,
+        edge = biomeBlend.edgeContext
+      )
+
+      val carve = caves.add(ctx, caveContext)
+      weightedSum += wb.weight * carve
+    }
+
+    // Critical: prevent carve magnitude from shrinking in the middle of a border.
+    return weightedSum / maxWeight
+  }
+
+  override fun blendedBiomeDensity(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int
+  ): DensityStack {
+    var blendedBase = 0.0
+    var blendedAdd = 0.0
+    var blendedCarve = 0.0
+
+    for (weightedBiome in biomeBlend.weightedBiomes) {
+      val biome = weightedBiome.biome
+      val weight = weightedBiome.weight
+
+      val stack = biome.shape.density(
+        generateCtx, worldX, y, worldZ, biomeBlend.edgeContext
+      )
+
+      blendedBase += weight * stack.base
+      blendedAdd += weight * stack.add
+      blendedCarve += weight * stack.carve
+    }
+
+    return DensityStack.densityStack(blendedBase, blendedAdd, blendedCarve)
+  }
+}

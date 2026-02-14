@@ -13,10 +13,6 @@ import killercreepr.cruxworldgen.test6.biome.Plateaus
 import killercreepr.cruxworldgen.test6.biome.SpiralHills
 import killercreepr.cruxworldgen.test6.biome.ToxicFogBasins
 
-interface Zone{
-  val biomes : BiomeRegistry
-}
-
 class TestZone : Zone{
   override val biomes: BiomeRegistry = BiomeRegistry(listOf(
     //Plains(),

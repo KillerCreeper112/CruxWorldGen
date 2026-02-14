@@ -1,25 +1,12 @@
 package killercreepr.cruxworldgen.test6.biome
 
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.test6.context.GenerateContext
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.sqrt
-
-interface CaveType {
-  fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double
-  fun addBlocks(ctx: GenerateContext, cave: CaveContext, add : Double): Double = 0.0
-
-  val canOpenToSky: Boolean get() = false
-
-  /** How quickly it fades in from surface if it CAN open to sky. */
-  val surfaceFadeDepth: Int get() = 4
-}
-
-interface CaveShape {
-  fun carve(ctx: GenerateContext, cave: CaveContext): Double
-  fun add(ctx: GenerateContext, c: CaveContext): Double = 0.0
-}
 
 class PillarAdditive(
   private val seedSalt: Long = 0x71A12B3L,
@@ -173,79 +160,6 @@ class PillarAdditiveOld(
     // IMPORTANT: don't add more than carve is creating, or it will "fill caves back in"
     return strength.coerceAtMost(carved + 0.75)
   }
-}
-
-
-class CaveProfile(
-  private val caveTypes: List<CaveType>
-) : CaveShape {
-
-  override fun carve(ctx: GenerateContext, cave: CaveContext): Double {
-    // Above surface => never carve
-    if (cave.depthBelowSurface < 0) return 0.0
-
-    val (strongestCarve, strongestType) = strongestCarveAndType(ctx, cave)
-    if (strongestCarve <= 0.0001) return 0.0
-
-    val fade = depthFade(cave.depthBelowSurface, strongestType)
-    val edgeFade = smoothstep01((1.0 - cave.edge.edgeBlendFactor()).coerceIn(0.0, 1.0))
-
-    val carved = strongestCarve * fade * edgeFade
-
-    // Safety cap: never carve more than local solid density + margin
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
-    val maxAllowed = solidDensity + 2.0
-    return carved.coerceAtMost(maxAllowed)
-  }
-
-  override fun add(ctx: GenerateContext, c: CaveContext): Double {
-    // Above surface => no cave additions
-    if (c.depthBelowSurface < 100) return 0.0
-
-    val (strongestCarve, strongestType) = strongestCarveAndType(ctx, c)
-    if (strongestCarve <= 0.0001) return 0.0
-
-    val fade = depthFade(c.depthBelowSurface, strongestType)
-    val edgeFade = smoothstep01((1.0 - c.edge.edgeBlendFactor()).coerceIn(0.0, 1.0))
-
-    var strongestAdd = 0.0
-    for (type in caveTypes) {
-      strongestAdd = maxOf(strongestAdd, type.addBlocks(ctx, c, strongestCarve))
-    }
-
-    val added = strongestAdd * fade * edgeFade
-
-    // SAFETY: never add more than carve + margin (prevents filling caves back in)
-    val maxAllowedAdd = strongestCarve + 0.75
-    return added.coerceIn(0.0, maxAllowedAdd)
-  }
-
-  private fun strongestCarveAndType(ctx: GenerateContext, cave: CaveContext): Pair<Double, CaveType?> {
-    var best = 0.0
-    var bestType: CaveType? = null
-    for (type in caveTypes) {
-      val v = type.carveBlocks(ctx, cave)
-      if (v > best) {
-        best = v
-        bestType = type
-      }
-    }
-    return best to bestType
-  }
-
-  private fun depthFade(depthBelowSurface: Int, type: CaveType?): Double {
-    // depthBelowSurface is >= 0 here
-    return if (type?.canOpenToSky == true) {
-      // Ravines: fade in quickly near the surface so they can open to sky
-      val d = type.surfaceFadeDepth.coerceAtLeast(1)
-      smoothstep01(((depthBelowSurface.toDouble()+10.0) / d.toDouble()).coerceIn(0.0, 1.0))
-    } else {
-      // Regular caves: your original fade (prevents open-to-sky caves)
-      smoothstep01(((depthBelowSurface - 6).toDouble() / 16.0).coerceIn(0.0, 1.0))
-    }
-  }
-
-  private fun smoothstep01(t: Double): Double = t * t * (3.0 - 2.0 * t)
 }
 
 class RavineCarver(

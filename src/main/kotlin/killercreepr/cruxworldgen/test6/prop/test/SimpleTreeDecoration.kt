@@ -3,9 +3,9 @@ package killercreepr.cruxworldgen.test6.prop.test
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
 import killercreepr.cruxworldgen.test6.context.GenerateContext
-import killercreepr.cruxworldgen.test6.decor.Decoration
-import killercreepr.cruxworldgen.test6.decor.DecorationPass
-import killercreepr.cruxworldgen.test6.decor.Placement
+import killercreepr.cruxworldgen.api.decor.Decoration
+import killercreepr.cruxworldgen.api.decor.DecorationPass
+import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.test6.prop.PropPoint
 import org.bukkit.Material
 import kotlin.math.abs
