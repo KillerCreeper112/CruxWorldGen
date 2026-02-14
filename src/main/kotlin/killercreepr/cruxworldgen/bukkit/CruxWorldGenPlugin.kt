@@ -6,7 +6,9 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
 import killercreepr.crux.core.util.CruxMath
 import killercreepr.crux.core.util.CruxWorldUtil
-import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.cave.CaveProfile
+import killercreepr.cruxworldgen.api.noise.NoiseAutoInstaller
+import killercreepr.cruxworldgen.api.noise.Noised
 import killercreepr.cruxworldgen.bukkit.generation.BukkitGenerationChunkGenerator
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
 import killercreepr.cruxworldgen.core.decor.SimpleDecorationPipeline
@@ -17,7 +19,7 @@ import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
-import killercreepr.cruxworldgen.test6.zone.TestZone
+import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
 
@@ -55,11 +57,8 @@ class CruxWorldGenPlugin : CruxPlugin() {
 
                   BaseNoiseModule.install(noise)
 
-                  zones.zones.forEach { zone ->
-                    zone.biomes.biomes.forEach { biome ->
-                      (biome as? Biome.Noised)?.noiseModule?.install(noise)
-                    }
-                  }
+                  //auto install noises
+                  NoiseAutoInstaller(noise).installAllFromZones(zones)
 
                   val worldDetails = WorldDetails(
                     64,

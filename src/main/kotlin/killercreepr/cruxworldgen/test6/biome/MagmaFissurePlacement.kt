@@ -7,6 +7,7 @@ import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.test.biome.CharredWastes
 import org.bukkit.Material
 import kotlin.math.abs
 

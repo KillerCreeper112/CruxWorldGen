@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.test6.biome
+package killercreepr.cruxworldgen.test.biome
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.Biome
@@ -16,6 +16,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.test6.biome.MagmaFissureDecoration
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.floor
@@ -36,16 +37,16 @@ class CharredWastes(
       // (These are SOLID blocks; later you can add real lava fluid with a decoration pass.)
       if (fissure > 0.55 && context.depthBelowSurface >= 2) {
         // More magma deeper down; more basalt near surface
-        return if (context.depthBelowSurface > 10) BukkitBlockResolver.INSTANCE.resolve(Material.MAGMA_BLOCK)
-        else BukkitBlockResolver.INSTANCE.resolve(Material.BASALT)
+        return if (context.depthBelowSurface > 10) BukkitBlockResolver.Companion.INSTANCE.resolve(Material.MAGMA_BLOCK)
+        else BukkitBlockResolver.Companion.INSTANCE.resolve(Material.BASALT)
       }
 
       // Cracked-looking surface palette
       if (context.depthBelowSurface <= 0) return BukkitBlockResolver.INSTANCE.resolve(Material.BLACKSTONE)
-      if (context.depthBelowSurface <= 2) return BukkitBlockResolver.INSTANCE.resolve(Material.BASALT)
+      if (context.depthBelowSurface <= 2) return BukkitBlockResolver.Companion.INSTANCE.resolve(Material.BASALT)
 
       // Bulk filler
-      return BukkitBlockResolver.INSTANCE.resolve(Material.BASALT)
+      return BukkitBlockResolver.Companion.INSTANCE.resolve(Material.BASALT)
     }
 
     private fun fissureMask01(wx: Int, wz: Int, surfaceY: Int, y: Int, context: MaterialContext): Double {
@@ -97,17 +98,17 @@ class CharredWastes(
   private val fissureWallSoftness: Double = 1.6  // higher => sharper walls
 ) : Biome.Noised {
 
-  object Noise : NoiseModule{
-    object FissureWarp2D : NoiseKey{ override val id = "charred.fissure.warp2D" }
-    object FissureMask2D : NoiseKey{ override val id = "charred.fissure.mask2D" }
-    object Base2D : NoiseKey{ override val id = "charred.base2D" }
-    object Ridge2D : NoiseKey{ override val id = "charred.ridge2D" }
-    object CrackWarp2D : NoiseKey{ override val id = "charred.crack.warp2D" }
-    object CrackMask2D : NoiseKey{ override val id = "charred.crack.mask2D" }
+  object Noise : NoiseModule {
+    object FissureWarp2D : NoiseKey { override val id = "biome.charred_wastes.fissure.warp2D" }
+    object FissureMask2D : NoiseKey { override val id = "biome.charred_wastes.fissure.mask2D" }
+    object Base2D : NoiseKey { override val id = "biome.charred_wastes.base2D" }
+    object Ridge2D : NoiseKey { override val id = "biome.charred_wastes.ridge2D" }
+    object CrackWarp2D : NoiseKey { override val id = "biome.charred_wastes.crack.warp2D" }
+    object CrackMask2D : NoiseKey { override val id = "biome.charred_wastes.crack.mask2D" }
 
     override fun install(bank: NoiseBank) {
       bank.register(Base2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0014) // big rolling, ~700 block wavelength
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -117,7 +118,7 @@ class CharredWastes(
         }
       }
       bank.register(Ridge2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0024)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.Ridged)
@@ -127,7 +128,7 @@ class CharredWastes(
         }
       }
       bank.register(CrackWarp2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0028)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -135,7 +136,7 @@ class CharredWastes(
         }
       }
       bank.register(CrackMask2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.018)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -143,7 +144,7 @@ class CharredWastes(
         }
       }
       bank.register(FissureWarp2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0018)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -151,7 +152,7 @@ class CharredWastes(
         }
       }
       bank.register(FissureMask2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0065) // lower = longer, fewer fissures
             .noiseType(CruxNoise.NoiseType.Perlin)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -173,7 +174,7 @@ class CharredWastes(
 
       // Bind ctx into the material provider so it can sample the same fissure noise
       (materialProvider as? Any)?.let {
-        if (it is kotlin.Any) {
+        if (it is Any) {
           // safe cast to our anonymous provider's method via reflection isn't worth it;
           // simplest: make materialProvider a named class if you want this clean.
         }
@@ -218,7 +219,7 @@ class CharredWastes(
       // Base density is simple surface field
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack.densityStack(
+      return DensityStack.Companion.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = fissureCarve

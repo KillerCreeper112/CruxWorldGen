@@ -19,7 +19,7 @@ class SimpleNoiseBank(override val seed: Long) : NoiseBank {
     key: NoiseKey,
     build : NoiseFactory
   ) {
-    if(factories.containsKey(key)) throw IllegalArgumentException("NoiseFactory already exists! $key")
+    if(factories.containsKey(key)) throw IllegalArgumentException("NoiseFactory already exists! $key Installed: ${factories.keys}")
     factories[key] = build
   }
 }

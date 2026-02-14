@@ -10,7 +10,10 @@ import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.api.util.Curve
+import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.test.biome.gCaves
 import org.bukkit.Material
 import kotlin.math.pow
 
@@ -108,7 +111,7 @@ class PlagueMire(
 
       // Blend surface back toward base near edges (so micro-bubbles don't make seams)
       val baseOnly = sea + baseAboveSea + baseN * baseAmp
-      surface = lerp(baseOnly, surface, fade)
+      surface = Curve.lerp(baseOnly, surface, fade)
 
       // --- 6) clamp so it stays “mire near sea” ---
       val minY = sea + baseAboveSea + minSurfaceDelta
@@ -119,8 +122,5 @@ class PlagueMire(
       return DensityStack.densityStack(base = baseDensity, add = 0.0, carve = 0.0)
     }
   }
-
-  private fun smoothstep01(t: Double): Double = t * t * (3.0 - 2.0 * t)
-  private fun lerp(a: Double, b: Double, t: Double): Double = a + (b - a) * t
 }
 

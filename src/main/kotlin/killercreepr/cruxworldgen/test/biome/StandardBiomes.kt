@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.test6.biome
+package killercreepr.cruxworldgen.test.biome
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.Biome
@@ -18,6 +18,11 @@ import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+import killercreepr.cruxworldgen.test.cave.CavernRooms
+import killercreepr.cruxworldgen.test.cave.CheeseCaves
+import killercreepr.cruxworldgen.test.cave.LavaTubes
+import killercreepr.cruxworldgen.test.cave.RavineCarver
+import killercreepr.cruxworldgen.test.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.test6.decor.DripstoneDecoration
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
@@ -25,6 +30,11 @@ import kotlin.math.*
 
 val gCaves: CaveShape = CaveProfile(
   listOf(
+    LavaTubes(),
+    RavineCarver(),
+    SpaghettiCaves(),
+    CavernRooms(),
+    CheeseCaves()
     /*LavaTubes(
       noodleRadius = 5.0,
       verticalRadiusBlocks = 10.0
@@ -70,9 +80,7 @@ class Plains : Biome.Noised{
 
   override val caves: CaveShape = gCaves
   override val decorations = listOf(
-    SimpleTreeDecoration(
-      chancePerPoint = 0.75
-    ), DripstoneDecoration()
+    SimpleTreeDecoration(chancePerPoint = 0.75)
   )
 
   override val materialProvider = object : MaterialProvider{
@@ -319,8 +327,8 @@ class SpiralHills : Biome.Noised {
   data class SwirlCenter(val centerX: Int, val centerZ: Int)
 
   fun swirlCenter(worldSeed: Long, worldX: Int, worldZ: Int, cellSizeBlocks: Int): SwirlCenter {
-    val cellX = kotlin.math.floor(worldX.toDouble() / cellSizeBlocks.toDouble()).toInt()
-    val cellZ = kotlin.math.floor(worldZ.toDouble() / cellSizeBlocks.toDouble()).toInt()
+    val cellX = floor(worldX.toDouble() / cellSizeBlocks.toDouble()).toInt()
+    val cellZ = floor(worldZ.toDouble() / cellSizeBlocks.toDouble()).toInt()
 
     val hash = hash2D(worldSeed, cellX, cellZ)
     val offsetX = (hash and 0xFFFF).toInt() % cellSizeBlocks

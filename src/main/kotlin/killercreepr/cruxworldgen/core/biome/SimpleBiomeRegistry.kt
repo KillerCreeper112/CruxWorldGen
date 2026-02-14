@@ -70,15 +70,34 @@ class SimpleBiomeRegistry(
     val w2 = weightFromDistance(second.distance)
     val w3 = weightFromDistance(third.distance)
 
-    val total = (w1 + w2 + w3).coerceAtLeast(1e-9)
+    //val total = (w1 + w2 + w3).coerceAtLeast(1e-9)
+
+    val merged = linkedMapOf<Biome, Double>()
+    for ((b, w) in listOf(nearest.biome to w1, second.biome to w2, third.biome to w3)) {
+      merged[b] = (merged[b] ?: 0.0) + w
+    }
+    val totalMerged = merged.values.sum().coerceAtLeast(1e-9)
+
+    val weighted = merged.entries.map { (b, w) ->
+      WeightedBiome.weightedBiome(b, w / totalMerged)
+    }
+
+    val uniqueCount = merged.size
+    val edgeCtx = if (uniqueCount <= 1) {
+      BiomeEdgeContext.biomeEdgeContext(distanceToEdgeBlocks = Double.POSITIVE_INFINITY, blendRadiusBlocks = blendRadiusBlocks)
+    } else {
+      edgeContext
+    }
+
 
     return BiomeBlendSample.biomeBlendSample(
-      weightedBiomes = listOf(
+      weighted,
+      /*weightedBiomes = listOf(
         WeightedBiome.weightedBiome(nearest.biome, w1 / total),
         WeightedBiome.weightedBiome(second.biome, w2 / total),
         WeightedBiome.weightedBiome(third.biome, w3 / total)
-      ),
-      edgeContext = edgeContext
+      ),*/
+      edgeContext = edgeCtx
     )
   }
 

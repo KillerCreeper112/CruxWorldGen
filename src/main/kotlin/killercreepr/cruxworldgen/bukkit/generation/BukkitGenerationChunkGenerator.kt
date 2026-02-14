@@ -12,6 +12,7 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+import org.bukkit.Bukkit
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
 import java.util.*
@@ -34,8 +35,13 @@ class BukkitGenerationChunkGenerator(
     val maxY = ctx.chunkContext.maxHeight - 1
 
     for (y in maxY downTo minY) {
-      val terrainDensity = generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ)
-      if (terrainDensity > 0.0) return y
+      val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
+
+      val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX,  y, worldZ) * 3.0
+      val terrainFinal = terrainMacro + detail
+      if(terrainFinal > 0.0) return y
+      /*val terrainDensity = generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ)
+      if (terrainDensity > 0.0) return y*/
     }
     return minY
   }

@@ -27,8 +27,6 @@ class SimpleTreeDecoration(
   private val borderPadding: Int = 1
 ) : Decoration {
 
-  private val TREE_SALT: Long = 0x0BADC0FFEE0DDF00L
-
   override fun shouldTry(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     // If you later add biome-specific toggles, put them here.
     // For now: deterministic chance gate.

@@ -1,0 +1,34 @@
+package killercreepr.cruxworldgen.api.noise
+
+import killercreepr.cruxworldgen.api.cave.CaveProfile
+import killercreepr.cruxworldgen.api.zone.ZoneRegistry
+
+class NoiseAutoInstaller(val noise : NoiseBank) {
+  val installed = mutableSetOf<NoiseModule>()
+  fun installAllFromZones(zones : ZoneRegistry){
+    zones.zones.forEach { zone ->
+      install(zone as? Noised)
+      zone.biomes.biomes.forEach { biome ->
+        install(biome as? Noised)
+        install(biome.caves as? Noised)
+        (biome.caves as? CaveProfile)?.let {
+          for (type in it.caveTypes) {
+            install(type as? Noised)
+          }
+        }
+      }
+    }
+  }
+
+  fun install(noised : Noised?) : Boolean{
+    if(noised == null) return false
+    return install(noised.noiseModule)
+  }
+
+  fun install(module : NoiseModule) : Boolean{
+    if(installed.contains(module)) return false
+    installed.add(module)
+    module.install(noise)
+    return true
+  }
+}

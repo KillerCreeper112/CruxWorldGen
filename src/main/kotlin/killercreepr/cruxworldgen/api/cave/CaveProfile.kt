@@ -61,15 +61,33 @@ open class CaveProfile(
     return best to bestType
   }
 
+  /**
+   * depthBelowSurface = 0 means "at the surface"
+  depthBelowSurface = 10 means "10 blocks under the surface"
+   */
   fun depthFade(depthBelowSurface: Int, type: CaveType?): Double {
+
+    val start = type?.surfaceFadeStart ?: 6
+    if ((type?.surfaceFadeRamp ?: 16) <= 0) return if (depthBelowSurface >= start) 1.0 else 0.0
+
+    val ramp  = (type?.surfaceFadeRamp ?: 16).coerceAtLeast(1)
+
+    val t = ((depthBelowSurface - start).toDouble() / ramp.toDouble()).coerceIn(0.0, 1.0)
+    return Curve.smoothstep01(t)
+  }
+
+  /*fun depthFade(depthBelowSurface: Int, type: CaveType?): Double {
+    if(type == null) return Curve.smoothstep01(((depthBelowSurface - 6).toDouble() / 16.0).coerceIn(0.0, 1.0))
+
+    return Curve.smoothstep01(((depthBelowSurface - type.surfaceFadeDepth).toDouble() / 16.0).coerceIn(0.0, 1.0))
     // depthBelowSurface is >= 0 here
     return if (type?.canOpenToSky == true) {
       // Ravines: fade in quickly near the surface so they can open to sky
-      val d = type.surfaceFadeDepth.coerceAtLeast(1)
+      val d = type.surfaceFadeDepth//.coerceAtLeast(1)
       Curve.smoothstep01(((depthBelowSurface.toDouble()+10.0) / d.toDouble()).coerceIn(0.0, 1.0))
     } else {
       // Regular caves: your original fade (prevents open-to-sky caves)
       Curve.smoothstep01(((depthBelowSurface - 6).toDouble() / 16.0).coerceIn(0.0, 1.0))
     }
-  }
+  }*/
 }

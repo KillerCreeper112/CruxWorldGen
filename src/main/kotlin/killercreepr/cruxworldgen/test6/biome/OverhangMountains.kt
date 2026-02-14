@@ -11,6 +11,7 @@ import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.test.biome.gCaves
 import org.bukkit.Material
 import kotlin.math.pow
 

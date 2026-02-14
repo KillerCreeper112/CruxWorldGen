@@ -10,7 +10,6 @@ object Curve {
     val x = t.coerceIn(0.0, 1.0)
     return x * x * x * (x * (x * 6 - 15) + 10)
   }
-
   fun lerp(a: Double, b: Double, t: Double): Double = a + (b - a) * t
   fun invLerp(a: Double, b: Double, v: Double): Double =
     if (a == b) 0.0 else ((v - a) / (b - a)).coerceIn(0.0, 1.0)
