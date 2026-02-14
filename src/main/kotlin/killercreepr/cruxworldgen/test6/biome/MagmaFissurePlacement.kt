@@ -1,10 +1,12 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
-import killercreepr.cruxworldgen.test6.prop.PropPoint
+import killercreepr.cruxworldgen.api.decor.PropPoint
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
 
@@ -30,14 +32,14 @@ class MagmaFissureDecoration(
     // Domain warp so fissures snake
     val wx = point.worldX.toDouble()
     val wz = point.worldZ.toDouble()
-    val warpX = ctx.noise.charredFissureWarp2D(wx, wz) * warpAmp
-    val warpZ = ctx.noise.charredFissureWarp2D(wx + 1000.0, wz + 1000.0) * warpAmp
+    val warpX = ctx.noise.get(CharredWastes.Noise.FissureWarp2D).noise2D(wx, wz) * warpAmp
+    val warpZ = ctx.noise.get(CharredWastes.Noise.FissureWarp2D).noise2D(wx + 1000.0, wz + 1000.0) * warpAmp
 
     val xw = wx + warpX
     val zw = wz + warpZ
 
     // Ridge-like band mask
-    val n = ctx.noise.charredFissureMask2D(xw, zw) // [-1..1]
+    val n = ctx.noise.get(CharredWastes.Noise.FissureMask2D).noise2D(xw, zw) // [-1..1]
     val ridge01 = 1.0 - abs(n)                     // [0..1]
 
     return ridge01 >= fissureThreshold01
@@ -60,7 +62,7 @@ class MagmaFissureDecoration(
     var y = startY
 
     while (y > chunk.minHeight + 2) {
-      if (chunk.isAir(x, y, z) && chunk.isSolid(x, y - 1, z)) {
+      if (chunk.isEmpty(x, y, z) && chunk.isSolid(x, y - 1, z)) {
         val floorY = y - 1
 
         // If there’s too much “ceiling” right above, it’s not a fissure shaft—skip.
@@ -85,8 +87,8 @@ class MagmaFissureDecoration(
     for (i in 1..p.depth) {
       val y = p.floorY + i
       if (y !in chunk.minHeight until chunk.maxHeight) break
-      if (chunk.isAir(p.x, y, p.z)) {
-        chunk.setBlock(p.x, y, p.z, Material.MAGMA_BLOCK)
+      if (chunk.isEmpty(p.x, y, p.z)) {
+        chunk.setBlock(p.x, y, p.z, BukkitBlockResolver.INSTANCE.resolve(Material.MAGMA_BLOCK))
       } else break
     }
   }

@@ -2,7 +2,6 @@ package killercreepr.cruxworldgen.core
 
 import kotlin.math.floor
 import kotlin.math.sqrt
-import kotlin.math.min
 
 class Worley2D(
     private val seed: Long,

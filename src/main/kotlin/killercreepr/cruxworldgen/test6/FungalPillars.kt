@@ -1,15 +1,16 @@
+/*todo
 package killercreepr.cruxworldgen.test6
 
-import killercreepr.cruxworldgen.test6.biome.Biome
-import killercreepr.cruxworldgen.test6.biome.BiomeEdgeContext
-import killercreepr.cruxworldgen.test6.biome.BiomeShape
-import killercreepr.cruxworldgen.test6.biome.CaveShape
-import killercreepr.cruxworldgen.test6.biome.gCaves
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.test6.density.DensityStack
-import killercreepr.cruxworldgen.test6.material.MaterialContext
-import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.test6.biome.gCaves
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
@@ -231,3 +232,4 @@ class FungalPillarsMaterials : MaterialProvider {
     return Material.BASALT
   }
 }
+*/

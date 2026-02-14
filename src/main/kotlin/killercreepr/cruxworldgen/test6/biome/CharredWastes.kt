@@ -1,11 +1,21 @@
 package killercreepr.cruxworldgen.test6.biome
 
+import killercreepr.cruxgeneration.util.CruxNoise
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
+import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.api.noise.NoiseBank
+import killercreepr.cruxworldgen.api.noise.NoiseField
+import killercreepr.cruxworldgen.api.noise.NoiseKey
+import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.floor
@@ -15,8 +25,8 @@ class CharredWastes(
   override val caves: CaveShape = gCaves,
   override val decorations: List<Decoration> = listOf(MagmaFissureDecoration()),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      if (!context.isSolid) return Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      if (!context.isSolid) return BlockData.NONE
 
 
       // Recompute the same 2D fissure mask the shape uses (world-based, deterministic)
@@ -26,15 +36,16 @@ class CharredWastes(
       // (These are SOLID blocks; later you can add real lava fluid with a decoration pass.)
       if (fissure > 0.55 && context.depthBelowSurface >= 2) {
         // More magma deeper down; more basalt near surface
-        return if (context.depthBelowSurface > 10) Material.MAGMA_BLOCK else Material.BASALT
+        return if (context.depthBelowSurface > 10) BukkitBlockResolver.INSTANCE.resolve(Material.MAGMA_BLOCK)
+        else BukkitBlockResolver.INSTANCE.resolve(Material.BASALT)
       }
 
       // Cracked-looking surface palette
-      if (context.depthBelowSurface <= 0) return Material.BLACKSTONE
-      if (context.depthBelowSurface <= 2) return Material.BASALT
+      if (context.depthBelowSurface <= 0) return BukkitBlockResolver.INSTANCE.resolve(Material.BLACKSTONE)
+      if (context.depthBelowSurface <= 2) return BukkitBlockResolver.INSTANCE.resolve(Material.BASALT)
 
       // Bulk filler
-      return Material.BLACKSTONE
+      return BukkitBlockResolver.INSTANCE.resolve(Material.BASALT)
     }
 
     private fun fissureMask01(wx: Int, wz: Int, surfaceY: Int, y: Int, context: MaterialContext): Double {
@@ -45,13 +56,13 @@ class CharredWastes(
 
       // domain warp so fissures meander
       val warpAmp = 18.0
-      val warpX = ctxRef.noise.charredFissureWarp2D(x, z) * warpAmp
-      val warpZ = ctxRef.noise.charredFissureWarp2D(x + 1000.0, z + 1000.0) * warpAmp
+      val warpX = ctxRef.noise.get(Noise.FissureWarp2D).noise2D(x, z) * warpAmp
+      val warpZ = ctxRef.noise.get(Noise.FissureWarp2D).noise2D(x + 1000.0, z + 1000.0) * warpAmp
       val xw = x + warpX
       val zw = z + warpZ
 
       // ribbon lines: ridge = 1 - abs(noise)
-      val ridge01 = 1.0 - abs(ctxRef.noise.charredFissureMask2D(xw, zw))
+      val ridge01 = 1.0 - abs(ctxRef.noise.get(Noise.FissureMask2D).noise2D(xw, zw))
 
       // threshold -> thin lines
       val threshold01 = 0.83
@@ -84,7 +95,72 @@ class CharredWastes(
   private val fissureDepth: Double = 40.0,       // how far down the slit carves
   private val fissureStrength: Double = 26.0,    // how strongly it punches open
   private val fissureWallSoftness: Double = 1.6  // higher => sharper walls
-) : Biome {
+) : Biome.Noised {
+
+  object Noise : NoiseModule{
+    object FissureWarp2D : NoiseKey{ override val id = "charred.fissure.warp2D" }
+    object FissureMask2D : NoiseKey{ override val id = "charred.fissure.mask2D" }
+    object Base2D : NoiseKey{ override val id = "charred.base2D" }
+    object Ridge2D : NoiseKey{ override val id = "charred.ridge2D" }
+    object CrackWarp2D : NoiseKey{ override val id = "charred.crack.warp2D" }
+    object CrackMask2D : NoiseKey{ override val id = "charred.crack.mask2D" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(Base2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0014) // big rolling, ~700 block wavelength
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+            .fractalGain(0.5)
+            .fractalLacunarity(2.0)
+        }
+      }
+      bank.register(Ridge2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0024)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.Ridged)
+            .fractalOctaves(2)
+            .fractalGain(0.5)
+            .fractalLacunarity(2.0)
+        }
+      }
+      bank.register(CrackWarp2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0028)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+      bank.register(CrackMask2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.018)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+      bank.register(FissureWarp2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0018)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+      bank.register(FissureMask2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0065) // lower = longer, fewer fissures
+            .noiseType(CruxNoise.NoiseType.Perlin)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+    }
+  }
+  override val noiseModule = Noise
 
   override val shape = object : BiomeShape {
     override fun density(
@@ -106,10 +182,10 @@ class CharredWastes(
       val sea = ctx.chunkContext.seaLevel
 
       // ----- 1) High-elevation plateau base -----
-      val roll = ctx.noise.charredBase2D(worldX, worldZ) // [-1..1]
+      val roll = ctx.noise.get(Noise.Base2D).noise2D(worldX, worldZ) // [-1..1]
       val rollY = roll * rollAmp
 
-      val ridgeN = ctx.noise.charredRidge2D(worldX, worldZ) // [-1..1]
+      val ridgeN = ctx.noise.get(Noise.Ridge2D).noise2D(worldX, worldZ) // [-1..1]
       val ridge01 = (1.0 - abs(ridgeN)).pow(3.0)            // [0..1]
       val ridgeY = ridge01 * ridgeAmp
 
@@ -119,12 +195,12 @@ class CharredWastes(
       val x = worldX.toDouble()
       val z = worldZ.toDouble()
 
-      val crackWarpX = ctx.noise.charredCrackWarp2D(x, z) * crackWarpAmp
-      val crackWarpZ = ctx.noise.charredCrackWarp2D(x + 777.0, z + 777.0) * crackWarpAmp
+      val crackWarpX = ctx.noise.get(Noise.CrackWarp2D).noise2D(x, z) * crackWarpAmp
+      val crackWarpZ = ctx.noise.get(Noise.CrackWarp2D).noise2D(x + 777.0, z + 777.0) * crackWarpAmp
       val xw = x + crackWarpX
       val zw = z + crackWarpZ
 
-      val crackRidge01 = 1.0 - abs(ctx.noise.charredCrackMask2D(xw, zw))
+      val crackRidge01 = 1.0 - abs(ctx.noise.get(Noise.CrackMask2D).noise2D(xw, zw))
       val ct = ((crackRidge01 - crackThreshold01) / (1.0 - crackThreshold01)).coerceIn(0.0, 1.0)
       val crackLine = smoothstep01(ct) // 0..1 near crack center
 
@@ -142,7 +218,7 @@ class CharredWastes(
       // Base density is simple surface field
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = fissureCarve
@@ -156,13 +232,13 @@ class CharredWastes(
 
     // domain warp so fissures meander
     val warpAmp = 18.0
-    val warpX = ctx.noise.charredFissureWarp2D(x, z) * warpAmp
-    val warpZ = ctx.noise.charredFissureWarp2D(x + 1000.0, z + 1000.0) * warpAmp
+    val warpX = ctx.noise.get(Noise.FissureWarp2D).noise2D(x, z) * warpAmp
+    val warpZ = ctx.noise.get(Noise.FissureWarp2D).noise2D(x + 1000.0, z + 1000.0) * warpAmp
     val xw = x + warpX
     val zw = z + warpZ
 
     // ribbon lines: ridge = 1 - abs(noise)
-    val ridge01 = 1.0 - abs(ctx.noise.charredFissureMask2D(xw, zw))
+    val ridge01 = 1.0 - abs(ctx.noise.get(Noise.FissureMask2D).noise2D(xw, zw))
 
     val t = ((ridge01 - fissureThreshold01) / (1.0 - fissureThreshold01)).coerceIn(0.0, 1.0)
     val line = smoothstep01(t) // 0..1 around slit

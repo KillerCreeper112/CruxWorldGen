@@ -9,7 +9,6 @@ import killercreepr.cruxworldgen.api.structure.StructureTemplate
 import killercreepr.cruxworldgen.api.structure.Terraformer
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.api.util.HashUtil.hashSigned01
-import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.sqrt
 

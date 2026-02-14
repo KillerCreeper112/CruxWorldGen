@@ -1,10 +1,16 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.test6.density.DensityStack
-import killercreepr.cruxworldgen.test6.material.MaterialContext
-import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.pow
 
@@ -12,8 +18,9 @@ class PlagueMireHighlands(
   override val caves: CaveShape = gCaves,
   override val decorations: List<Decoration> = listOf(),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.MUD else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.MUD)
+      else BlockData.NONE
     }
   },
 
@@ -81,7 +88,7 @@ class PlagueMireHighlands(
       val carve = overhangCarve(ctx, worldX, y, worldZ, surface)
 
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = carve
@@ -94,7 +101,7 @@ class PlagueMireHighlands(
     val wz = z.toDouble()
 
     // broad base
-    val baseN = ctx.noise.mireHighlandsBase2D.noise(wx, wz) // [-1,1]
+    val baseN = 1.0//todo ctx.noise.mireHighlandsBase2D.noise(wx, wz) // [-1,1]
     val baseSurface = sea + baseAboveSea + baseN * baseAmp
 
     // mountain uplift
@@ -102,7 +109,7 @@ class PlagueMireHighlands(
     val uplift = uplift01 * mountainAmp
 
     // ridges (thin lines)
-    val ridgeN = ctx.noise.mireHighlandsRidge2D.noise(wx, wz) // [-1,1]
+    val ridgeN = 1.0//todo ctx.noise.mireHighlandsRidge2D.noise(wx, wz) // [-1,1]
     val ridge01 = (1.0 - kotlin.math.abs(ridgeN)).coerceIn(0.0, 1.0)
     val ridge = ridge01.pow(ridgePower) * ridgeAmp
 
@@ -111,25 +118,25 @@ class PlagueMireHighlands(
 
   private fun computeBubblyOffset(ctx: GenerateContext, x: Int, z: Int): Double {
     // Patch clusters
-    val patch01 = (ctx.noise.mireBubblePatch2D.noise(x.toDouble(), z.toDouble()) + 1.0) * 0.5
+    val patch01 = 1.0//todo (ctx.noise.mireBubblePatch2D.noise(x.toDouble(), z.toDouble()) + 1.0) * 0.5
     val patchT = ((patch01 - patchThreshold01) / (1.0 - patchThreshold01)).coerceIn(0.0, 1.0)
     val patchMask = smoothstep01(patchT).pow(patchFadePower)
 
     // Domain warp
     val wx = x.toDouble()
     val wz = z.toDouble()
-    val w1 = ctx.noise.mireBubbleWarp2D.noise(wx, wz) * warpAmpBlocks
-    val w2 = ctx.noise.mireBubbleWarp2D.noise(wx + 1000.0, wz + 1000.0) * warpAmpBlocks
+    val w1 = 1.0//todo ctx.noise.mireBubbleWarp2D.noise(wx, wz) * warpAmpBlocks
+    val w2 = 1.0//todo ctx.noise.mireBubbleWarp2D.noise(wx + 1000.0, wz + 1000.0) * warpAmpBlocks
     val xw = wx + w1
     val zw = wz + w2
 
     // Ridged “cells”
-    val n = ctx.noise.mireBubbleCells2D.noise(xw, zw)
+    val n = 1.0//todo ctx.noise.mireBubbleCells2D.noise(xw, zw)
     val ridge01 = (1.0 - kotlin.math.abs(n)).coerceIn(0.0, 1.0)
     val shape = ridge01.pow(bubbleSharpness)
 
     // pits vs bumps
-    val sign01 = (ctx.noise.mireBubbleSign2D.noise(xw, zw) + 1.0) * 0.5
+    val sign01 = 1.0//todo (ctx.noise.mireBubbleSign2D.noise(xw, zw) + 1.0) * 0.5
     val isPit = sign01 < pitBias
 
     val bumpScale = 0.65
@@ -161,7 +168,7 @@ class PlagueMireHighlands(
     if (band <= 0.001) return 0.0
 
     // Noise mask (3D is important so it varies with Y; 2D tends to make “sausages”)
-    val n01 = (ctx.noise.mireOverhang3D.noise(x.toDouble(), y.toDouble(), z.toDouble()) + 1.0) * 0.5
+    val n01 = 1.0//todo (ctx.noise.mireOverhang3D.noise(x.toDouble(), y.toDouble(), z.toDouble()) + 1.0) * 0.5
     val t = ((n01 - 0.55) / (1.0 - 0.55)).coerceIn(0.0, 1.0)
     val m = smoothstep01(t)
     if (m <= 0.001) return 0.0

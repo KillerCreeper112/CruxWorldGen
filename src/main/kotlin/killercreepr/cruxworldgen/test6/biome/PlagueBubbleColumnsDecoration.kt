@@ -1,11 +1,12 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.ChunkContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
-import killercreepr.cruxworldgen.test6.prop.PropPoint
-import org.bukkit.Material
+import killercreepr.cruxworldgen.api.decor.PropPoint
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import kotlin.math.max
 
 class PlagueBubbleColumnsDecoration(
@@ -30,7 +31,7 @@ class PlagueBubbleColumnsDecoration(
   private val SALT: Long = 0x1F2E3D4C5B6A798L
 
   override fun shouldTry(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
-    val patch01 = (ctx.noise.mireBubblePatch2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5
+    val patch01 = 1.0//todo (ctx.noise.mireBubblePatch2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5
     if (patch01 < patchThreshold01) return false
 
     val r01 = hash01(point.seed xor SALT)
@@ -53,7 +54,7 @@ class PlagueBubbleColumnsDecoration(
     //if (waterDepth < minWaterDepth) return null
 
     // Height varies by noise (stable, world-based)
-    val var01 = (ctx.noise.mireBubbleVar2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5
+    val var01 = 1.0//todo (ctx.noise.mireBubbleVar2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5
     var height = lerpInt(minHeight, maxHeight, var01)
 
     // must fit inside the available water depth (leave top as water ok either way)
@@ -68,7 +69,7 @@ class PlagueBubbleColumnsDecoration(
 
     // Base for upward bubbles
     if (p.floorY in chunk.minHeight until chunk.maxHeight) {
-      chunk.setBlock(p.x, p.floorY, p.z, Material.SOUL_SAND)
+      //todo chunk.setBlock(p.x, p.floorY, p.z, Material.SOUL_SAND)
     }
 
     // Column
@@ -78,15 +79,15 @@ class PlagueBubbleColumnsDecoration(
 
       // Only write into water (prevents punching holes into terrain)
       val current = chunk.getBlock(p.x, y, p.z)
-      if (current == Material.WATER || current == Material.BUBBLE_COLUMN) {
+      /* todo if (current == Material.WATER || current == Material.BUBBLE_COLUMN) {
         chunk.setBlock(p.x, y, p.z, Material.BUBBLE_COLUMN)
       } else {
         break
-      }
+      }*/
     }
   }
 
-  private fun findWaterFloorY(chunk: killercreepr.cruxworldgen.test6.context.ChunkContext, x: Int, z: Int): Int? {
+  private fun findWaterFloorY(chunk: ChunkContext, x: Int, z: Int): Int? {
     val minY = chunk.minHeight
     val maxY = chunk.maxHeight - 1
     // Start near sea level and search downward
@@ -94,15 +95,14 @@ class PlagueBubbleColumnsDecoration(
 
     for (y in start downTo (minY + 1)) {
       if (chunk.isSolid(x, y, z)) {
-        val above = chunk.getBlock(x, y + 1, z)
-        if (above.isAir) return y
+        //todo if(chunk.isEmpty(x, y + 1, z)) return y
       }
     }
     return null
   }
 
   private fun countWaterAbove(
-    chunk: killercreepr.cruxworldgen.test6.context.ChunkContext,
+    chunk: ChunkContext,
     x: Int,
     floorY: Int,
     z: Int,

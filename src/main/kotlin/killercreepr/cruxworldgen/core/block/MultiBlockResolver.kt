@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.core.block
 
-import killercreepr.crux.api.codec.node.DataArray
 import killercreepr.crux.api.codec.node.DataNode
 import killercreepr.crux.core.codec.node.StringDataNode
 import killercreepr.cruxworldgen.api.block.BlockData

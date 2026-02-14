@@ -1,8 +1,8 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.cave.CaveType
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.CaveContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow
@@ -126,7 +126,7 @@ class PillarAdditiveOld(
     if (carved < 1.0) return 0.0
 
     // A simple "column mask" noise (you can implement pillarNoise2D/3D in NoiseBank)
-    val n = ctx.noise.pillar2D(c.worldX, c.worldZ) // [-1..1]
+    val n = 1.0//todo ctx.noise.pillar2D(c.worldX, c.worldZ) // [-1..1]
     val n01 = (n + 1.0) * 0.5
 
     val effectiveThreshold = (0.90 - pillarFreq * 0.35).coerceIn(0.45, 0.90)
@@ -140,7 +140,7 @@ class PillarAdditiveOld(
     // We want bulge at top/bottom and pinch in middle.
     // Use another low-freq noise to pick a "pillar core height" relative to surface.
     //val pillarCenterY = c.surfaceY - (12 + ((ctx.noise.pillarHeight2D(c.worldX, c.worldZ) + 1.0) * 0.5 * 30.0)).toInt()
-    val pillarCenterY = c.surfaceY - (35 + ((ctx.noise.pillarHeight2D(c.worldX, c.worldZ) + 1.0) * 0.5 * 30.0)).toInt()
+    val pillarCenterY = 1.0 //todo c.surfaceY - (35 + ((ctx.noise.pillarHeight2D(c.worldX, c.worldZ) + 1.0) * 0.5 * 30.0)).toInt()
 // depth ~35..65 below surface (much closer to cheese at 45)
 
 
@@ -189,20 +189,20 @@ class RavineCarver(
     // --- 1) Domain warp so ravines meander ---
     val wx = c.worldX.toDouble()
     val wz = c.worldZ.toDouble()
-    val warpX = ctx.noise.ravineWarp2D(wx, wz) * warpAmp
-    val warpZ = ctx.noise.ravineWarp2D(wx + 1000.0, wz + 1000.0) * warpAmp
+    val warpX = 1.0//todo ctx.noise.ravineWarp2D(wx, wz) * warpAmp
+    val warpZ = 1.0//todo ctx.noise.ravineWarp2D(wx + 1000.0, wz + 1000.0) * warpAmp
     val xw = wx + warpX
     val zw = wz + warpZ
 
     // --- 2) Make "ribbons": ridge = 1 - abs(noise) gives long stripe-like bands ---
-    val n = ctx.noise.ravineMask2D(xw, zw) // [-1,1]
+    val n = 1.0//todo ctx.noise.ravineMask2D(xw, zw) // [-1,1]
     val ridge01 = 1.0 - abs(n)             // [0,1], high near the ridge centerline
 
     val t = ((ridge01 - threshold01) / (1.0 - threshold01)).coerceIn(0.0, 1.0)
     if (t <= 0.0) return 0.0
 
     // --- 3) Width & depth vary along the ribbon ---
-    val v01 = (ctx.noise.ravineVar2D(xw, zw) + 1.0) * 0.5
+    val v01 = 1.0//todo (ctx.noise.ravineVar2D(xw, zw) + 1.0) * 0.5
     val halfWidth = (baseHalfWidth + widthVar * v01).coerceAtLeast(2.0)
     val depth = (baseDepth + depthVar * v01).coerceAtLeast(8.0)
 
@@ -225,7 +225,7 @@ class RavineCarver(
     val mask = widthMask * verticalMask
     if (mask <= 0.001) return 0.0
 
-    val bridge01 = (ctx.noise.ravineBridge2D(xw, zw) + 1.0) * 0.5
+    val bridge01 = 1.0//todo (ctx.noise.ravineBridge2D(xw, zw) + 1.0) * 0.5
     if (bridge01 > bridgeThreshold01) {
       // pick a bridge height inside the ravine (biased toward upper half)
       val t01 = ((bridge01 - bridgeThreshold01) / (1.0 - bridgeThreshold01)).coerceIn(0.0, 1.0)
@@ -363,7 +363,7 @@ class SpaghettiCaves(
     if (cave.depthBelowSurface <= 0) return 0.0
 
     // ---------- Pick a center Y for the spaghetti layer ----------
-    val heightNoise = ctx.noise.spaghettiHeight2D(cave.worldX, cave.worldZ) // [-1..1]
+    val heightNoise = 1.0//todo ctx.noise.spaghettiHeight2D(cave.worldX, cave.worldZ) // [-1..1]
     val targetDepth = baseDepthBelowSurface + heightNoise * depthVariationBlocks
     val centerY = cave.surfaceY - targetDepth
 
@@ -375,12 +375,12 @@ class SpaghettiCaves(
 
     // ---------- Build a noodle network in XZ ----------
     // Warp in XZ only (stable with Y)
-    val warp = ctx.noise.caveWarp3D(cave.worldX, 0, cave.worldZ) // using y=0 intentionally
+    val warp = 1.0//todo ctx.noise.caveWarp3D(cave.worldX, 0, cave.worldZ) // using y=0 intentionally
     val wx = (cave.worldX + warp * warpBlocks).toInt()
     val wz = (cave.worldZ + warp * warpBlocks).toInt()
 
     // Worm noise sampled with constant y -> gives an XZ noodle network
-    val worm = ctx.noise.caveWorm3D(wx, 0, wz) // using y=0 intentionally
+    val worm = 1.0//todo ctx.noise.caveWorm3D(wx, 0, wz) // using y=0 intentionally
     val axisDist = kotlin.math.abs(worm)
 
     val nT = ((noodleRadius - axisDist) / noodleRadius).coerceIn(0.0, 1.0)
@@ -420,7 +420,7 @@ class WideThinVerticalCaves(
     val solidDensity = maxOf(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
 
-    val warp = ctx.noise.caveWarp3D(cave.worldX, 0, cave.worldZ)
+    val warp =1.0//todo  ctx.noise.caveWarp3D(cave.worldX, 0, cave.worldZ)
     val wx = (cave.worldX + warp * 20.0).toInt()
     val wz = (cave.worldZ + warp * 20.0).toInt()
 
@@ -460,7 +460,7 @@ class CheeseCaves(
     val verticalMask = smoothstep01(bandT)
     if (verticalMask <= 0.001) return 0.0
 
-    val n01 = (ctx.noise.cheese3D(cave.worldX, cave.y, cave.worldZ) + 1.0) * 0.5
+    val n01 = 1.0//todo (ctx.noise.cheese3D(cave.worldX, cave.y, cave.worldZ) + 1.0) * 0.5
     val t = ((n01 - threshold01) / (1.0 - threshold01)).coerceIn(0.0, 1.0)
     val blobMask = smoothstep01(t)
     if (blobMask < 0.35) return 0.0  // stops tiny freckles
@@ -485,7 +485,7 @@ class CavernRooms(
     if (solidDensity <= 0.0) return 0.0
     if (cave.depthBelowSurface < minDepthBlocks) return 0.0
 
-    val n01 = (ctx.noise.cavern3D(cave.worldX, cave.y, cave.worldZ) + 1.0) * 0.5
+    val n01 = 1.0//todo (ctx.noise.cavern3D(cave.worldX, cave.y, cave.worldZ) + 1.0) * 0.5
     val t = ((n01 - threshold01) / (1.0 - threshold01)).coerceIn(0.0, 1.0)
     val mask = t * t // sharper/rarer than smoothstep
     if (mask < 0.25) return 0.0
@@ -512,7 +512,7 @@ class LavaTubes(
     if (cave.depthBelowSurface <= 0) return 0.0
 
     // centerline depth slowly varies across XZ
-    val hNoise = ctx.noise.spaghettiHeight2D(cave.worldX, cave.worldZ) // [-1..1]
+    val hNoise = 1.0//todo ctx.noise.spaghettiHeight2D(cave.worldX, cave.worldZ) // [-1..1]
     val centerY = cave.surfaceY - (baseDepthBelowSurface + hNoise * depthVariationBlocks)
 
     val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
@@ -520,11 +520,11 @@ class LavaTubes(
     val verticalMask = smoothstep01(vT)
     if (verticalMask <= 0.001) return 0.0
 
-    val warp = ctx.noise.caveWarp3D(cave.worldX, 0, cave.worldZ)
+    val warp = 1.0//todo ctx.noise.caveWarp3D(cave.worldX, 0, cave.worldZ)
     val wx = (cave.worldX + warp * warpBlocks).toInt()
     val wz = (cave.worldZ + warp * warpBlocks).toInt()
 
-    val worm = ctx.noise.caveWorm3D(wx, 0, wz)
+    val worm = 1.0//todo ctx.noise.caveWorm3D(wx, 0, wz)
     val axisDist = kotlin.math.abs(worm)
 
     val t = ((noodleRadius - axisDist) / noodleRadius).coerceIn(0.0, 1.0)

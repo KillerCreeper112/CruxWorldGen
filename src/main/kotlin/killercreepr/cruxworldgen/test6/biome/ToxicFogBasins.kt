@@ -1,10 +1,16 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.test6.density.DensityStack
-import killercreepr.cruxworldgen.test6.material.MaterialContext
-import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.pow
 
@@ -12,8 +18,9 @@ class ToxicFogBasins(
   override val caves: CaveShape = gCaves,
   override val decorations: List<Decoration> = listOf(),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.MUD else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.DARK_PRISMARINE)
+      else BlockData.NONE
     }
   },
 
@@ -51,7 +58,7 @@ class ToxicFogBasins(
       val surfaceY = baseSurfaceY + offset
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack(base = baseDensity, add = 0.0, carve = 0.0)
+      return DensityStack.densityStack(base = baseDensity, add = 0.0, carve = 0.0)
     }
   }
 
@@ -60,13 +67,13 @@ class ToxicFogBasins(
     val wz = z.toDouble()
 
     // --- 1) Domain warp (continuous) ---
-    val warpX = ctx.noise.basinWarp2D.noise(wx, wz) * warpAmpBlocks
-    val warpZ = ctx.noise.basinWarp2D.noise(wx + 1000.0, wz + 1000.0) * warpAmpBlocks
+    val warpX = 1.0//todo ctx.noise.basinWarp2D.noise(wx, wz) * warpAmpBlocks
+    val warpZ = 1.0//todo ctx.noise.basinWarp2D.noise(wx + 1000.0, wz + 1000.0) * warpAmpBlocks
     val xw = wx + warpX
     val zw = wz + warpZ
 
     // --- 2) Basin patch field (0..1) ---
-    val n01 = (ctx.noise.basinMask2D.noise(xw, zw) + 1.0) * 0.5
+    val n01 = 1.0//todo (ctx.noise.basinMask2D.noise(xw, zw) + 1.0) * 0.5
 
     // We want basins where n01 is LOW.
     // strength01: 0 outside basins, 1 at deepest basin centers.
@@ -88,7 +95,7 @@ class ToxicFogBasins(
     offset += rimHeightBlocks * rim * (basinStrength.coerceIn(0.0, 1.0))
 
     // --- 5) Floor imperfections (mostly in the interior) ---
-    val floorN = ctx.noise.basinFloor2D.noise(wx, wz) // [-1..1]
+    val floorN = 1.0//todo ctx.noise.basinFloor2D.noise(wx, wz) // [-1..1]
     offset += floorN * floorAmpBlocks * basinStrength
 
     return offset

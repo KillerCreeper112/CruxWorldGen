@@ -1,10 +1,16 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.test6.density.DensityStack
-import killercreepr.cruxworldgen.test6.material.MaterialContext
-import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.pow
 
@@ -12,8 +18,9 @@ class OverhangMountains(
   override val caves: CaveShape = gCaves,
   override val decorations: List<Decoration> = listOf(),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.STONE else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.STONE )
+      else BlockData.NONE
     }
   },
 
@@ -56,10 +63,10 @@ class OverhangMountains(
       // -------------------------
       // 1) Base mountains (heightmap)
       // -------------------------
-      val baseN = ctx.noise.mountainBaseHeight2D(worldX, worldZ) // [-1..1]
+      val baseN = 1.0//todo ctx.noise.mountainBaseHeight2D(worldX, worldZ) // [-1..1]
       val baseSurface = sea + baseHeight + baseN * baseAmp
 
-      val ridgeN = ctx.noise.mountainRidge2D(worldX, worldZ)     // [-1..1]
+      val ridgeN = 1.0//todo ctx.noise.mountainRidge2D(worldX, worldZ)     // [-1..1]
       val ridge01 = (1.0 - kotlin.math.abs(ridgeN)).coerceIn(0.0, 1.0)
       val ridgeHeight = ridge01 * ridge01 * ridge01 * ridgeAmp
 
@@ -73,22 +80,22 @@ class OverhangMountains(
       val wz = worldZ.toDouble()
 
       // Domain warp so shelves meander
-      val warpX = ctx.noise.ravineWarp2D(wx, wz) * shelfWarpAmp
-      val warpZ = ctx.noise.ravineWarp2D(wx + 1000.0, wz + 1000.0) * shelfWarpAmp
+      val warpX = 1.0//todo ctx.noise.ravineWarp2D(wx, wz) * shelfWarpAmp
+      val warpZ = 1.0//todo ctx.noise.ravineWarp2D(wx + 1000.0, wz + 1000.0) * shelfWarpAmp
       val xw = wx + warpX
       val zw = wz + warpZ
 
       // Band mask: long ribbons where shelves can exist
-      val bandN = ctx.noise.ravineMask2D(xw, zw) // [-1..1]
+      val bandN = 1.0//todo ctx.noise.ravineMask2D(xw, zw) // [-1..1]
       val band01 = (1.0 - kotlin.math.abs(bandN)).coerceIn(0.0, 1.0)
       val tBand = ((band01 - shelfThreshold01) / (1.0 - shelfThreshold01)).coerceIn(0.0, 1.0)
       val bandMask = smoothstep01(tBand)
       if (bandMask <= 0.0001) {
-        return DensityStack(base = baseDensity, add = 0.0, carve = 0.0)
+        return DensityStack.densityStack(base = baseDensity, add = 0.0, carve = 0.0)
       }
 
       // Vary shelf height/thickness along the band
-      val v01 = ((ctx.noise.ravineVar2D(xw, zw) + 1.0) * 0.5).coerceIn(0.0, 1.0)
+      val v01 = 1.0//todo ((ctx.noise.ravineVar2D(xw, zw) + 1.0) * 0.5).coerceIn(0.0, 1.0)
       val shelfCenterY = sea + shelfBaseYAboveSea + shelfYRange * v01
       val halfThick = lerp(shelfHalfThicknessMin, shelfHalfThicknessMax, v01)
 
@@ -96,7 +103,7 @@ class OverhangMountains(
       val vertical = halfThick - kotlin.math.abs(y.toDouble() - shelfCenterY)
 
       // Blob breakup (use lowish freq if possible; detail3D can work if not too noisy)
-      val blob01 = ((ctx.noise.terrainDetailNoise01(worldX, y, worldZ) + 1.0) * 0.5).coerceIn(0.0, 1.0)
+      val blob01 = 1.0//todo ((ctx.noise.terrainDetailNoise01(worldX, y, worldZ) + 1.0) * 0.5).coerceIn(0.0, 1.0)
       val tBlob = ((blob01 - blobThreshold01) / (1.0 - blobThreshold01)).coerceIn(0.0, 1.0)
       val blobMask = smoothstep01(tBlob).pow(1.4) * blobStrength
 
@@ -129,7 +136,7 @@ class OverhangMountains(
         }
       }
 
-      return DensityStack(base = union, add = 0.0, carve = carve)
+      return DensityStack.densityStack(base = union, add = 0.0, carve = carve)
     }
   }
 

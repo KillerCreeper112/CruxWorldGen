@@ -1,10 +1,16 @@
 package killercreepr.cruxworldgen.test6.biome
 
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.cave.CaveShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.test6.density.DensityStack
-import killercreepr.cruxworldgen.test6.material.MaterialContext
-import killercreepr.cruxworldgen.test6.material.MaterialProvider
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.pow
 
@@ -16,8 +22,9 @@ class PlagueMire(
     // PlagueBubbleColumnsDecoration()
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.MUD else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.BRICK)
+      else BlockData.NONE
     }
   },
 
@@ -51,32 +58,32 @@ class PlagueMire(
       val sea = ctx.chunkContext.seaLevel.toDouble()
 
       // --- 1) broad base ---
-      val baseN = ctx.noise.mireBase2D.noise(worldX.toDouble(), worldZ.toDouble()) // [-1,1]
+      val baseN = 1.0//todo ctx.noise.mireBase2D.noise(worldX.toDouble(), worldZ.toDouble()) // [-1,1]
       var surface = sea + baseAboveSea + baseN * baseAmp
 
       // --- 2) patch mask (clusters of bubbly terrain) ---
-      val patch01 = (ctx.noise.mireBubblePatch2D.noise(worldX.toDouble(), worldZ.toDouble()) + 1.0) * 0.5
+      val patch01 = 1.0//todo (ctx.noise.mireBubblePatch2D.noise(worldX.toDouble(), worldZ.toDouble()) + 1.0) * 0.5
       val patchT = ((patch01 - patchThreshold01) / (1.0 - patchThreshold01)).coerceIn(0.0, 1.0)
       val patchMask = smoothstep01(patchT).pow(patchFadePower)
 
       // --- 3) domain warp (makes it more organic / less grid-like) ---
       val wx = worldX.toDouble()
       val wz = worldZ.toDouble()
-      val w1 = ctx.noise.mireBubbleWarp2D.noise(wx, wz) * warpAmpBlocks
-      val w2 = ctx.noise.mireBubbleWarp2D.noise(wx + 1000.0, wz + 1000.0) * warpAmpBlocks
+      val w1 = 1.0//todo ctx.noise.mireBubbleWarp2D.noise(wx, wz) * warpAmpBlocks
+      val w2 = 1.0//todo ctx.noise.mireBubbleWarp2D.noise(wx + 1000.0, wz + 1000.0) * warpAmpBlocks
       val xw = wx + w1
       val zw = wz + w2
 
       // --- 4) "bubble cells" from ridged noise ---
       // n in [-1,1] => ridge01 in [0,1] (1 near center of features)
-      val n = ctx.noise.mireBubbleCells2D.noise(xw, zw)
+      val n = 1.0//todo ctx.noise.mireBubbleCells2D.noise(xw, zw)
       val ridge01 = (1.0 - kotlin.math.abs(n)).coerceIn(0.0, 1.0)
 
       // Sharpen => rounder domes/pits
       val bubbleShape = ridge01.pow(bubbleSharpness)
 
       // Decide bump vs pit
-      val sign01 = (ctx.noise.mireBubbleSign2D.noise(xw, zw) + 1.0) * 0.5
+      val sign01 = 1.0//todo (ctx.noise.mireBubbleSign2D.noise(xw, zw) + 1.0) * 0.5
       val isPit = sign01 < pitBias
 
       // Bumps should be slightly smaller than pits (usually looks more “mire”)
@@ -109,7 +116,7 @@ class PlagueMire(
       surface = surface.coerceIn(minY, maxY)
 
       val baseDensity = surface - y.toDouble()
-      return DensityStack(base = baseDensity, add = 0.0, carve = 0.0)
+      return DensityStack.densityStack(base = baseDensity, add = 0.0, carve = 0.0)
     }
   }
 

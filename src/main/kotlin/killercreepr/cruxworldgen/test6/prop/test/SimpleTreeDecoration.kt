@@ -1,12 +1,15 @@
 package killercreepr.cruxworldgen.test6.prop.test
 
 import killercreepr.cruxgeneration.util.CruxNoise
-import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.context.ChunkContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
-import killercreepr.cruxworldgen.test6.prop.PropPoint
+import killercreepr.cruxworldgen.api.decor.PropPoint
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
 
@@ -88,23 +91,23 @@ class SimpleTreeDecoration(
     for (dy in 0 until p.height) {
       val y = p.baseY + dy
       if (y < chunk.minHeight || y >= chunk.maxHeight) break
-      if (chunk.isAir(p.localX, y, p.localZ)) {
-        chunk.setBlock(p.localX, y, p.localZ, Material.OAK_LOG)
+      if (chunk.isEmpty(p.localX, y, p.localZ)) {
+        chunk.setBlock(p.localX, y, p.localZ, BukkitBlockResolver.INSTANCE.resolve(Material.OAK_LOG))
       }
     }
 
     // Canopy around the top
     val topY = (p.baseY + p.height - 1).coerceAtMost(chunk.maxHeight - 1)
-    placeCanopyBlob(chunk, p.localX, topY, p.localZ, p.canopyRadius, Material.OAK_LEAVES)
+    placeCanopyBlob(chunk, p.localX, topY, p.localZ, p.canopyRadius, BukkitBlockResolver.INSTANCE.resolve(Material.OAK_LEAVES))
   }
 
   private fun placeCanopyBlob(
-    chunk: killercreepr.cruxworldgen.test6.context.ChunkContext,
+    chunk: ChunkContext,
     cx: Int,
     topY: Int,
     cz: Int,
     radius: Int,
-    leaves: Material
+    leaves: BlockData
   ) {
     // 3-layer blob: (topY-2..topY)
     for (dy in -2..0) {
@@ -121,12 +124,12 @@ class SimpleTreeDecoration(
         for (dz in -r..r) {
           val x = cx + dx
           val z = cz + dz
-          if (x !in 0..15 || z !in 0..15) continue
+          if (x !in 0..15 || z !in 0..15) continue//todo hard coded chunk borders
 
           val manhattan = abs(dx) + abs(dz)
           if (manhattan > r + 1) continue // soft corners
 
-          if (chunk.isAir(x, y, z)) {
+          if (chunk.isEmpty(x, y, z)) {
             chunk.setBlock(x, y, z, leaves)
           }
         }

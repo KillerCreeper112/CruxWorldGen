@@ -2,7 +2,7 @@ package killercreepr.cruxworldgen.api.context
 
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.util.Curve
-import java.util.Random
+import java.util.*
 
 interface GenerateContext{
   val worldContext : WorldContext

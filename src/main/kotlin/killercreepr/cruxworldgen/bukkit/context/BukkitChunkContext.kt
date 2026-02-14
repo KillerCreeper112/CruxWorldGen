@@ -24,8 +24,8 @@ class BukkitChunkContext(
   }
 
   override fun getBlock(x: Int, y: Int, z: Int): BlockSection {
-    val data = chunkData.getBlockData(x, y, z)
-    //todo
+    //todo val data = chunkData.getBlockData(x, y, z)
+    return null!!
   }
 
   override fun isEmpty(x: Int, y: Int, z: Int): Boolean = chunkData.getType(x, y, z).isAir

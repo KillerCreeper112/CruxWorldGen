@@ -1,14 +1,9 @@
 package killercreepr.cruxworldgen.test
 
-import killercreepr.cruxworldgen.api.structure.RelBlock
-import killercreepr.cruxworldgen.api.structure.StructureFeature
-import killercreepr.cruxworldgen.api.structure.StructurePlacementRule
-import killercreepr.cruxworldgen.api.structure.StructureTemplate
-import killercreepr.cruxworldgen.api.structure.Terraformer
+import killercreepr.cruxworldgen.api.structure.*
 import killercreepr.cruxworldgen.api.structure.standard.BlockListTemplate
 import killercreepr.cruxworldgen.core.structure.CellPlacementRule
 import killercreepr.cruxworldgen.core.structure.NaturalPadTerraformer
-import org.bukkit.Material
 
 class TinyHutFeature : StructureFeature {
   val id: String = "tiny_hut"

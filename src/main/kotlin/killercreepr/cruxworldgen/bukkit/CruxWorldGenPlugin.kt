@@ -6,12 +6,13 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
 import killercreepr.crux.core.util.CruxMath
 import killercreepr.crux.core.util.CruxWorldUtil
-import killercreepr.cruxworldgen.api.prop.PropPointGrid
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.bukkit.generation.BukkitGenerationChunkGenerator
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
 import killercreepr.cruxworldgen.core.decor.SimpleDecorationPipeline
 import killercreepr.cruxworldgen.core.decor.SimplePropPointGrid
 import killercreepr.cruxworldgen.core.generation.SimpleGenerationPipeline
+import killercreepr.cruxworldgen.core.noise.BaseNoiseModule
 import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
@@ -51,6 +52,14 @@ class CruxWorldGenPlugin : CruxPlugin() {
 
                   val seed = CruxMath.random().nextLong()
                   val noise = SimpleNoiseBank(seed)
+
+                  BaseNoiseModule.install(noise)
+
+                  zones.zones.forEach { zone ->
+                    zone.biomes.biomes.forEach { biome ->
+                      (biome as? Biome.Noised)?.noiseModule?.install(noise)
+                    }
+                  }
 
                   val worldDetails = WorldDetails(
                     64,

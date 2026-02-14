@@ -1,6 +1,6 @@
 package killercreepr.cruxworldgen.test6.pillar
 
-import killercreepr.cruxworldgen.test6.biome.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 
 data class PillarContext(
   val worldX: Int,

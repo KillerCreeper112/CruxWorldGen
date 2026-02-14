@@ -1,214 +1,24 @@
 package killercreepr.cruxworldgen.test6.prop
 
+import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.cave.CavePocket
-import killercreepr.cruxworldgen.api.util.HashUtil
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_1
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_2
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MUL_X
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_SALT
-import killercreepr.cruxworldgen.api.util.HashUtil.hash01
-import killercreepr.cruxworldgen.test6.biome.BiomeBlendSample
-import killercreepr.cruxworldgen.test6.context.ChunkContext
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.ChunkContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
+import killercreepr.cruxworldgen.api.decor.PropPoint
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.api.util.HashUtil.HASH_SALT
+import killercreepr.cruxworldgen.api.util.HashUtil.hash01
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.core.cave.SimpleCavePocket
 import org.bukkit.Material
 import kotlin.math.pow
-import kotlin.math.sqrt
 
 
 data class FloorHit(val y: Int)
 data class CeilingHit(val y: Int)
-
-class TerrainQueries(
-  private val ctx: GenerateContext
-) {
-  private val chunk: ChunkContext get() = ctx.chunkContext
-
-  /** Finds the topmost solid block in this (localX, localZ) column with air above it. */
-  fun surfaceY(localX: Int, localZ: Int): Int {
-    val minY = chunk.minHeight
-    val maxY = chunk.maxHeight - 1
-
-    for (y in (maxY - 1) downTo (minY + 1)) {
-      if (chunk.isSolid(localX, y, localZ) && chunk.isAir(localX, y + 1, localZ)) {
-        return y
-      }
-    }
-    return minY
-  }
-
-  /** True surface for trees/etc: topmost solid block that has an open air column to the top of the world. */
-  fun skySurfaceY(localX: Int, localZ: Int, maxAirCheck: Int = 128): Int {
-    val minY = chunk.minHeight
-    val topY = chunk.maxHeight - 1
-
-    for (y in (topY - 1) downTo (minY + 1)) {
-      if (!chunk.isSolid(localX, y, localZ)) continue
-      if (!chunk.isAir(localX, y + 1, localZ)) continue
-
-      // ensure "sky exposure": above must remain air (up to some limit)
-      var air = 0
-      var yy = y + 1
-      while (yy <= topY && air < maxAirCheck) {
-        if (!chunk.isAir(localX, yy, localZ)) {
-          air = -999 // blocked
-          break
-        }
-        air++
-        yy++
-      }
-
-      if (air >= 0) return y
-    }
-    return minY
-  }
-
-
-
-  /** Convenience: world coords -> local coords inside THIS chunk; returns null if not in chunk. */
-  fun surfaceYWorld(worldX: Int, worldZ: Int): Int? {
-    val chunkWorldX = ctx.chunkX * 16
-    val chunkWorldZ = ctx.chunkZ * 16
-    val localX = worldX - chunkWorldX
-    val localZ = worldZ - chunkWorldZ
-    if (localX !in 0..15 || localZ !in 0..15) return null
-    return surfaceY(localX, localZ)
-  }
-
-  fun depthBelowSurface(y: Int, surfaceY: Int): Int = surfaceY - y
-
-  /** Counts air blocks straight up (stops at first solid or maxY). */
-  fun airBlocksAbove(localX: Int, y: Int, localZ: Int, maxCount: Int = 255): Int {
-    val maxY = chunk.maxHeight - 1
-    var count = 0
-    var yy = y + 1
-    while (yy <= maxY && count < maxCount) {
-      if (!chunk.isAir(localX, yy, localZ)) break
-      count++
-      yy++
-    }
-    return count
-  }
-
-  /** Counts air blocks straight down (stops at first solid or minY). */
-  fun airBlocksBelow(localX: Int, y: Int, localZ: Int, maxCount: Int = 255): Int {
-    val minY = chunk.minHeight
-    var count = 0
-    var yy = y - 1
-    while (yy >= minY && count < maxCount) {
-      if (!chunk.isAir(localX, yy, localZ)) break
-      count++
-      yy--
-    }
-    return count
-  }
-
-  fun slopeBlocks(localX: Int, localZ: Int): Double {
-    val sx1 = surfaceY((localX - 1).coerceIn(0, 15), localZ)
-    val sx2 = surfaceY((localX + 1).coerceIn(0, 15), localZ)
-    val sz1 = surfaceY(localX, (localZ - 1).coerceIn(0, 15))
-    val sz2 = surfaceY(localX, (localZ + 1).coerceIn(0, 15))
-    val dx = (sx2 - sx1).toDouble() * 0.5
-    val dz = (sz2 - sz1).toDouble() * 0.5
-    return kotlin.math.sqrt(dx*dx + dz*dz)
-  }
-
-
-  /** A quick slope metric based on nearby surfaceY differences. Returns 0..1-ish. */
-  fun slope01(localX: Int, localZ: Int): Double {
-    val center = surfaceY(localX, localZ)
-
-    // 4-neighbor sample (clamped to chunk bounds)
-    val sx1 = surfaceY((localX - 1).coerceIn(0, 15), localZ)
-    val sx2 = surfaceY((localX + 1).coerceIn(0, 15), localZ)
-    val sz1 = surfaceY(localX, (localZ - 1).coerceIn(0, 15))
-    val sz2 = surfaceY(localX, (localZ + 1).coerceIn(0, 15))
-
-    val dx = (sx2 - sx1).toDouble() * 0.5
-    val dz = (sz2 - sz1).toDouble() * 0.5
-
-    // Convert gradient magnitude into 0..1 range (tune divisor)
-    val grad = sqrt(dx * dx + dz * dz)
-    return (grad / 6.0).coerceIn(0.0, 1.0) // 6 blocks per step ~= "steep"
-  }
-
-  /** Only meaningful once you actually place water. For now: underwater if surface below sea level. */
-  fun isUnderwater(surfaceY: Int): Boolean {
-    return surfaceY < chunk.seaLevel
-  }
-
-  /**
-   * Finds an enclosed air pocket below the surface:
-   * - starts a little below the surface
-   * - looks for air with solid under it (floor)
-   * - climbs through air to find ceiling solid
-   * - validates gap range
-   */
-  fun findCavePocket(
-    localX: Int,
-    localZ: Int,
-    surfaceY: Int = surfaceY(localX, localZ),
-    minGap: Int,
-    maxGap: Int,
-    searchDepthStartBelowSurface: Int = 6
-  ): CavePocket? {
-    val minY = chunk.minHeight
-    val maxY = chunk.maxHeight - 1
-
-    var y = (surfaceY - searchDepthStartBelowSurface).coerceAtMost(maxY - 2)
-    y = y.coerceAtLeast(minY + 2)
-
-    while (y > minY + 2) {
-
-      // air block with solid below => start of pocket
-      if (chunk.isAir(localX, y, localZ) && chunk.isSolid(localX, y - 1, localZ)) {
-        val floorY = y - 1
-
-        // walk upward through air
-        var topAirY = y
-        while (topAirY < maxY && chunk.isAir(localX, topAirY, localZ)) {
-          topAirY++
-        }
-
-        val ceilingY = topAirY
-
-        // must be enclosed by solid ceiling and below surface
-        if (ceilingY < maxY &&
-          chunk.isSolid(localX, ceilingY, localZ) &&
-          ceilingY < surfaceY - 1
-        ) {
-          val gap = ceilingY - floorY - 1
-          if (gap in minGap..maxGap) return CavePocket(floorY, ceilingY)
-        }
-
-        // continue searching deeper
-        y = floorY - 1
-        continue
-      }
-
-      y--
-    }
-
-    return null
-  }
-
-  /** Utility: “near solid” for placing things inside caves so they hug walls. */
-  fun nearSolid(localX: Int, y: Int, localZ: Int, radius: Int = 1): Boolean {
-    for (dx in -radius..radius) {
-      for (dz in -radius..radius) {
-        if (dx == 0 && dz == 0) continue
-        val x = localX + dx
-        val z = localZ + dz
-        if (x !in 0..15 || z !in 0..15) continue
-        if (chunk.isSolid(x, y, z)) return true
-      }
-    }
-    return false
-  }
-}
-
 
 fun findCavePocket(
   chunk: ChunkContext,
@@ -229,12 +39,12 @@ fun findCavePocket(
   while (y > minY + 2) {
 
     // Look for start of an air pocket where below is solid (so it's a floor)
-    if (chunk.isAir(localX, y, localZ) && chunk.isSolid(localX, y - 1, localZ)) {
+    if (chunk.isEmpty(localX, y, localZ) && chunk.isSolid(localX, y - 1, localZ)) {
       val floorY = y - 1
 
       // Walk upward through air until it stops
       var topAirY = y
-      while (topAirY < maxY - 1 && chunk.isAir(localX, topAirY, localZ)) {
+      while (topAirY < maxY - 1 && chunk.isEmpty(localX, topAirY, localZ)) {
         topAirY++
       }
 
@@ -248,7 +58,7 @@ fun findCavePocket(
 
         val gap = ceilingY - floorY - 1
         if (gap in minGap..maxGap) {
-          return CavePocket(floorY, ceilingY)
+          return SimpleCavePocket(floorY, ceilingY)
         }
       }
 
@@ -268,7 +78,7 @@ fun findFloor(chunk: ChunkContext, localX: Int, localZ: Int, minY: Int, maxY: In
   // floor = solid block with air above it
   for (y in (maxY - 2) downTo (minY + 1)) {
     val isSolid = chunk.isSolid(localX, y, localZ)
-    val airAbove = chunk.isAir(localX, y + 1, localZ)
+    val airAbove = chunk.isEmpty(localX, y + 1, localZ)
     if (isSolid && airAbove) return FloorHit(y)
   }
   return null
@@ -278,14 +88,11 @@ fun findCeilingAbove(chunk: ChunkContext, localX: Int, localZ: Int, startY: Int,
   // ceiling = solid block with air below it
   for (y in (startY + 2) until (maxY - 1)) {
     val isSolid = chunk.isSolid(localX, y, localZ)
-    val airBelow = chunk.isAir(localX, y - 1, localZ)
+    val airBelow = chunk.isEmpty(localX, y - 1, localZ)
     if (isSolid && airBelow) return CeilingHit(y)
   }
   return null
 }
-
-
-data class PropPoint(val worldX: Int, val worldZ: Int, val localX: Int, val localZ: Int, val seed: Long)
 
 data class CavernPillarRulePlacement(
   val cx: Int,
@@ -361,12 +168,12 @@ class CavernPillarRule(
 
     // --- 1) Cavern mask (only spawn in “open-ish” caves) ---
     val midY = floorY + gap / 2
-    val cavern01 = ((ctx.noise.cavern3D(point.worldX, midY, point.worldZ) + 1.0) * 0.5)
+    val cavern01 = 1.0//todo ((ctx.noise.cavern3D(point.worldX, midY, point.worldZ) + 1.0) * 0.5)
     // If you want pillars mainly in caverns, push this threshold up (0.65..0.85)
     if (cavern01 < 0.4) return null
 
     // --- 2) Patch noise: makes regions of many pillars ---
-    val patch01 = ((ctx.noise.pillarPatch2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5)
+    val patch01 = 1.0//todo ((ctx.noise.pillarPatch2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5)
     // Turn it into a “presence mask”
     val patchMask = smoothstep01(((patch01 - 0.55) / (1.0 - 0.55)).coerceIn(0.0, 1.0))
     if (patchMask < 0.2) return null
@@ -428,24 +235,24 @@ class CavernPillarRule(
       //var r = p.baseRadius * (0.35 + 0.65 * taper) * bulge
 
       // Roughness modulated by 3D noise (world coords for continuity)
-      val n = ctx.noise.pillarDetail3D.noise(ctx.chunkX * 16.0 + p.cx, y.toDouble(), ctx.chunkZ * 16.0 + p.cz) // [-1..1]
+      val n = 1.0//todo ctx.noise.pillarDetail3D.noise(ctx.chunkX * 16.0 + p.cx, y.toDouble(), ctx.chunkZ * 16.0 + p.cz) // [-1..1]
       r *= (1.0 + n * p.roughness).coerceIn(0.6, 1.4)
 
       // Random “breaks” -> missing rings / holes / snapped pillars
       val ringR01 = hash01(p.seed xor (y.toLong() * HASH_SALT))
       if (ringR01 < p.breakChance * 0.35) continue
 
-      placePillarDisc(chunk, p.cx, p.cz, y, r, Material.DRIPSTONE_BLOCK)
+      placePillarDisc(chunk, p.cx, p.cz, y, r, BukkitBlockResolver.INSTANCE.resolve(Material.DRIPSTONE_BLOCK))
     }
   }
 
-  private fun placePillarDisc(chunk: ChunkContext, cx: Int, cz: Int, y: Int, radius: Double, mat: Material) {
+  private fun placePillarDisc(chunk: ChunkContext, cx: Int, cz: Int, y: Int, radius: Double, mat: BlockData) {
     val rInt = kotlin.math.ceil(radius).toInt()
     for (dx in -rInt..rInt) for (dz in -rInt..rInt) {
       val x = cx + dx
       val z = cz + dz
       if (x !in 0..15 || z !in 0..15) continue
-      if (!chunk.isAir(x, y, z)) continue
+      if (!chunk.isEmpty(x, y, z)) continue
 
       val dist2 = (dx * dx + dz * dz).toDouble()
       if (dist2 <= radius * radius) {
@@ -459,7 +266,7 @@ class CavernPillarRule(
 
   private fun estimateSurfaceY(chunk: ChunkContext, localX: Int, localZ: Int, minY: Int, maxY: Int): Int {
     for (y in (maxY - 2) downTo (minY + 1)) {
-      if (chunk.isSolid(localX, y, localZ) && chunk.isAir(localX, y + 1, localZ)) return y
+      if (chunk.isSolid(localX, y, localZ) && chunk.isEmpty(localX, y + 1, localZ)) return y
     }
     return minY
   }
@@ -476,8 +283,8 @@ class CavernPillarRule(
           val dist2 = (dx * dx + dz * dz).toDouble()
           if (dist2 > radius * radius) continue
 
-          if (chunk.isAir(x, y, z)) {
-            chunk.setBlock(x, y, z, Material.DRIPSTONE_BLOCK)
+          if (chunk.isEmpty(x, y, z)) {
+            chunk.setBlock(x, y, z, BukkitBlockResolver.INSTANCE.resolve(Material.DRIPSTONE_BLOCK))
           }
         }
       }

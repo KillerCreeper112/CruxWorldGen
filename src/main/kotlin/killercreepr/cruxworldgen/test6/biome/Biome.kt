@@ -1,22 +1,27 @@
 package killercreepr.cruxworldgen.test6.biome
 
+import killercreepr.cruxgeneration.util.CruxNoise
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
-import killercreepr.cruxworldgen.test6.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.MaterialContext
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.api.noise.NoiseBank
+import killercreepr.cruxworldgen.api.noise.NoiseField
+import killercreepr.cruxworldgen.api.noise.NoiseKey
+import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.test6.decor.DripstoneDecoration
-import killercreepr.cruxworldgen.test6.density.DensityStack
-import killercreepr.cruxworldgen.test6.material.MaterialContext
-import killercreepr.cruxworldgen.test6.material.MaterialProvider
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.floor
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 val gCaves: CaveShape = CaveProfile(
   listOf(
@@ -46,18 +51,36 @@ val gCaves: CaveShape = CaveProfile(
 )*/
 
 
-class Plains : Biome{
+class Plains : Biome.Noised{
+  object Noise : NoiseModule{
+    object Height2D : NoiseKey{ override val id = "plains.height2D" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(Height2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.001)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(4)
+        }
+      }
+    }
+  }
+  override val noiseModule = Noise
+
   override val caves: CaveShape = gCaves
-  override val decorations = listOf(SimpleTreeDecoration(
-    chancePerPoint = 0.75
-  ), DripstoneDecoration())
+  override val decorations = listOf(
+    SimpleTreeDecoration(
+      chancePerPoint = 0.75
+    ), DripstoneDecoration()
+  )
 
   override val materialProvider = object : MaterialProvider{
-    override fun chooseMaterial(context: MaterialContext): Material {
+    override fun chooseMaterial(context: MaterialContext): BlockData {
       if(context.isSolid){
-        return Material.RED_CONCRETE
+        return BukkitBlockResolver.INSTANCE.resolve(Material.RED_CONCRETE)
       }
-      return Material.AIR
+      return BlockData.NONE
     }
 
   }
@@ -73,13 +96,13 @@ class Plains : Biome{
       val seaLevelY = ctx.chunkContext.seaLevel
       val hillAmplitudeBlocks = 18.0
 
-      val heightNoiseValue = ctx.noise.plainsHeight2D(worldX, worldZ) // [-1..1]
+      val heightNoiseValue = ctx.noise.get(Noise.Height2D).noise2D(worldX, worldZ) // [-1..1]
       val surfaceY = seaLevelY + (heightNoiseValue * hillAmplitudeBlocks)
 
 
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = 0.0
@@ -88,11 +111,37 @@ class Plains : Biome{
   }
 
 }
-class Mountains : Biome {
+class Mountains : Biome.Noised {
+  object Noise : NoiseModule{
+    object Height2D : NoiseKey{ override val id = "mountain.height2D" }
+    object Ridge2D : NoiseKey{ override val id = "mountain.ridge2D" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(Height2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.006)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(5)
+        }
+      }
+      bank.register(Ridge2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0012)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(4)
+        }
+      }
+    }
+  }
+  override val noiseModule = Noise
+
   override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.GREEN_CONCRETE else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.GREEN_CONCRETE )
+      else BlockData.NONE
     }
   }
 
@@ -109,7 +158,7 @@ class Mountains : Biome {
 
       // Blend-friendly base ground (can go above/below sea level)
       val baseGroundAmplitudeBlocks = 24.0
-      val baseNoiseValue = ctx.noise.mountainBaseHeight2D(worldX, worldZ) // [-1..1]
+      val baseNoiseValue = ctx.noise.get(Noise.Height2D).noise2D(worldX, worldZ) // [-1..1]
       val baseSurfaceY = seaLevelY + baseNoiseValue * baseGroundAmplitudeBlocks
 
       // Big mountain stuff (should fade near edges)
@@ -119,27 +168,27 @@ class Mountains : Biome {
       val uplift01 = (baseNoiseValue + 1.0) * 0.5 // [0..1]
       val upliftHeightBlocks = uplift01 * mountainAmplitudeBlocks
 
-      val ridgeNoiseValue = ctx.noise.mountainRidge2D(worldX, worldZ) // [-1..1]
+      val ridgeNoiseValue = ctx.noise.get(Noise.Ridge2D).noise2D(worldX, worldZ) // [-1..1]
       val ridge01 = 1.0 - abs(ridgeNoiseValue)           // [0..1]
       val ridgeHeightBlocks = ridge01.pow(3.0) * ridgeAmplitudeBlocks
 
       val mountainExtraHeightBlocks = upliftHeightBlocks + ridgeHeightBlocks
 
-      val edgeBlendFactor = edge.edgeBlendFactor()      // 1 at edge, 0 inside
-      val distanceIntoBiome = 1.0 - edgeBlendFactor     // 0 at edge, 1 inside
+      //val edgeBlendFactor = edge.edgeBlendFactor()      // 1 at edge, 0 inside
+      //val distanceIntoBiome = 1.0 - edgeBlendFactor     // 0 at edge, 1 inside
 
 // Ease-in so mountains ramp up slowly
-      val eased = distanceIntoBiome * distanceIntoBiome * (3.0 - 2.0 * distanceIntoBiome)
+      //val eased = distanceIntoBiome * distanceIntoBiome * (3.0 - 2.0 * distanceIntoBiome)
 
 // Critical part: don't go to 0 at the edge
-      val minimumEdgeFade = 0.25  // try 0.20..0.40
-      val mountainExtraFade = minimumEdgeFade + (1.0 - minimumEdgeFade) * eased
+      //val minimumEdgeFade = 0.25  // try 0.20..0.40
+      //val mountainExtraFade = minimumEdgeFade + (1.0 - minimumEdgeFade) * eased
 
       val surfaceY = baseSurfaceY + mountainExtraHeightBlocks//baseSurfaceY + mountainExtraHeightBlocks * mountainExtraFade
 
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = 0.0
@@ -149,11 +198,36 @@ class Mountains : Biome {
 
 }
 
-class Plateaus : Biome {
+class Plateaus : Biome.Noised {
+  object Noise : NoiseModule{
+    object Mask2D : NoiseKey{ override val id = "plateau.mask2d" }
+    object Variation2D : NoiseKey{ override val id = "plateau.variation2D" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(Mask2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0012)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(3)
+        }
+      }
+      bank.register(Variation2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.003)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(4)
+        }
+      }
+    }
+  }
+  override val noiseModule = Noise
   override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.TERRACOTTA else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.TERRACOTTA)
+      else BlockData.NONE
     }
   }
 
@@ -170,7 +244,7 @@ class Plateaus : Biome {
 
       // Base plains-like ground under everything (keeps blending sane)
       val baseGroundAmplitudeBlocks = 18.0
-      val baseHeightNoise = ctx.noise.plainsHeight2D(worldX, worldZ) // [-1..1]
+      val baseHeightNoise = ctx.noise.get(Plains.Noise.Height2D).noise2D(worldX, worldZ) // [-1..1]
       val baseSurfaceY = seaLevelY + baseHeightNoise * baseGroundAmplitudeBlocks
 
       // Plateau parameters
@@ -180,14 +254,14 @@ class Plateaus : Biome {
       val plateauStepSizeBlocks = 6.0       // quantize top into steps (mesa feel)
 
       // 1) Mask decides where plateau "wins"
-      val maskNoise = ctx.noise.plateauMask2D(worldX, worldZ) // [-1..1]
+      val maskNoise = ctx.noise.get(Noise.Mask2D).noise2D(worldX, worldZ) // [-1..1]
       val mask01 = (maskNoise + 1.0) * 0.5                        // [0..1]
 
       // Make mask more binary so it forms regions (tablelands)
       val plateauPresence = mask01.pow(plateauEdgeSharpness)       // [0..1], more 0/1
 
       // 2) Plateau top variation
-      val variationNoise = ctx.noise.plateauVariation2D(worldX, worldZ) // [-1..1]
+      val variationNoise = ctx.noise.get(Noise.Variation2D).noise2D(worldX, worldZ) // [-1..1]
       val topVariation = variationNoise * plateauTopVariationBlocks
 
       // 3) Compute plateau top height and "step" it
@@ -207,9 +281,9 @@ class Plateaus : Biome {
 
       // Add small 3D detail (keep it small so plateaus stay flat)
       val detailAmplitudeBlocks = 1.8
-      density += ctx.noise.detail3D(worldX, y, worldZ) * detailAmplitudeBlocks
+      density += ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * detailAmplitudeBlocks
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = density,
         add = 0.0,
         carve = 0.0
@@ -218,12 +292,43 @@ class Plateaus : Biome {
   }
 }
 
-class SpiralHills : Biome {
+class SpiralHills : Biome.Noised {
+  object Noise : NoiseModule{
+    object SwirlCenter : NoiseKey{ override val id = "spiral_hills.swirl.center" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(SwirlCenter){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0012)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(3)
+        }
+      }
+    }
+  }
+  override val noiseModule = Noise
   override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
-      return if (context.isSolid) Material.CLAY else Material.AIR
+    override fun chooseMaterial(context: MaterialContext): BlockData {
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.CLAY)
+      else BlockData.NONE
     }
+  }
+
+  data class SwirlCenter(val centerX: Int, val centerZ: Int)
+
+  fun swirlCenter(worldSeed: Long, worldX: Int, worldZ: Int, cellSizeBlocks: Int): SwirlCenter {
+    val cellX = kotlin.math.floor(worldX.toDouble() / cellSizeBlocks.toDouble()).toInt()
+    val cellZ = kotlin.math.floor(worldZ.toDouble() / cellSizeBlocks.toDouble()).toInt()
+
+    val hash = hash2D(worldSeed, cellX, cellZ)
+    val offsetX = (hash and 0xFFFF).toInt() % cellSizeBlocks
+    val offsetZ = ((hash ushr 16) and 0xFFFF).toInt() % cellSizeBlocks
+
+    val baseX = cellX * cellSizeBlocks
+    val baseZ = cellZ * cellSizeBlocks
+    return SwirlCenter(baseX + offsetX, baseZ + offsetZ)
   }
 
   override val shape = object : BiomeShape {
@@ -239,7 +344,7 @@ class SpiralHills : Biome {
 
       // --- Base ground (blend-friendly) ---
       val baseGroundAmplitudeBlocks = 14.0
-      val baseNoiseValue = ctx.noise.plainsHeight2D(worldX, worldZ) // [-1..1]
+      val baseNoiseValue = ctx.noise.get(Plains.Noise.Height2D).noise2D(worldX, worldZ) // [-1..1]
       val baseSurfaceY = seaLevelY + baseNoiseValue * baseGroundAmplitudeBlocks
 
       // --- Spiral settings (tune these) ---
@@ -256,7 +361,7 @@ class SpiralHills : Biome {
       val swirlFade = distanceIntoBiome * distanceIntoBiome // ease-in
 
       // --- Determine swirl center for this location ---
-      val swirlCenter = ctx.noise.swirlCenter(ctx.worldContext.seed, worldX, worldZ, swirlCellSizeBlocks)
+      val swirlCenter = swirlCenter(ctx.worldContext.seed, worldX, worldZ, swirlCellSizeBlocks)
 
       val deltaX = (worldX - swirlCenter.centerX).toDouble()
       val deltaZ = (worldZ - swirlCenter.centerZ).toDouble()
@@ -284,7 +389,7 @@ class SpiralHills : Biome {
 
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = 0.0
@@ -293,13 +398,38 @@ class SpiralHills : Biome {
   }
 }
 
-class FjordIce : Biome {
+class FjordIce : Biome.Noised {
+  object Noise : NoiseModule{
+    object Flow2D : NoiseKey{ override val id = "fjord_ice.flow2D" }
+    object Lines2D : NoiseKey{ override val id = "fjord_ice.lines2D" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(Flow2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0012)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(3)
+        }
+      }
+      bank.register(Lines2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0045)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(4)
+        }
+      }
+    }
+  }
+  override val noiseModule = Noise
   override val caves: CaveShape = gCaves
   override val materialProvider = object : MaterialProvider {
-    override fun chooseMaterial(context: MaterialContext): Material {
+    override fun chooseMaterial(context: MaterialContext): BlockData {
       // For now: simple debug-friendly.
       // You can upgrade once MaterialContext has surface/depth.
-      return if (context.isSolid) Material.PACKED_ICE else Material.AIR
+      return if (context.isSolid) BukkitBlockResolver.INSTANCE.resolve(Material.PACKED_ICE)
+      else BlockData.NONE
     }
   }
 
@@ -317,19 +447,19 @@ class FjordIce : Biome {
       // --- Base icy plateau ---
       val plateauBaseHeightBlocks = 55.0      // lifts land above sea
       val plateauVariationBlocks = 18.0       // rolling variation
-      val plateauNoise = ctx.noise.plainsHeight2D(worldX, worldZ) // [-1..1]
+      val plateauNoise = ctx.noise.get(Plains.Noise.Height2D).noise2D(worldX, worldZ) // [-1..1]
       val plateauSurfaceY =
         seaLevelY + plateauBaseHeightBlocks + plateauNoise * plateauVariationBlocks
 
       // --- Fjord carving mask ---
       // Use flow noise to warp the line noise so fjords "curve" and look natural
-      val flowNoise = ctx.noise.fjordFlow2D(worldX, worldZ) // [-1..1]
+      val flowNoise = ctx.noise.get(Noise.Flow2D).noise2D(worldX, worldZ) // [-1..1]
       val warpStrengthBlocks = 140.0
 
       val warpedX = worldX + (flowNoise * warpStrengthBlocks).toInt()
       val warpedZ = worldZ + (flowNoise * warpStrengthBlocks).toInt()
 
-      val lineNoise = ctx.noise.fjordLines2D(warpedX, warpedZ) // [-1..1]
+      val lineNoise = ctx.noise.get(Noise.Lines2D).noise2D(warpedX, warpedZ) // [-1..1]
 
       // Convert to "distance from line": abs puts ridges/lines at 0
       val lineDistance = abs(lineNoise) // [0..1-ish]
@@ -348,7 +478,7 @@ class FjordIce : Biome {
 
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack(
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = 0.0

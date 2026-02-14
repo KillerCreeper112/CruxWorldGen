@@ -1,11 +1,5 @@
 package killercreepr.cruxworldgen.api.util
 
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_1
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MIX_2
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_MUL_X
-import killercreepr.cruxworldgen.api.util.HashUtil.HASH_SALT
-import killercreepr.cruxworldgen.api.util.HashUtil.hash01
-
 object HashUtil {
   const val HASH_SALT: Long = -7046029254386353131L //0x9E3779B97F4A7C15L
   const val HASH_MUL_X: Long = 7145483588892929177L
