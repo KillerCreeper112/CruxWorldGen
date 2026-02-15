@@ -58,7 +58,7 @@ class LavaTubes(
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
     val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
-    if (cave.depthBelowSurface <= 0) return 0.0
+    //if (cave.depthBelowSurface <= 0) return 0.0
 
     // centerline depth slowly varies across XZ
     val hNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]

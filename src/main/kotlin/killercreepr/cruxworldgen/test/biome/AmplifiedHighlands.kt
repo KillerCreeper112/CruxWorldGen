@@ -18,13 +18,14 @@ import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.test.cave.AmplifiedRavines
 import killercreepr.cruxworldgen.test.cave.CavernRooms
 import killercreepr.cruxworldgen.test.cave.CheeseCaves
+import killercreepr.cruxworldgen.test.cave.HorizontalMountainTunnel
 import killercreepr.cruxworldgen.test.cave.LavaTubes
-import killercreepr.cruxworldgen.test.cave.MegaCavernRegions
+import killercreepr.cruxworldgen.test.cave.MountainCutCavesOld
 import killercreepr.cruxworldgen.test.cave.RavineCarver
 import killercreepr.cruxworldgen.test.cave.SpaghettiCaves
+import killercreepr.cruxworldgen.test.cave.ThroughMountainCave
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
@@ -36,14 +37,47 @@ import kotlin.math.pow
 const val scale = 0.6
 class AmplifiedHighlands(
   override val caves: CaveShape = CaveProfile(listOf(
-    SpaghettiCaves(
-      noodleRadius = 5.0,
+    HorizontalMountainTunnel()
+    /*CheeseCaves(
+      centerDepthBlocks = 20.0,
+      surfaceFadeRamp = 0,
+      surfaceFadeStart = 0,
+      threshold01 = 0.4,
+      strength = 1.6,
+      openMarginBlocks = 30.0,
+      halfWidthBlocks = 50.0
+    )*/,
+    /*CheeseCaves(
+      centerDepthBlocks = 20.0,
+      surfaceFadeRamp = 0,
+      surfaceFadeStart = 0
+    )*/
+    /*LavaTubes(
+      noodleRadius = 4.0,
+      verticalRadiusBlocks = 15.0,
+      depthVariationBlocks = 15.0,
+      strength = 1.5,
+      openMarginBlocks = 15.0
+    ),
+    RavineCarver(),
+    SpaghettiCaves(),
+    CavernRooms(),
+    CheeseCaves()*/
+    /*SpaghettiCaves(
+      noodleRadius = 8.0,
       //baseDepthBelowSurface = 0.0,
       verticalRadiusBlocks = 10.0,
       depthVariationBlocks = 20.0,
-      surfaceFadeRamp = 3,
+      surfaceFadeRamp = 0,
       surfaceFadeStart = 0
-    ),
+    )*/
+    /*LavaTubes(
+      surfaceFadeStart = 0,
+      surfaceFadeRamp = 0,
+      baseDepthBelowSurface = 0.0,
+      noodleRadius = 2.0,
+      openMarginBlocks = 20.0
+    )*/
     /*CheeseCaves(
       centerDepthBlocks = 0.0,
       surfaceFadeRamp = 0,
@@ -126,7 +160,7 @@ class AmplifiedHighlands(
           frequency(0.0017 / scale)
           noiseType(CruxNoise.NoiseType.OpenSimplex2)
           fractalType(CruxNoise.FractalType.FBm)
-          fractalOctaves(3)
+          fractalOctaves(4)//3
         }
       }
 
