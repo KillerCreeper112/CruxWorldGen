@@ -51,10 +51,10 @@ class AmplifiedHighlands(
       openMarginBlocks = 30.0,
       halfWidthBlocks = 50.0
     ),
-    SpaghettiCaves(
-      surfaceFadeRamp = 0,
+    LavaTubes(
       surfaceFadeStart = 0,
-      noodleRadius = 5.0
+      surfaceFadeRamp = 0,
+      baseDepthBelowSurface = 0.0
     ),
     LavaTubes(),
     RavineCarver(),
@@ -120,7 +120,11 @@ class AmplifiedHighlands(
   override val decorations: List<Decoration> = listOf(),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(ctx: MaterialContext): BlockData {
-      if(ctx.isSeaFloor) return BukkitBlockResolver.INSTANCE.resolve(Material.SAND)
+      if(ctx.depthFromSeaFloor >= 0){
+        if(ctx.depthFromSeaFloor < 3){
+          return BukkitBlockResolver.INSTANCE.resolve(Material.SAND)
+        }
+      }
       //if(ctx.isUnderwater) return BukkitBlockResolver.INSTANCE.resolve(Material.WATER)
       if(!ctx.isSolid) return BlockData.NONE
       val depth = ctx.depthBelowSurface

@@ -15,6 +15,10 @@ object BaseNoiseKeys {
   object Biome3D : NoiseKey{ override val id = "biome3D" }
   object TerrainHeight : NoiseKey{ override val id = "terrain.height" }
   object TerrainDetail : NoiseKey{ override val id = "terrain.detail" }
+  object AquiferLevel2D : NoiseKey { override val id = "fluid.aquifer.level2D" }
+  object AquiferFill3D  : NoiseKey { override val id = "fluid.aquifer.fill3D" }
+  object AquiferLava3D  : NoiseKey { override val id = "fluid.aquifer.lava3D" }
+  object AquiferDepth2D : NoiseKey { override val id = "fluid.aquifer.depth2D" }
 }
 
 object BaseNoiseModule : NoiseModule{
@@ -92,6 +96,43 @@ object BaseNoiseModule : NoiseModule{
           .fractalOctaves(3)
       }
     }
+
+    bank.register(BaseNoiseKeys.AquiferLevel2D) { seed ->
+      NoiseField.noiseField(seed) {
+        frequency(0.0012) // slow changes = regions
+        noiseType(CruxNoise.NoiseType.OpenSimplex2)
+        fractalType(CruxNoise.FractalType.FBm)
+        fractalOctaves(2)
+      }
+    }
+
+    bank.register(BaseNoiseKeys.AquiferFill3D) { seed ->
+      NoiseField.noiseField(seed) {
+        frequency(0.020) // pockety
+        noiseType(CruxNoise.NoiseType.OpenSimplex2)
+        fractalType(CruxNoise.FractalType.FBm)
+        fractalOctaves(1)
+      }
+    }
+
+    bank.register(BaseNoiseKeys.AquiferLava3D) { seed ->
+      NoiseField.noiseField(seed) {
+        frequency(0.018)
+        noiseType(CruxNoise.NoiseType.OpenSimplex2)
+        fractalType(CruxNoise.FractalType.FBm)
+        fractalOctaves(1)
+      }
+    }
+
+    bank.register(BaseNoiseKeys.AquiferDepth2D) { seed ->
+      NoiseField.noiseField(seed) {
+        frequency(0.02)
+        noiseType(CruxNoise.NoiseType.OpenSimplex2)
+        fractalType(CruxNoise.FractalType.FBm)
+        fractalOctaves(1)
+      }
+    }
+
   }
 
 }

@@ -12,5 +12,5 @@ interface MaterialContext{
   val airBlocksAbove: Int        // how open the sky is
   val caveAirBlocksBelow: Int    // how much empty space is under ground
   val isUnderwater: Boolean
-  val isSeaFloor : Boolean
+  val depthFromSeaFloor : Int
 }

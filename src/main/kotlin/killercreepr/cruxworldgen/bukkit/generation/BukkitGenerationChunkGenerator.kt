@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.bukkit.generation
 
-import fr.maxlego08.zauctionhouse.zcore.utils.DefaultFontInfo
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
@@ -14,8 +13,6 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
-import net.minecraft.world.level.levelgen.blockpredicates.BlockPredicate.solid
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
@@ -49,6 +46,7 @@ class BukkitGenerationChunkGenerator(
     }
     return minY
   }
+
   override fun generateNoise(
     worldInfo: WorldInfo,
     random: Random,
@@ -139,9 +137,12 @@ class BukkitGenerationChunkGenerator(
               y <= sea &&
               airAbove[iy] >= 8 // "open water column" heuristic; prevents underwater-cave misflags
 
-          val isSeaFloor =
+          /*val isSeaFloor =
             (surfaceY < sea) &&
-              (y == surfaceY) && (airAbove[iy] > 0)
+              (y == surfaceY) && (airAbove[iy] > 0)*/
+
+          val isOceanColumn = surfaceY < sea
+          val depthFromSeaFloor = if (isOceanColumn) (surfaceY - y) else -1
 
           val materialContext = BukkitMaterialContext(
             ctx,
@@ -154,7 +155,7 @@ class BukkitGenerationChunkGenerator(
             airBlocksAbove = airAbove[iy],
             caveAirBlocksBelow = airBelow[iy],
             isUnderwater = isUnderwater,
-            isSeaFloor = isSeaFloor,
+            depthFromSeaFloor = depthFromSeaFloor,
           )
 
           val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
@@ -162,49 +163,6 @@ class BukkitGenerationChunkGenerator(
             ctx.chunkContext.setBlock(localX, y, localZ, chosenMaterial)
           }
         }
-
-        /*val worldX = chunkX * chunkWidth + localX
-        val worldZ = chunkZ * chunkDepth + localZ
-
-        val zone = generation.zones.sampleZone(ctx, worldX, worldZ)
-
-        val biomeBlend = zone.biomes.sampleBiomeBlend(ctx, worldX, worldZ)
-        //cacheMap[worldX to worldZ] = biomeBlend
-        val surfaceY = findSurfaceY(ctx, biomeBlend, worldX, worldZ)
-
-        for (y in (ctx.chunkContext.maxHeight - 1) downTo ctx.chunkContext.minHeight) {
-          val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
-
-          val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX,  y, worldZ) * 3.0
-          val terrainFinal = terrainMacro + detail
-
-          val caveCarve = generation.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal)
-          val caveAdd   = generation.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal)//terrainMacro
-
-          val finalDensity = terrainFinal - caveCarve + caveAdd
-
-          val isSolid = finalDensity > 0.0
-          val depthBelowSurface = surfaceY - y
-
-          val materialContext = BukkitMaterialContext(
-            ctx,
-            worldX = worldX,
-            y = y,
-            worldZ = worldZ,
-            isSolid = isSolid,
-            surfaceY = surfaceY,
-            depthBelowSurface = depthBelowSurface,
-            airBlocksAbove = 0,
-            caveAirBlocksBelow = 0,
-            isUnderwater = false
-          )
-
-          val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
-
-          if (chosenMaterial != BlockData.NONE) {
-            ctx.chunkContext.setBlock(localX, y, localZ, chosenMaterial)
-          }
-        }*/
       }
     }
 
@@ -238,6 +196,7 @@ class BukkitGenerationChunkGenerator(
     var qt = 0
 
     val WATER = BukkitBlockResolver.INSTANCE.resolve(Material.WATER)
+    val LAVA = BukkitBlockResolver.INSTANCE.resolve(Material.LAVA)
 
     // 1) Fill surface water columns up to sea and seed BFS
     for (x in 0 until 16) for (z in 0 until 16) {
@@ -287,8 +246,173 @@ class BukkitGenerationChunkGenerator(
       tryPush(x, y, z - 1)
     }
 
-    // 3) Aquifers later (fill where !oceanConn and density<=0)
+    // =========================
+// 3) Aquifers (enclosed pockets, noise-driven, rarer)
+// =========================
+
+    val levelN = ctx.noise.get(BaseNoiseKeys.AquiferLevel2D)
+    val depthN = ctx.noise.get(BaseNoiseKeys.AquiferDepth2D)
+    val fillN  = ctx.noise.get(BaseNoiseKeys.AquiferFill3D)
+    val lavaN  = ctx.noise.get(BaseNoiseKeys.AquiferLava3D)
+
+    val seaCap = minOf(sea, maxY)
+    val baseWX = chunkX * 16
+    val baseWZ = chunkZ * 16
+
+// Tunables (start here)
+    val waterTableBase = sea - 18
+    val waterTableAmp  = 14.0
+
+    val headroom = 6            // keep air gap under ceiling
+    val minFillDepth = 2        // puddles
+    val maxFillDepth = 12       // small underground lakes
+
+    val minCavitySize = 48      // makes aquifers rarer & avoids tiny drips
+    val minCavityHeight = 4     // skip thin cracks
+
+    val fillThreshold = 0.90    // higher = fewer aquifers (0.75..0.88 good range)
+
+    val lavaMaxY = minY + 28
+    val lavaThreshold = 0.74
+
+// "snap" reduces cross-chunk disagreements because we sample noises at a stable anchor
+    val SNAP = 64               // 32/64/96/128; higher = more coherence
+
+    fun snapToGrid(v: Int, snap: Int): Int = Math.floorDiv(v, snap) * snap + snap / 2
+
+    val visited = BooleanArray(16 * 16 * H)
+    val q2 = IntArray(16 * 16 * H)
+    val comp = IntArray(16 * 16 * H)
+
+    fun unpackX(i: Int) = i and 15
+    fun unpackZ(i: Int) = (i shr 4) and 15
+    fun unpackY(i: Int) = (i shr 8) + minY
+
+    fun pushIfAir(i: Int, qtRef: IntArray, qtIdx: Int): Int {
+      if (visited[i]) return qtIdx
+      if (oceanConn[i]) return qtIdx
+      if (density[i] > 0.0) return qtIdx
+      visited[i] = true
+      qtRef[qtIdx] = i
+      return qtIdx + 1
+    }
+
+    for (x0 in 0 until 16) for (z0 in 0 until 16) {
+      for (y0 in minY..seaCap) {
+        val start = vid(x0, z0, y0)
+        if (visited[start]) continue
+        if (oceanConn[start]) continue
+        if (density[start] > 0.0) continue
+
+        // ---- BFS this enclosed air component ----
+        var qh2 = 0
+        var qt2 = 0
+        qt2 = pushIfAir(start, q2, qt2)
+
+        var compSize = 0
+        var minCompY = Int.MAX_VALUE
+        var maxCompY = Int.MIN_VALUE
+        var floorY = Int.MAX_VALUE
+
+        // representative (world) centroid for anchoring noises
+        var sumWX = 0
+        var sumWZ = 0
+
+        while (qh2 < qt2) {
+          val i = q2[qh2++]
+          comp[compSize++] = i
+
+          val x = unpackX(i)
+          val z = unpackZ(i)
+          val y = unpackY(i)
+
+          val wx = baseWX + x
+          val wz = baseWZ + z
+          sumWX += wx
+          sumWZ += wz
+
+          if (y < minCompY) minCompY = y
+          if (y > maxCompY) maxCompY = y
+
+          // floor: an air cell with solid directly below
+          if (y > minY) {
+            val below = vid(x, z, y - 1)
+            if (density[below] > 0.0) floorY = minOf(floorY, y)
+          }
+
+          // 6-neighbors
+          if (x + 1 < 16) qt2 = pushIfAir(vid(x + 1, z, y), q2, qt2)
+          if (x - 1 >= 0) qt2 = pushIfAir(vid(x - 1, z, y), q2, qt2)
+          if (z + 1 < 16) qt2 = pushIfAir(vid(x, z + 1, y), q2, qt2)
+          if (z - 1 >= 0) qt2 = pushIfAir(vid(x, z - 1, y), q2, qt2)
+          if (y + 1 <= seaCap) qt2 = pushIfAir(vid(x, z, y + 1), q2, qt2)
+          if (y - 1 >= minY) qt2 = pushIfAir(vid(x, z, y - 1), q2, qt2)
+        }
+
+        if (compSize < minCavitySize) continue
+        if (maxCompY - minCompY < minCavityHeight) continue
+        if (floorY == Int.MAX_VALUE) floorY = minCompY
+
+        // ---- Noise anchor (snapped) ----
+        val repWX = sumWX / compSize
+        val repWZ = sumWZ / compSize
+        val ax = snapToGrid(repWX, SNAP)
+        val az = snapToGrid(repWZ, SNAP)
+
+        // ---- Gate per-cavity so aquifers are rare ----
+        val gate01 = (fillN.noise3D(ax, floorY, az) + 1.0) * 0.5
+        if (gate01 < fillThreshold) continue
+
+        // ---- Water table & depth from noises ----
+        val level01 = (levelN.noise2D(ax, az) + 1.0) * 0.5
+        val waterTableY = (waterTableBase + (level01 - 0.5) * 2.0 * waterTableAmp)
+          .toInt()
+          .coerceIn(minY + 8, minOf(sea - 2, maxY))
+
+        val depth01 = (depthN.noise2D(ax, az) + 1.0) * 0.5
+        val fillDepth = (minFillDepth + depth01 * (maxFillDepth - minFillDepth)).toInt()
+
+        var aquiferTop = floorY + fillDepth
+
+        // keep air gap and don't exceed water table
+        aquiferTop = minOf(aquiferTop, maxCompY - headroom)
+        aquiferTop = minOf(aquiferTop, waterTableY)
+
+        if (aquiferTop <= floorY) continue
+
+        // ---- Lava decision (deep-only, noise-driven) ----
+        val lava01 = (lavaN.noise3D(ax, aquiferTop, az) + 1.0) * 0.5
+        val useLava = aquiferTop <= lavaMaxY && lava01 > lavaThreshold
+        val fluid = if (useLava) LAVA else WATER
+
+        // ---- Fill component up to aquiferTop ----
+        for (k in 0 until compSize) {
+          val i = comp[k]
+          val y = unpackY(i)
+          if (y <= aquiferTop) {
+            ctx.chunkContext.setBlock(unpackX(i), y, unpackZ(i), fluid)
+          }
+        }
+      }
+    }
+
   }
 
+  private fun mix64(x: Long): Long {
+    var z = x
+    z = (z xor (z ushr 30)) * 0xBF58476D1CE4E5B9uL.toLong()
+    z = (z xor (z ushr 27)) * 0x94D049BB133111EBuL.toLong()
+    return z xor (z ushr 31)
+  }
+
+  private val M1: Long = 0x9E3779B97F4A7C15uL.toLong()
+  private val M2: Long = 0xC2B2AE3D27D4EB4FuL.toLong()
+
+  private fun hash01(seed: Long, x: Int, z: Int, salt: Long): Double {
+    val h = mix64(seed xor salt xor (x.toLong() * M1) xor (z.toLong() * M2))
+    return ((h ushr 11) * (1.0 / (1L shl 53)))
+  }
+
+  private fun floorDiv(a: Int, b: Int): Int = Math.floorDiv(a, b)
 
 }

@@ -14,6 +14,6 @@ class BukkitMaterialContext(
   override val airBlocksAbove: Int,
   override val caveAirBlocksBelow: Int,
   override val isUnderwater: Boolean,
-  override val isSeaFloor: Boolean,
+  override val depthFromSeaFloor: Int,
 ) : MaterialContext {
 }
