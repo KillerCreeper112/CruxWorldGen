@@ -61,7 +61,7 @@ class CruxWorldGenPlugin : CruxPlugin() {
                   NoiseAutoInstaller(noise).installAllFromZones(zones)
 
                   val worldDetails = WorldDetails(
-                    64,
+                    62,
                     16, 16
                   )
 
