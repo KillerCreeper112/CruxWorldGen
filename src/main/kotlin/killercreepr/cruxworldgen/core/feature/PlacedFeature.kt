@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.core.underground
+package killercreepr.cruxworldgen.core.feature
 
 data class PlacedFeature<Cfg>(
   val feature: Feature<Cfg>,

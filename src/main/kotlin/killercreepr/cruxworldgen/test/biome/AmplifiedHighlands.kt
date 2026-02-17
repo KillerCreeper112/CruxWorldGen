@@ -18,13 +18,15 @@ import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.core.feature.PlacedFeature
+import killercreepr.cruxworldgen.core.feature.ironHigh
+import killercreepr.cruxworldgen.core.feature.ironLow
 import killercreepr.cruxworldgen.test.cave.CavernRooms
 import killercreepr.cruxworldgen.test.cave.CheeseCaves
 import killercreepr.cruxworldgen.test.cave.LavaTubes
 import killercreepr.cruxworldgen.test.cave.MountainCheeseOverhangs
 import killercreepr.cruxworldgen.test.cave.RavineCarver
 import killercreepr.cruxworldgen.test.cave.SpaghettiCaves
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
@@ -121,6 +123,9 @@ class AmplifiedHighlands(
     CheeseCaves()*/
   )),
   override val decorations: List<Decoration> = listOf(),
+  override val features: List<PlacedFeature<*>> = listOf(
+    ironLow, ironHigh
+  ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(ctx: MaterialContext): BlockData {
       if(ctx.depthFromSeaFloor >= 0){

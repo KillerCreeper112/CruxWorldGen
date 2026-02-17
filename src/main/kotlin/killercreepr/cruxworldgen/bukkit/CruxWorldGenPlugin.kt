@@ -6,9 +6,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
 import killercreepr.crux.core.util.CruxMath
 import killercreepr.crux.core.util.CruxWorldUtil
-import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.noise.NoiseAutoInstaller
-import killercreepr.cruxworldgen.api.noise.Noised
 import killercreepr.cruxworldgen.bukkit.generation.BukkitGenerationChunkGenerator
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
 import killercreepr.cruxworldgen.core.decor.SimpleDecorationPipeline
@@ -18,9 +16,7 @@ import killercreepr.cruxworldgen.core.noise.BaseNoiseModule
 import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
-import killercreepr.cruxworldgen.core.underground.SimpleUndergroundFeaturePipeline
-import killercreepr.cruxworldgen.core.underground.ironHigh
-import killercreepr.cruxworldgen.core.underground.ironLow
+import killercreepr.cruxworldgen.core.feature.SimpleFeaturePipeline
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
@@ -68,10 +64,7 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     16, 16
                   )
 
-                  val undergroundPipeline = SimpleUndergroundFeaturePipeline(listOf(
-                    ironHigh,
-                    ironLow
-                  ))
+                  val features = SimpleFeaturePipeline(listOf())
 
                   val generator = BukkitGenerationChunkGenerator(
                     generation,
@@ -79,7 +72,7 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     structures,
                     noise,
                     worldDetails,
-                    undergroundPipeline
+                    features
                   )
                   val world = WorldCreator(name).generator(
                     generator

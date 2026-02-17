@@ -13,7 +13,8 @@ class BukkitChunkContext(
   override val minHeight: Int,
   override val maxHeight: Int,
   override val seaLevel: Int,
-  val chunkData : ChunkGenerator.ChunkData, override val width: Int, override val depth: Int
+  val chunkData : ChunkGenerator.ChunkData,
+  override val width: Int, override val depth: Int
 ) : ChunkContext {
   override fun setBlock(
     x: Int,

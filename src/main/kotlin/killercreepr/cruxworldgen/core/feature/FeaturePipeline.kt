@@ -1,9 +1,9 @@
-package killercreepr.cruxworldgen.core.underground
+package killercreepr.cruxworldgen.core.feature
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 
-interface UndergroundFeaturePipeline {
+interface FeaturePipeline {
   fun runForChunk(
     ctx: GenerateContext,
     chunkX: Int,

@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.core.underground
+package killercreepr.cruxworldgen.core.feature
 
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData

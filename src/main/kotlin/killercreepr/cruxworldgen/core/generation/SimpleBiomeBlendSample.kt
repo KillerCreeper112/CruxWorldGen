@@ -9,6 +9,7 @@ class SimpleBiomeBlendSample(
   override val weightedBiomes: List<WeightedBiome>,
   override val edgeContext: BiomeEdgeContext
 ) : BiomeBlendSample {
+
   override fun primaryBiome(): Biome = weightedBiomes.maxBy { it.weight }.biome
 
   override fun totalWeight(): Double = weightedBiomes.sumOf { it.weight }

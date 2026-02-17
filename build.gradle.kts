@@ -22,8 +22,6 @@ dependencies {
     paperweight.paperDevBundle(libs.versions.paper)
     compileOnly(files(
         "E:\\Plugins\\YO\\CruxCore\\build\\libs\\CruxCore-1.0-all.jar",
-        "E:\\Plugins\\YO\\CruxCore\\run\\plugins\\zAuctionHouse-3.2.3.3.jar",
-      "E:\\Plugins\\YO\\CruxQuest\\build\\libs\\CruxQuest-1.0-all.jar"
     ))
 
     implementation(platform(kotlin("bom")))

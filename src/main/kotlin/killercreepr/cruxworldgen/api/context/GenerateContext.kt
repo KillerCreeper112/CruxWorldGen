@@ -2,7 +2,9 @@ package killercreepr.cruxworldgen.api.context
 
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.util.Curve
+import sun.jvm.hotspot.interpreter.Bytecodes.depth
 import java.util.*
+import kotlin.times
 
 interface GenerateContext{
   val worldContext : WorldContext
@@ -22,4 +24,12 @@ interface GenerateContext{
 
   fun band(center01: Double, halfWidth01: Double, y01: Double): Double = Curve.band(center01, halfWidth01, y01)
 
+  fun wrapLocalX(worldX : Int) : Int
+  fun wrapLocalZ(worldZ : Int) : Int
+
+  fun toWorldX(localX : Int) : Int
+  fun toWorldZ(localZ : Int) : Int
+
+  fun toLocalXIfInChunk(worldX: Int): Int?
+  fun toLocalZIfInChunk(worldZ: Int): Int?
 }

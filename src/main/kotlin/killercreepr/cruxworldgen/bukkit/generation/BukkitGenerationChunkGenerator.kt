@@ -12,9 +12,13 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
+import killercreepr.cruxworldgen.bukkit.region.SimpleLimitedRegion
+import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
-import killercreepr.cruxworldgen.core.underground.UndergroundFeaturePipeline
+import killercreepr.cruxworldgen.core.feature.FeaturePipeline
+import net.minecraft.world.level.levelgen.Heightmap
+import org.bukkit.HeightMap
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
@@ -33,7 +37,7 @@ class BukkitGenerationChunkGenerator(
   val structures : StructurePipeline,
   val noise : NoiseBank,
   val worldDetails : WorldDetails,
-  val undergroundPipeline : UndergroundFeaturePipeline
+  val features : FeaturePipeline
 ) : ChunkGenerator() {
   fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
     val minY = ctx.chunkContext.minHeight
@@ -61,12 +65,25 @@ class BukkitGenerationChunkGenerator(
     val chunkWidth = worldDetails.chunkWidth
     val chunkDepth = worldDetails.chunkDepth
 
+    val baseWX = chunkX * chunkWidth   // world X of localX=0
+    val baseWZ = chunkZ * chunkDepth   // world Z of localZ=0
+
+    val bufferX = 32  // blocks
+    val bufferZ = 32  // blocks
+
+    val minWX = baseWX - bufferX
+    val minWZ = baseWZ - bufferZ
+    val width = chunkWidth + bufferX * 2
+    val depth = chunkDepth + bufferZ * 2
+
+    //val surfaceYArr = IntArray(16 * 16)
     val ctx = BukkitGenerateContext(
       BukkitWorldContext(worldInfo),
       random, chunkX, chunkZ,
       BukkitChunkContext(chunkData.minHeight, chunkData.maxHeight, worldDetails.seaLevel, chunkData, chunkWidth, chunkDepth),
       noise
     )
+    val terrain2D = SimpleTerrain2D(generation, ctx, minWX, minWZ, width, depth)
 
     val minY = ctx.chunkContext.minHeight
     val maxY = ctx.chunkContext.maxHeight - 1
@@ -75,7 +92,6 @@ class BukkitGenerationChunkGenerator(
     fun vid(x: Int, z: Int, y: Int) = (x and 15) + ((z and 15) shl 4) + ((y - minY) shl 8)
 
     val density = DoubleArray(16 * 16 * H)
-    val surfaceYArr = IntArray(16 * 16)
 
     for (localX in 0 until chunkWidth) {
       for (localZ in 0 until chunkDepth) {
@@ -97,7 +113,8 @@ class BukkitGenerationChunkGenerator(
 
         val col = DoubleArray(H)
         val surfaceY = findSurfaceY(ctx, biomeBlend, worldX, worldZ)
-        surfaceYArr[localX + (localZ shl 4)] = surfaceY
+        terrain2D.surfaceY[terrain2D.idxUnsafe(worldX, worldZ)] = surfaceY
+        //surfaceYArr[localX + (localZ shl 4)] = surfaceY
 
         for (y in maxY downTo minY) {
           val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
@@ -112,6 +129,9 @@ class BukkitGenerationChunkGenerator(
           val iy = y - minY
           col[iy] = finalDensity
           density[vid(localX, localZ, y)] = finalDensity
+          if(finalDensity > 0.0 && y > terrain2D.skySurfaceY[terrain2D.idxUnsafe(worldX, worldZ)]){
+            terrain2D.skySurfaceY[terrain2D.idxUnsafe(worldX, worldZ)] = y
+          }
         }
 
         var run = 0
@@ -172,9 +192,15 @@ class BukkitGenerationChunkGenerator(
       }
     }
 
-    fillFluids(ctx, chunkX, chunkZ, density, surfaceYArr, minY, maxY)
+    fillFluids(ctx, chunkX, chunkZ, density, terrain2D, minY, maxY)
 
-    undergroundPipeline.runForChunk(ctx, chunkX, chunkZ){ wx, wz ->
+    val region = SimpleLimitedRegion(
+      ctx, bufferX, bufferZ,
+      minY, maxY,
+      terrain
+    )
+
+    features.runForChunk(ctx, chunkX, chunkZ){ wx, wz ->
       val zone = generation.zones.sampleZone(ctx, wx, wz)
       zone.biomes.sampleBiomeBlend(ctx, wx, wz)
     }
@@ -191,7 +217,7 @@ class BukkitGenerationChunkGenerator(
     ctx: BukkitGenerateContext,
     chunkX: Int, chunkZ: Int,
     density: DoubleArray,
-    surfaceY: IntArray,
+    terrain2D: SimpleTerrain2D,
     minY: Int, maxY: Int
   ) {
     val sea = ctx.chunkContext.seaLevel
@@ -207,11 +233,24 @@ class BukkitGenerationChunkGenerator(
 
     val WATER = BukkitBlockResolver.INSTANCE.resolve(Material.WATER)
     val LAVA = BukkitBlockResolver.INSTANCE.resolve(Material.LAVA)
-
+    val seaCap = minOf(sea, maxY)
     // 1) Fill surface water columns up to sea and seed BFS
     for (x in 0 until 16) for (z in 0 until 16) {
-      val sY = surfaceY[x + (z shl 4)]
-      if (sY >= sea) continue
+      val worldX = ctx.toWorldX(x)
+      val worldZ = ctx.toWorldZ(z)
+
+      val sY = terrain2D.surfaceY(worldX, worldZ)//surfaceY[x + (z shl 4)]
+      val idx2D = terrain2D.idxUnsafe(worldX, worldZ)
+      if (sY >= sea){
+        terrain2D.oceanFloorY[idx2D] = -1
+        terrain2D.waterDepth[idx2D] = 0
+        continue
+      }
+
+      terrain2D.oceanFloorY[idx2D] = sY
+
+      val depth = (seaCap - sY).coerceAtLeast(0)
+      terrain2D.waterDepth[idx2D] = depth
 
       val top = minOf(sea, maxY)
       val start = maxOf(sY + 1, minY)
@@ -265,9 +304,9 @@ class BukkitGenerationChunkGenerator(
     val fillN  = ctx.noise.get(BaseNoiseKeys.AquiferFill3D)
     val lavaN  = ctx.noise.get(BaseNoiseKeys.AquiferLava3D)
 
-    val seaCap = minOf(sea, maxY)
-    val baseWX = chunkX * 16
-    val baseWZ = chunkZ * 16
+    //val seaCap = minOf(sea, maxY)
+    val baseWX = chunkX * ctx.chunkContext.width
+    val baseWZ = chunkZ * ctx.chunkContext.depth
 
 // Tunables (start here)
     val waterTableBase = sea - 18

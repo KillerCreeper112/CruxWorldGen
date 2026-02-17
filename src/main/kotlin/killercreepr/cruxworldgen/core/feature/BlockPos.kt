@@ -1,36 +1,50 @@
-package killercreepr.cruxworldgen.core.underground
+package killercreepr.cruxworldgen.core.feature
 
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.util.Curve.lerp
-import java.util.Random
+import java.util.*
 
 data class BlockPos(val x: Int, val y: Int, val z: Int)
 
 interface Feature<Cfg> {
-  fun place(ctx: GenerateContext, rng: java.util.Random, origin: BlockPos, cfg: Cfg)
+  fun place(ctx: GenerateContext, rng : Random, origin: BlockPos, cfg: Cfg)
 }
 
 interface HeightSampler {
   fun sampleY(rng: java.util.Random, minY: Int, maxY: Int): Int
 }
 
-/*class NearAirFilter(
-  private val view: OreVeinFeature.DensityView,
+class NearAirFilter(
+  private val base: PlacementModifier,
   private val radius: Int = 3,
   private val keepIfNearAir: Double = 1.0,
   private val keepIfNotNearAir: Double = 0.15,
-  private val minAirCount: Int = 1
+  private val minAirCount: Int = 1,
+  private val isSolid: (GenerateContext, Int, Int, Int) -> Boolean
 ) : PlacementModifier {
 
-  override fun emitPositions(ctx: GenerateContext, rng: Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(
+    ctx: GenerateContext,
+    rng: Random,
+    chunkX: Int,
+    chunkZ: Int,
+    out: MutableList<BlockPos>
+  ) {
+    val tmp = ArrayList<BlockPos>(128)
+    base.emitPositions(ctx, rng, chunkX, chunkZ, tmp)
+
     fun nearAir(p: BlockPos): Boolean {
       var air = 0
+      val px = p.x
+      val py = p.y
+      val pz = p.z
+
       for (dx in -radius..radius)
         for (dy in -radius..radius)
           for (dz in -radius..radius) {
-            if (!view.isSolid(p.x + dx, p.y + dy, p.z + dz)) {
+            if (!isSolid(ctx, px + dx, py + dy, pz + dz)) {
               air++
               if (air >= minAirCount) return true
             }
@@ -38,12 +52,13 @@ interface HeightSampler {
       return false
     }
 
-    for (p in input) {
+    for (p in tmp) {
       val k = if (nearAir(p)) keepIfNearAir else keepIfNotNearAir
       if (k >= 1.0 || rng.nextDouble() < k) out.add(p)
     }
   }
-}*/
+}
+
 
 
 /** Uniform between */
@@ -83,14 +98,6 @@ class TrapezoidHeight(val min: Int, val max: Int, val plateau: Int) : HeightSamp
   }
 }
 
-class Count(val count: Int) : PlacementModifier {
-  override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    // Count itself doesn’t choose positions; it works with other modifiers.
-    // So typically Count is not a modifier — it’s a wrapper.
-    // I prefer a wrapper "Repeat" instead:
-  }
-}
-
 class Repeat(val n: Int, val inner: PlacementModifier) : PlacementModifier {
   override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
     repeat(n) { inner.emitPositions(ctx, rng, chunkX, chunkZ, out) }
@@ -105,18 +112,10 @@ class InChunkSquare : PlacementModifier {
   }
 }
 
-class WithHeight(val height: HeightSampler) : PlacementModifier {
-  override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    // expects out already has an x/z entry OR you use a composite modifier below
-    // simpler: make one combined modifier:
-    error("Use CompositeXZHeight instead.")
-  }
-}
-
 class XZHeight(val height: HeightSampler) : PlacementModifier {
   override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    val wx = chunkX * 16 + rng.nextInt(16)
-    val wz = chunkZ * 16 + rng.nextInt(16)
+    val wx = chunkX * ctx.chunkContext.width + rng.nextInt(ctx.chunkContext.width)
+    val wz = chunkZ * ctx.chunkContext.depth + rng.nextInt(ctx.chunkContext.depth)
     val y = height.sampleY(rng, ctx.chunkContext.minHeight, ctx.chunkContext.maxHeight - 1)
     out.add(BlockPos(wx, y, wz))
   }
@@ -135,9 +134,13 @@ data class OreConfig(
   val discardChanceOnAirExposure: Double = 0.0, // optional
 )
 
+fun interface OreConfigGetter{
+  fun getOre(ctx: GenerateContext, section : BlockSection)
+}
+
 class OreVeinFeature : Feature<OreConfig> {
 
-  override fun place(ctx: GenerateContext, rng: java.util.Random, origin: BlockPos, cfg: OreConfig) {
+  override fun place(ctx: GenerateContext, rng : Random, origin: BlockPos, cfg: OreConfig) {
     // Random line endpoints
     val angle = rng.nextDouble() * Math.PI
     val dx = kotlin.math.sin(angle)
@@ -174,7 +177,7 @@ class OreVeinFeature : Feature<OreConfig> {
 
       for (x in minX..maxX) for (y in minY..maxY) for (z in minZ..maxZ) {
         // only write inside current chunk; if you want cross-chunk veins later, see note below
-        if (!isInChunk(ctx, x, z)) continue
+        //todo if (!isInChunk(ctx, x, z)) continue
         if (y < ctx.chunkContext.minHeight || y >= ctx.chunkContext.maxHeight) continue
 
         val nx = (x + 0.5 - cx) / rx
@@ -185,22 +188,12 @@ class OreVeinFeature : Feature<OreConfig> {
         val lx = x and 15
         val lz = z and 15
 
-        val cur = ctx.chunkContext.getBlock(lx, y, lz) // add this accessor if you don’t have it
+        val cur = ctx.chunkContext.getBlock(lx, y, lz)
         if (!cfg.canReplace(cur)) continue
 
         ctx.chunkContext.setBlock(lx, y, lz, cfg.ore)
       }
     }
-  }
-
-  private fun isInChunk(ctx: GenerateContext, worldX: Int, worldZ: Int): Boolean {
-    val cx = ctx.chunkX // if you store it
-    val cz = ctx.chunkZ
-    return (worldX shr 4) == cx && (worldZ shr 4) == cz
-  }
-  interface DensityView {
-    fun density(wx: Int, y: Int, wz: Int): Double
-    fun isSolid(wx: Int, y: Int, wz: Int): Boolean = density(wx, y, wz) > 0.0
   }
 
 }

@@ -92,11 +92,6 @@ class SimpleBiomeRegistry(
 
     return BiomeBlendSample.biomeBlendSample(
       weighted,
-      /*weightedBiomes = listOf(
-        WeightedBiome.weightedBiome(nearest.biome, w1 / total),
-        WeightedBiome.weightedBiome(second.biome, w2 / total),
-        WeightedBiome.weightedBiome(third.biome, w3 / total)
-      ),*/
       edgeContext = edgeCtx
     )
   }
