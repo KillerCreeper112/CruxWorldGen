@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.core.decor
 
-import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline

@@ -16,7 +16,6 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.test6.biome.MagmaFissureDecoration
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.floor
@@ -24,7 +23,7 @@ import kotlin.math.pow
 
 class CharredWastes(
   override val caves: CaveShape = gCaves,
-  override val decorations: List<Decoration> = listOf(MagmaFissureDecoration()),
+  override val decorations: List<Decoration> = listOf(),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): BlockData {
       if (!context.isSolid) return BlockData.NONE

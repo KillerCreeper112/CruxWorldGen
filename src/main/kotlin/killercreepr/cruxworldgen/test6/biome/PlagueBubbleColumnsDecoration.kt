@@ -1,3 +1,4 @@
+/*
 package killercreepr.cruxworldgen.test6.biome
 
 import killercreepr.cruxworldgen.api.context.ChunkContext
@@ -82,11 +83,13 @@ class PlagueBubbleColumnsDecoration(
 
       // Only write into water (prevents punching holes into terrain)
       val current = chunk.getBlock(p.x, y, p.z)
-      /* todo if (current == Material.WATER || current == Material.BUBBLE_COLUMN) {
+      */
+/* todo if (current == Material.WATER || current == Material.BUBBLE_COLUMN) {
         chunk.setBlock(p.x, y, p.z, Material.BUBBLE_COLUMN)
       } else {
         break
-      }*/
+      }*//*
+
     }
   }
 
@@ -141,3 +144,4 @@ data class BubbleColumnPlacement(
   val floorY: Int,
   val height: Int
 ) : Placement
+*/

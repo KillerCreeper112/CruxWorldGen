@@ -1,7 +1,6 @@
 package killercreepr.cruxworldgen.api.structure.standard
 
 import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.structure.*
 import kotlin.math.max
@@ -47,7 +46,7 @@ class BlockListTemplate(
       }
 
       if (mat != BlockData.NONE) {
-        chunk.setBlock(lx, wy, lz, mat)
+        region.setBlock(lx, wy, lz, mat)
       }
     }
   }

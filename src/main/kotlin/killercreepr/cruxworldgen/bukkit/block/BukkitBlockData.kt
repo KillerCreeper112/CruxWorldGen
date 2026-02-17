@@ -1,8 +1,9 @@
 package killercreepr.cruxworldgen.bukkit.block
 
 import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
+import org.bukkit.generator.ChunkGenerator
 
 interface BukkitBlockData : BlockData {
-  fun setAt(ctx : BukkitChunkContext, x : Int, y : Int, z : Int)
+  fun setAt(ctx : ChunkGenerator.ChunkData, x : Int, y : Int, z : Int)
+  fun setAt(ctx : org.bukkit.generator.LimitedRegion, x : Int, y : Int, z : Int)
 }

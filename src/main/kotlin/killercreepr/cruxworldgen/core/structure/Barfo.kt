@@ -4,14 +4,8 @@ import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
-import killercreepr.cruxworldgen.api.structure.Aabb
 import killercreepr.cruxworldgen.api.structure.StructureInstance
 import killercreepr.cruxworldgen.api.structure.StructureTemplate
-import killercreepr.cruxworldgen.api.structure.Terraformer
-import killercreepr.cruxworldgen.api.util.HashUtil.hash01
-import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
-import kotlin.math.abs
-import kotlin.math.sqrt
 
 class BuildSurfaceCacheStep : TerraformStep {
   override fun run(s: TerraformState): Boolean {
@@ -19,7 +13,7 @@ class BuildSurfaceCacheStep : TerraformStep {
     return true
   }
 }
-class ComputeFootprintStep : TerraformStep {
+/*class ComputeFootprintStep : TerraformStep {
   override fun run(s: TerraformState): Boolean {
     val chunkWorldX = s.chunkWorldX
     val chunkWorldZ = s.chunkWorldZ
@@ -60,7 +54,7 @@ class ComputeFootprintStep : TerraformStep {
     // Fill surface cache for work rect
     for (lx in s.workMinX..s.workMaxX) {
       for (lz in s.workMinZ..s.workMaxZ) {
-        s.surface[idx(lx, lz)] = s.ctx.queries.surfaceY(lx, lz)
+        s.surface[idx(lx, lz)] = s.ctx.surfaceY(lx, lz)
       }
     }
 
@@ -154,7 +148,7 @@ class ComputeFalloffStep : TerraformStep {
 
         // edgeWarp in blocks
         //val edge01 = (s.ctx.noise.pillarHeight2D(wx, wz) + 1.0) * 0.5
-        val edgeWarp = (/*edge01 - */0.5) * 2.0 * s.edgeWarpAmp
+        val edgeWarp = (*//*edge01 - *//*0.5) * 2.0 * s.edgeWarpAmp
 
         val distWarped = (dist - edgeWarp).coerceAtLeast(0.0)
 
@@ -316,7 +310,7 @@ class ApplyCarveFillStep : TerraformStep {
 }
 
 
-/** A single chunk terraformer built from composable steps. */
+*//** A single chunk terraformer built from composable steps. *//*
 class NaturalPadTerraformer(
   private val bufferRadius: Int = 6,           // how far it blends outwards
   private val edgeWarpAmp: Double = 2.5,       // irregular boundary size (blocks)
@@ -336,9 +330,8 @@ class NaturalPadTerraformer(
 ) : Terraformer {
 
   override fun terraformChunk(region: LimitedRegion, inst: StructureInstance, template: StructureTemplate) {
-    val ctx = region.ctx
     val state = TerraformState(
-      ctx = ctx,
+      region = region,
       inst = inst,
       template = template,
       bufferRadius = bufferRadius,
@@ -355,7 +348,7 @@ class NaturalPadTerraformer(
       if (!step.run(state)) return
     }
   }
-}
+}*/
 
 /** Pipeline step */
 interface TerraformStep {
@@ -365,7 +358,7 @@ interface TerraformStep {
 
 /** Holds intermediate products between steps. */
 class TerraformState(
-  val ctx: GenerateContext,
+  val region: LimitedRegion,
   val inst: StructureInstance,
   val template: StructureTemplate,
 
@@ -377,9 +370,9 @@ class TerraformState(
   val topSoilMin: Int,
   val topSoilMax: Int,
 ) {
-  val chunk: ChunkContext get() = ctx.chunkContext
-  val chunkWorldX: Int get() = ctx.chunkX * chunk.width
-  val chunkWorldZ: Int get() = ctx.chunkZ * chunk.depth
+  val chunk: ChunkContext get() = region.ctx.chunkContext
+  val chunkWorldX: Int get() = region.ctx.chunkX * chunk.width
+  val chunkWorldZ: Int get() = region.ctx.chunkZ * chunk.depth
 
   // Anchor in local chunk coords
   var anchorLX: Int = 0
@@ -401,7 +394,7 @@ class TerraformState(
   lateinit var surface: IntArray // (x + z*16) => y
 
   // Height model
-  var plane: FlattenPadTerraformer.Plane = FlattenPadTerraformer.Plane(0.0, 0.0, 64.0)
+  //var plane: FlattenPadTerraformer.Plane = FlattenPadTerraformer.Plane(0.0, 0.0, 64.0)
 
   // Falloff per column (0..1)
   lateinit var falloff: DoubleArray // same indexing

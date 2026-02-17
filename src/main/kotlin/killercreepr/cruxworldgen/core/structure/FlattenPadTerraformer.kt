@@ -1,3 +1,4 @@
+/*
 package killercreepr.cruxworldgen.core.structure
 
 import killercreepr.cruxworldgen.api.block.BlockData
@@ -203,3 +204,4 @@ class FlattenPadTerraformer(
     return Plane(detA / det, detB / det, detC / det)
   }
 }
+*/

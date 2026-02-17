@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.core.structure
 
-import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.structure.StructureInstance
 import killercreepr.cruxworldgen.api.structure.StructurePlacementRule
@@ -12,7 +11,7 @@ class CellPlacementRule(
   private val cellSizeChunks: Int = 4,
   private val chancePerCell: Double = 0.5,
   private val yOffset: Int = 1,
-  private val borderPadding: Int = 3
+  //private val borderPadding: Int = 3
 ) : StructurePlacementRule {
 
   override fun pickInstancesForChunk(region: LimitedRegion, chunkX: Int, chunkZ: Int): List<StructureInstance> {
@@ -41,13 +40,23 @@ class CellPlacementRule(
     if (chunkX != anchorChunkX || chunkZ != anchorChunkZ) return out
 
     // Pick anchor inside that chunk with padding (single-chunk-safe)
-    val localX = borderPadding + chooseInt(cellSeed xor 0x3333, 0, 15 - borderPadding * 2)
-    val localZ = borderPadding + chooseInt(cellSeed xor 0x4444, 0, 15 - borderPadding * 2)
+    //val localX = borderPadding + chooseInt(cellSeed xor 0x3333, 0, 15 - borderPadding * 2)
+    //val localZ = borderPadding + chooseInt(cellSeed xor 0x4444, 0, 15 - borderPadding * 2)
 
-    val worldX = chunkX * 16 + localX
-    val worldZ = chunkZ * 16 + localZ
+    val center = region.centerBounds
+    val worldX = chooseInt(
+      cellSeed xor 0x3333,
+      center.minX,
+      center.maxX,
+    )
+    val worldZ = chooseInt(
+      cellSeed xor 0x4444,
+      center.minZ,
+      center.maxZ,
+    )
 
-    val surfaceY = ctx.queries.surfaceY(localX, localZ)
+    val surfaceY = region.terrainSnapshot.terrain2D.surfaceY(worldX, worldZ)
+    //val surfaceY = ctx.queries.surfaceY(localX, localZ)
     val worldY = surfaceY + yOffset
 
     out.add(

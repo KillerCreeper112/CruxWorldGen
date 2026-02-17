@@ -1,3 +1,4 @@
+/*
 package killercreepr.cruxworldgen.test6.prop
 
 import killercreepr.cruxworldgen.api.block.BlockData
@@ -118,7 +119,9 @@ class CavernPillarRule(
 ) : Decoration {
   override val pass = DecorationPass.UNDERGROUND
 
-  /** Controls distribution. Examples: grid spacing, noise chance, biome-weight scaling */
+  */
+/** Controls distribution. Examples: grid spacing, noise chance, biome-weight scaling *//*
+
   override fun shouldTry(
     region: LimitedRegion,
     point: PropPoint,
@@ -146,7 +149,9 @@ class CavernPillarRule(
     ) != null
   }
 
-  /** Pattern scan: find an anchor/placement candidate */
+  */
+/** Pattern scan: find an anchor/placement candidate *//*
+
   override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
     val ctx = region.ctx
     val chunk = ctx.chunkContext
@@ -208,7 +213,9 @@ class CavernPillarRule(
   }
 
 
-  /** Apply: place blocks using placement info */
+  */
+/** Apply: place blocks using placement info *//*
+
   override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
     val p = placement as CavernPillarRulePlacement
     val ctx = region.ctx
@@ -303,3 +310,4 @@ class CavernPillarRule(
 
 }
 
+*/

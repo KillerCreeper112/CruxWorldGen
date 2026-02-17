@@ -7,7 +7,6 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.signal.SignalKey
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
-import org.bukkit.Bukkit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow

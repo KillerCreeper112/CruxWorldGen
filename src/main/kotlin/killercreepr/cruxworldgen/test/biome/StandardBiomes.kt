@@ -18,12 +18,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
-import killercreepr.cruxworldgen.test.cave.CavernRooms
-import killercreepr.cruxworldgen.test.cave.CheeseCaves
-import killercreepr.cruxworldgen.test.cave.LavaTubes
-import killercreepr.cruxworldgen.test.cave.RavineCarver
-import killercreepr.cruxworldgen.test.cave.SpaghettiCaves
-import killercreepr.cruxworldgen.test6.decor.DripstoneDecoration
+import killercreepr.cruxworldgen.test.cave.*
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.math.*

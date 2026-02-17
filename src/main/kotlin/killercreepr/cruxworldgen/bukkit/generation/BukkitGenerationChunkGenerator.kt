@@ -8,17 +8,18 @@ import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.structure.StructurePipeline
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
-import killercreepr.cruxworldgen.bukkit.region.SimpleLimitedRegion
+import killercreepr.cruxworldgen.bukkit.region.BukkitLimitedRegion
 import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
 import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
+import killercreepr.cruxworldgen.core.feature.FeaturePipeline
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
-import killercreepr.cruxworldgen.core.feature.FeaturePipeline
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.generator.BlockPopulator
@@ -60,7 +61,14 @@ class BukkitGenerationChunkGenerator(
 
   val cache = hashMapOf<Pair<Int, Int>, Cache>()
 
-  data class Cache(val region : killercreepr.cruxworldgen.api.context.LimitedRegion)
+  data class Cache(
+    val ctx: GenerateContext,
+    val bufferX: Int,
+    val bufferZ: Int,
+    val minY: Int,
+    val maxY: Int,
+    val terrainSnapshot : TerrainSnapshot
+  )
 
   override fun generateNoise(
     worldInfo: WorldInfo,
@@ -87,7 +95,7 @@ class BukkitGenerationChunkGenerator(
     val ctx = BukkitGenerateContext(
       BukkitWorldContext(worldInfo),
       random, chunkX, chunkZ,
-      BukkitChunkContext(chunkData.minHeight, chunkData.maxHeight, worldDetails.seaLevel, chunkData, chunkWidth, chunkDepth),
+      BukkitChunkContext(chunkData.minHeight, chunkData.maxHeight, worldDetails.seaLevel, chunkWidth, chunkDepth),
       noise
     )
     val terrain2D = SimpleTerrain2D(generation, ctx, minWX, minWZ, width, depth)
@@ -193,23 +201,22 @@ class BukkitGenerationChunkGenerator(
 
           val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
           if (chosenMaterial != BlockData.NONE) {
-            ctx.chunkContext.setBlock(localX, y, localZ, chosenMaterial)
+            setBlock(chunkData,localX, y, localZ, chosenMaterial)
+            //ctx.chunkContext.setBlock(localX, y, localZ, chosenMaterial)
           }
         }
       }
     }
 
-    fillFluids(ctx, chunkX, chunkZ, density, terrain2D, minY, maxY)
+    fillFluids(chunkData,ctx, chunkX, chunkZ, density, terrain2D, minY, maxY)
 
     val terrain = SimpleTerrainSnapshot(terrain2D)
 
-    val region = SimpleLimitedRegion(
-      ctx, bufferX, bufferZ,
+    cache[chunkX to chunkZ] = Cache(
+      ctx,bufferX, bufferZ,
       minY, maxY,
       terrain
     )
-
-    cache[chunkX to chunkZ] = Cache(region)
 
     /*features.runForChunk(ctx, chunkX, chunkZ){ wx, wz ->
       val zone = generation.zones.sampleZone(ctx, wx, wz)
@@ -234,7 +241,14 @@ class BukkitGenerationChunkGenerator(
         limitedRegion: LimitedRegion
       ) {
         val cache = cache.remove(chunkX to chunkZ) ?: throw IllegalStateException("No cache for ${chunkX}x${chunkZ}")
-        val region = cache.region
+
+        val region = BukkitLimitedRegion(
+          cache.ctx, limitedRegion,
+          limitedRegion.buffer, limitedRegion.buffer,
+          cache.minY, cache.maxY,
+          cache.terrainSnapshot
+        )
+
         features.runForChunk(region, chunkX, chunkZ){ wx, wz ->
           val zone = generation.zones.sampleZone(region.ctx, wx, wz)
           zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
@@ -250,7 +264,13 @@ class BukkitGenerationChunkGenerator(
     })
   }
 
+  fun setBlock(chunkData : ChunkData, x : Int, y : Int, z : Int, block: BlockData) {
+    (block as? BukkitBlockData) ?: error("$block is not a BukkitBlockData")
+    block.setAt(chunkData, x, y, z)
+  }
+
   fun fillFluids(
+    chunkData : ChunkData,
     ctx: BukkitGenerateContext,
     chunkX: Int, chunkZ: Int,
     density: DoubleArray,
@@ -296,7 +316,7 @@ class BukkitGenerationChunkGenerator(
         val i = vid(x, z, y)
         if (density[i] <= 0.0 && !oceanConn[i]) {
           oceanConn[i] = true
-          ctx.chunkContext.setBlock(x, y, z, WATER)
+          setBlock(chunkData, x,y,z, WATER)
           q[qt++] = i
         }
       }
@@ -320,7 +340,7 @@ class BukkitGenerationChunkGenerator(
         if (density[ni] > 0.0) return // solid blocks stop water
 
         oceanConn[ni] = true
-        ctx.chunkContext.setBlock(nx, ny, nz, WATER)
+        setBlock(chunkData, nx,ny,nz, WATER)
         q[qt++] = ni
       }
 
@@ -476,7 +496,8 @@ class BukkitGenerationChunkGenerator(
           val i = comp[k]
           val y = unpackY(i)
           if (y <= aquiferTop) {
-            ctx.chunkContext.setBlock(unpackX(i), y, unpackZ(i), fluid)
+            setBlock(chunkData, unpackX(i), y, unpackZ(i), fluid)
+            //ctx.chunkContext.setBlock(unpackX(i), y, unpackZ(i), fluid)
           }
         }
       }

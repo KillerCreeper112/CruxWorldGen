@@ -14,8 +14,6 @@ class BukkitGenerateContext(
   override val chunkContext: ChunkContext,
   override val noise: NoiseBank
 ) : GenerateContext {
-  override val queries = BukkitTerrainQueries(this)
-
   override fun wrapLocalX(worldX: Int) : Int = Math.floorMod(worldX, chunkContext.width)
 
   override fun wrapLocalZ(worldZ: Int) : Int = Math.floorMod(worldZ, chunkContext.depth)

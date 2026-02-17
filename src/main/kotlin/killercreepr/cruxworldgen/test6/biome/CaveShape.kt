@@ -3,10 +3,6 @@ package killercreepr.cruxworldgen.test6.biome
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.pow
 import kotlin.math.sqrt
 
 class PillarAdditive(

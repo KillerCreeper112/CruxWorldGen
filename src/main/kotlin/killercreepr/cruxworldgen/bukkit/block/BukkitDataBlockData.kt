@@ -1,17 +1,27 @@
 package killercreepr.cruxworldgen.bukkit.block
 
-import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
 import org.bukkit.block.data.BlockData
+import org.bukkit.generator.ChunkGenerator
+import org.bukkit.generator.LimitedRegion
 
 class BukkitDataBlockData(
   val data : BlockData
 ) : BukkitBlockData {
   override fun setAt(
-    ctx: BukkitChunkContext,
+    ctx: ChunkGenerator.ChunkData,
     x: Int,
     y: Int,
     z: Int
   ) {
-    ctx.chunkData.setBlock(x, y, z, data)
+    ctx.setBlock(x, y, z, data)
+  }
+
+  override fun setAt(
+    ctx: LimitedRegion,
+    x: Int,
+    y: Int,
+    z: Int
+  ) {
+    ctx.setBlockData(x, y, z, data)
   }
 }

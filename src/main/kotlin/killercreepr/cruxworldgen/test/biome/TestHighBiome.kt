@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.test.biome
 
-import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
@@ -22,17 +21,7 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
 import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.test.cave.CavernRooms
-import killercreepr.cruxworldgen.test.cave.CheeseCaves
-import killercreepr.cruxworldgen.test.cave.HorizontalMountainTunnel
-import killercreepr.cruxworldgen.test.cave.LavaTubes
-import killercreepr.cruxworldgen.test.cave.MountainCutCavesOld
-import killercreepr.cruxworldgen.test.cave.RavineCarver
-import killercreepr.cruxworldgen.test.cave.SpaghettiCaves
-import killercreepr.cruxworldgen.test.cave.ThroughMountainCave
 import org.bukkit.Material
-import kotlin.math.abs
-import kotlin.math.floor
 import kotlin.math.pow
 
 class TestHighBiome(

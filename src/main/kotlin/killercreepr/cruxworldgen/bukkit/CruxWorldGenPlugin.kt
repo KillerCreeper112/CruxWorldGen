@@ -11,12 +11,12 @@ import killercreepr.cruxworldgen.bukkit.generation.BukkitGenerationChunkGenerato
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
 import killercreepr.cruxworldgen.core.decor.SimpleDecorationPipeline
 import killercreepr.cruxworldgen.core.decor.SimplePropPointGrid
+import killercreepr.cruxworldgen.core.feature.SimpleFeaturePipeline
 import killercreepr.cruxworldgen.core.generation.SimpleGenerationPipeline
 import killercreepr.cruxworldgen.core.noise.BaseNoiseModule
 import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
-import killercreepr.cruxworldgen.core.feature.SimpleFeaturePipeline
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator

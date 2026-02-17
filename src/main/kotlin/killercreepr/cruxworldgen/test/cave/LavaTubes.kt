@@ -6,7 +6,6 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
-import killercreepr.cruxworldgen.test.cave.RavineCarver.Signal
 
 class LavaTubes(
   val noodleRadius: Double = 0.5,

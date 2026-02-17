@@ -108,18 +108,20 @@ class Repeat(val n: Int, val inner: PlacementModifier) : PlacementModifier {
 
 class InChunkSquare : PlacementModifier {
   override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    val wx = chunkX * 16 + rng.nextInt(16)
-    val wz = chunkZ * 16 + rng.nextInt(16)
+    val wx = chunkX * region.bufferX + rng.nextInt(region.bufferX)
+    val wz = chunkZ * region.bufferZ + rng.nextInt(region.bufferZ)
     out.add(BlockPos(wx, 0, wz)) // y filled by Height modifier later or combined modifier
   }
 }
 
 class XZHeight(val height: HeightSampler) : PlacementModifier {
   override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    val ctx = region.ctx
-    val wx = chunkX * ctx.chunkContext.width + rng.nextInt(ctx.chunkContext.width)
-    val wz = chunkZ * ctx.chunkContext.depth + rng.nextInt(ctx.chunkContext.depth)
-    val y = height.sampleY(rng, ctx.chunkContext.minHeight, ctx.chunkContext.maxHeight - 1)
+    val center = region.centerBounds
+
+    val wx = rng.nextInt(center.minX, center.maxX+1)
+    val wz = rng.nextInt(center.minZ, center.maxZ+1)
+    val y  = height.sampleY(rng, center.minY, center.maxY)
+
     out.add(BlockPos(wx, y, wz))
   }
 }
@@ -178,24 +180,18 @@ class OreVeinFeature : Feature<OreConfig> {
       val minZ = kotlin.math.floor(cz - rz).toInt()
       val maxZ = kotlin.math.floor(cz + rz).toInt()
 
-      val ctx = region.ctx
       for (x in minX..maxX) for (y in minY..maxY) for (z in minZ..maxZ) {
         // only write inside current chunk; if you want cross-chunk veins later, see note below
-        //todo if (!isInChunk(ctx, x, z)) continue
-        if (y < ctx.chunkContext.minHeight || y >= ctx.chunkContext.maxHeight) continue
+        if(!region.isInRegion(x, z)) continue
 
         val nx = (x + 0.5 - cx) / rx
         val ny = (y + 0.5 - cy) / ry
         val nz = (z + 0.5 - cz) / rz
         if (nx*nx + ny*ny + nz*nz >= 1.0) continue
 
-        val lx = x and 15
-        val lz = z and 15
-
-        val cur = ctx.chunkContext.getBlock(lx, y, lz)
+        val cur = region.getBlock(x, y, z)
         if (!cfg.canReplace(cur)) continue
-
-        ctx.chunkContext.setBlock(lx, y, lz, cfg.ore)
+        region.setBlock(x, y, z, cfg.ore)
       }
     }
   }

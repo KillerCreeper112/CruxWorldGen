@@ -1,5 +1,4 @@
 package killercreepr.cruxworldgen.api.context.terrain
 
-interface TerrainSnapshot {
-  val terrain2D : Terrain2D
+interface Terrain3D {
 }

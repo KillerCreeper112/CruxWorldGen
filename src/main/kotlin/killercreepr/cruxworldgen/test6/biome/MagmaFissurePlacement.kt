@@ -1,3 +1,4 @@
+/*
 package killercreepr.cruxworldgen.test6.biome
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
@@ -98,3 +99,4 @@ class MagmaFissureDecoration(
     }
   }
 }
+*/

@@ -34,6 +34,6 @@ val ironLow = PlacedFeature(
     }
   ),
   modifiers = listOf(
-    Repeat(10, XZHeight(TrapezoidHeight(min = -64, max = 72, plateau = 24)))
+    Repeat(10, XZHeight(TrapezoidHeight(min = -50, max = 72, plateau = 24)))
   )
 )

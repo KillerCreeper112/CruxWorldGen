@@ -1,3 +1,4 @@
+/*
 package killercreepr.cruxworldgen.test
 
 import killercreepr.cruxworldgen.api.structure.*
@@ -25,14 +26,16 @@ class TinyHutFeature : StructureFeature {
     //for (x in 0..4) for (z in 0..4) out.add(RelBlock(x, 0, z, Material.OAK_PLANKS))
 
     // 3-block tall walls (simple)
-    /*for (y in 1..3) {
+    */
+/*for (y in 1..3) {
       for (i in 0..4) {
         out.add(RelBlock(0, y, i, Material.OAK_LOG))
         out.add(RelBlock(4, y, i, Material.OAK_LOG))
         out.add(RelBlock(i, y, 0, Material.OAK_LOG))
         out.add(RelBlock(i, y, 4, Material.OAK_LOG))
       }
-    }*/
+    }*//*
+
 
     // doorway
     out.removeIf { it.x == 2 && (it.y == 1 || it.y == 2) && it.z == 0 }
@@ -42,4 +45,4 @@ class TinyHutFeature : StructureFeature {
 
     return out
   }
-}
+}*/

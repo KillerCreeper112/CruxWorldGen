@@ -3,7 +3,6 @@ package killercreepr.cruxworldgen.api.context
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.util.Curve
 import java.util.*
-import kotlin.times
 
 interface GenerateContext{
   val worldContext : WorldContext
@@ -13,7 +12,6 @@ interface GenerateContext{
   val chunkContext : ChunkContext
   val noise : NoiseBank
 
-  val queries : TerrainQueries
   fun normalizedY(y: Int): Double {
     val minY = chunkContext.minHeight
     val maxYExclusive = chunkContext.maxHeight
