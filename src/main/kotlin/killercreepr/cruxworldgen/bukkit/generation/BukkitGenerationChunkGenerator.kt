@@ -20,6 +20,7 @@ import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
 import killercreepr.cruxworldgen.core.feature.FeaturePipeline
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
+import org.bukkit.HeightMap
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.generator.BlockPopulator
@@ -69,6 +70,36 @@ class BukkitGenerationChunkGenerator(
     val maxY: Int,
     val terrainSnapshot : TerrainSnapshot
   )
+
+  override fun getBaseHeight(
+    worldInfo: WorldInfo,
+    random: Random,
+    x: Int,
+    z: Int,
+    heightMap: HeightMap
+  ): Int {
+    val chunkWidth = worldDetails.chunkWidth
+    val chunkDepth = worldDetails.chunkDepth
+    val chunkX = chunkXFromWorld(x, chunkWidth)
+    val chunkZ = chunkZFromWorld(z, chunkDepth)
+
+    val ctx = BukkitGenerateContext(
+      BukkitWorldContext(worldInfo),
+      random, chunkX, chunkZ,
+      BukkitChunkContext(worldInfo.minHeight, worldInfo.maxHeight, worldDetails.seaLevel, chunkWidth, chunkDepth),
+      noise
+    )
+
+    val zone = generation.zones.sampleZone(ctx, x, z)
+    val biomeBlend = zone.biomes.sampleBiomeBlend(ctx, x, z)
+    return findSurfaceY(ctx, biomeBlend, x, z)
+  }
+
+  fun chunkXFromWorld(worldX: Int, chunkWidth: Int = worldDetails.chunkWidth): Int =
+    Math.floorDiv(worldX, chunkWidth)
+
+  fun chunkZFromWorld(worldZ: Int, chunkDepth: Int = worldDetails.chunkDepth): Int =
+    Math.floorDiv(worldZ, chunkDepth)
 
   override fun generateNoise(
     worldInfo: WorldInfo,
