@@ -13,9 +13,11 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
+import org.codehaus.plexus.util.FastMap
 import java.util.*
 
 data class WorldDetails(
@@ -76,6 +78,7 @@ class BukkitGenerationChunkGenerator(
     for (localX in 0 until chunkWidth) {
       for (localZ in 0 until chunkDepth) {
 
+        val signalWriter = SimpleSignalWriter(FastMap(32))
         val worldX = chunkX * chunkWidth + localX
         val worldZ = chunkZ * chunkDepth + localZ
 
@@ -99,8 +102,8 @@ class BukkitGenerationChunkGenerator(
           val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
           val terrainFinal = terrainMacro + detail
 
-          val caveCarve = generation.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal)
-          val caveAdd   = generation.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal)
+          val caveCarve = generation.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal, signalWriter)
+          val caveAdd   = generation.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal, signalWriter)
 
           val finalDensity = terrainFinal - caveCarve + caveAdd
 
@@ -156,6 +159,7 @@ class BukkitGenerationChunkGenerator(
             caveAirBlocksBelow = airBelow[iy],
             isUnderwater = isUnderwater,
             depthFromSeaFloor = depthFromSeaFloor,
+            signalView = signalWriter
           )
 
           val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
@@ -395,24 +399,5 @@ class BukkitGenerationChunkGenerator(
         }
       }
     }
-
   }
-
-  private fun mix64(x: Long): Long {
-    var z = x
-    z = (z xor (z ushr 30)) * 0xBF58476D1CE4E5B9uL.toLong()
-    z = (z xor (z ushr 27)) * 0x94D049BB133111EBuL.toLong()
-    return z xor (z ushr 31)
-  }
-
-  private val M1: Long = 0x9E3779B97F4A7C15uL.toLong()
-  private val M2: Long = 0xC2B2AE3D27D4EB4FuL.toLong()
-
-  private fun hash01(seed: Long, x: Int, z: Int, salt: Long): Double {
-    val h = mix64(seed xor salt xor (x.toLong() * M1) xor (z.toLong() * M2))
-    return ((h ushr 11) * (1.0 / (1L shl 53)))
-  }
-
-  private fun floorDiv(a: Int, b: Int): Int = Math.floorDiv(a, b)
-
 }

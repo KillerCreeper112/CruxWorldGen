@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.api.generation
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 
 interface GenerationPipeline{
@@ -20,7 +21,8 @@ interface GenerationPipeline{
     y: Int,
     worldZ: Int,
     surfaceY: Int,
-    terrainDensity: Double
+    terrainDensity: Double,
+    signalWriter : SignalWriter
   ): Double
   fun blendedBiomeAdd(
     ctx: GenerateContext,
@@ -29,7 +31,8 @@ interface GenerationPipeline{
     y: Int,
     worldZ: Int,
     surfaceY: Int,
-    terrainDensity: Double
+    terrainDensity: Double,
+    signalWriter : SignalWriter
   ): Double
 
   fun blendedBiomeDensity(

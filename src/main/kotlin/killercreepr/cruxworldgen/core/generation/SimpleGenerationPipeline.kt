@@ -4,6 +4,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 import killercreepr.cruxworldgen.core.context.SimpleCaveContext
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
@@ -31,7 +32,8 @@ class SimpleGenerationPipeline(
     y: Int,
     worldZ: Int,
     surfaceY: Int,
-    terrainDensity: Double
+    terrainDensity: Double,
+    signalWriter : SignalWriter
   ): Double {
 
     var weightedSum = 0.0
@@ -50,7 +52,8 @@ class SimpleGenerationPipeline(
         surfaceY = surfaceY,
         depthBelowSurface = depthBelowSurface,
         terrainDensity = terrainDensity,
-        edge = biomeBlend.edgeContext
+        edge = biomeBlend.edgeContext,
+        signalWriter = signalWriter
       )
 
       val carve = caves.carve(ctx, caveContext)
@@ -67,7 +70,8 @@ class SimpleGenerationPipeline(
     y: Int,
     worldZ: Int,
     surfaceY: Int,
-    terrainDensity: Double
+    terrainDensity: Double,
+    signalWriter : SignalWriter
   ): Double {
 
     var weightedSum = 0.0
@@ -86,7 +90,8 @@ class SimpleGenerationPipeline(
         surfaceY = surfaceY,
         depthBelowSurface = depthBelowSurface,
         terrainDensity = terrainDensity,
-        edge = biomeBlend.edgeContext
+        edge = biomeBlend.edgeContext,
+        signalWriter = signalWriter
       )
 
       val carve = caves.add(ctx, caveContext)

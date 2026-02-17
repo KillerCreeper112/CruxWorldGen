@@ -5,7 +5,9 @@ import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.signal.SignalKey
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import org.bukkit.Bukkit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.pow
@@ -26,6 +28,11 @@ class RavineCarver(
   override val surfaceFadeStart : Int = 0,
   override val surfaceFadeRamp: Int = 3
 ) : CaveType, Noised {
+  object Signal {
+    object RavineFloor : SignalKey.Companion.DoubleKey()
+    object RavineMask : SignalKey.Companion.DoubleKey()
+  }
+
   object Noise : NoiseModule{
     object Warp2D : NoiseKey{ override val id = "cave.ravine.warp2D" }
     object Mask2D : NoiseKey{ override val id = "cave.ravine.mask2D" }
@@ -72,7 +79,6 @@ class RavineCarver(
 
   val widthToNoise = 0.02 // tune: bigger => wider ravines for same halfWidth
 
-
   override fun carveBlocks(ctx: GenerateContext, c: CaveContext): Double {
     val solidDensity = max(0.0, c.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
@@ -114,6 +120,12 @@ class RavineCarver(
 
     // Final carve strength
     val mask = widthMask * verticalMask
+    c.signalWriter.max(c.worldX, c.y, c.worldZ,
+      Signal.RavineMask, mask)
+
+    val nearBottom01 = ((v - 0.85) / 0.15).coerceIn(0.0, 1.0)
+    c.signalWriter.max(c.worldX, c.y, c.worldZ,
+      Signal.RavineFloor, nearBottom01)
     if (mask <= 0.001) return 0.0
 
     val bridge01 = (ctx.noise.get(Noise.Bridge2D).noise2D(xw, zw) + 1.0) * 0.5
@@ -133,7 +145,6 @@ class RavineCarver(
       if (finalMask <= 0.001) return 0.0
       return finalMask * (solidDensity * strength + openMarginBlocks)
     }
-
     return mask * (solidDensity * strength + openMarginBlocks)
   }
 }

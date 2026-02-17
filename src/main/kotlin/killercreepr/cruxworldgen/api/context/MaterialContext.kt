@@ -1,5 +1,8 @@
 package killercreepr.cruxworldgen.api.context
 
+import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.signal.SignalView
+
 interface MaterialContext{
   val generateContext: GenerateContext
   val worldX: Int
@@ -13,4 +16,7 @@ interface MaterialContext{
   val caveAirBlocksBelow: Int    // how much empty space is under ground
   val isUnderwater: Boolean
   val depthFromSeaFloor : Int
+  val signalView : SignalView
+
+  fun densityAt(x: Int, y: Int, z: Int): DensityStack
 }

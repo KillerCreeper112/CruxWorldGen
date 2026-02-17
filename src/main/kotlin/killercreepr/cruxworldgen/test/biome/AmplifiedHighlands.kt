@@ -17,19 +17,14 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
-import killercreepr.cruxworldgen.api.util.NoiseShaper
-import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
-import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.test.cave.CavernRooms
 import killercreepr.cruxworldgen.test.cave.CheeseCaves
-import killercreepr.cruxworldgen.test.cave.HorizontalMountainTunnel
 import killercreepr.cruxworldgen.test.cave.LavaTubes
 import killercreepr.cruxworldgen.test.cave.MountainCheeseOverhangs
-import killercreepr.cruxworldgen.test.cave.MountainCutCavesOld
 import killercreepr.cruxworldgen.test.cave.RavineCarver
 import killercreepr.cruxworldgen.test.cave.SpaghettiCaves
-import killercreepr.cruxworldgen.test.cave.ThroughMountainCave
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
@@ -56,9 +51,14 @@ class AmplifiedHighlands(
       surfaceFadeRamp = 0,
       baseDepthBelowSurface = 0.0
     ),
-    LavaTubes(),
-    RavineCarver(),
-    SpaghettiCaves(),
+    LavaTubes(
+      noodleRadius = 3.5
+    ),
+    SpaghettiCaves(
+      noodleRadius = 3.5,
+      surfaceFadeStart = 0,
+      surfaceFadeRamp = 8
+    ),
     CavernRooms(),
     CheeseCaves()
     /*CheeseCaves(
@@ -127,6 +127,14 @@ class AmplifiedHighlands(
       }
       //if(ctx.isUnderwater) return BukkitBlockResolver.INSTANCE.resolve(Material.WATER)
       if(!ctx.isSolid) return BlockData.NONE
+      val x = ctx.worldX
+      val y = ctx.y
+      val z = ctx.worldZ
+
+      if(ctx.signalView.getOrDefault(x,y+1,z,RavineCarver.Signal.RavineFloor, 0.0) > 0.0){
+        return BukkitBlockResolver.INSTANCE.resolve(Material.MAGMA_BLOCK)
+      }
+
       val depth = ctx.depthBelowSurface
       if(depth == 0){
         return BukkitBlockResolver.INSTANCE.resolve(Material.GRASS_BLOCK)

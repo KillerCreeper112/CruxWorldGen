@@ -6,6 +6,7 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.test.cave.RavineCarver.Signal
 
 class LavaTubes(
   val noodleRadius: Double = 0.5,
@@ -67,6 +68,7 @@ class LavaTubes(
     val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
     val vT = ((verticalRadiusBlocks - dy) / verticalRadiusBlocks).coerceIn(0.0, 1.0)
     val verticalMask = smoothstep01(vT)
+
     if (verticalMask <= 0.001) return 0.0
 
     val warp = ctx.noise.get(Noise.Warp3D).noise3D(cave.worldX, 0, cave.worldZ)
