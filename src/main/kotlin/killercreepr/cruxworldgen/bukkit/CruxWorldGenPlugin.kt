@@ -18,6 +18,9 @@ import killercreepr.cruxworldgen.core.noise.BaseNoiseModule
 import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
+import killercreepr.cruxworldgen.core.underground.SimpleUndergroundFeaturePipeline
+import killercreepr.cruxworldgen.core.underground.ironHigh
+import killercreepr.cruxworldgen.core.underground.ironLow
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
@@ -65,12 +68,18 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     16, 16
                   )
 
+                  val undergroundPipeline = SimpleUndergroundFeaturePipeline(listOf(
+                    ironHigh,
+                    ironLow
+                  ))
+
                   val generator = BukkitGenerationChunkGenerator(
                     generation,
                     decorations,
                     structures,
                     noise,
-                    worldDetails
+                    worldDetails,
+                    undergroundPipeline
                   )
                   val world = WorldCreator(name).generator(
                     generator

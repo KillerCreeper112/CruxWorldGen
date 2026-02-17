@@ -52,12 +52,15 @@ class AmplifiedHighlands(
       baseDepthBelowSurface = 0.0
     ),
     LavaTubes(
-      noodleRadius = 3.5
+      noodleRadius = 3.5,
+      verticalRadiusBlocks = 10.0,
+      depthVariationBlocks = 15.0
     ),
     SpaghettiCaves(
       noodleRadius = 3.5,
       surfaceFadeStart = 0,
-      surfaceFadeRamp = 8
+      surfaceFadeRamp = 8,
+      openMarginBlocks = 30.0,
     ),
     CavernRooms(),
     CheeseCaves()

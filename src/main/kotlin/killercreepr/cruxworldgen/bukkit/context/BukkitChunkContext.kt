@@ -4,6 +4,8 @@ import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockSection
+import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 
@@ -24,8 +26,8 @@ class BukkitChunkContext(
   }
 
   override fun getBlock(x: Int, y: Int, z: Int): BlockSection {
-    //todo val data = chunkData.getBlockData(x, y, z)
-    return null!!
+    //todo
+    return BukkitBlockSection(BukkitDataBlockData(chunkData.getBlockData(x,y,z)))
   }
 
   override fun isEmpty(x: Int, y: Int, z: Int): Boolean = chunkData.getType(x, y, z).isAir

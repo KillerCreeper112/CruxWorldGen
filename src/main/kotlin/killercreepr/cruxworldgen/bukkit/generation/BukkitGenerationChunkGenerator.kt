@@ -14,6 +14,7 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
+import killercreepr.cruxworldgen.core.underground.UndergroundFeaturePipeline
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.WorldInfo
@@ -31,7 +32,8 @@ class BukkitGenerationChunkGenerator(
   val decorations : DecorationPipeline,
   val structures : StructurePipeline,
   val noise : NoiseBank,
-  val worldDetails : WorldDetails
+  val worldDetails : WorldDetails,
+  val undergroundPipeline : UndergroundFeaturePipeline
 ) : ChunkGenerator() {
   fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
     val minY = ctx.chunkContext.minHeight
@@ -172,10 +174,14 @@ class BukkitGenerationChunkGenerator(
 
     fillFluids(ctx, chunkX, chunkZ, density, surfaceYArr, minY, maxY)
 
+    undergroundPipeline.runForChunk(ctx, chunkX, chunkZ){ wx, wz ->
+      val zone = generation.zones.sampleZone(ctx, wx, wz)
+      zone.biomes.sampleBiomeBlend(ctx, wx, wz)
+    }
+
     structures.runForChunk(ctx, chunkX, chunkZ)
 
     decorations.runAllPasses(ctx, chunkX, chunkZ) { wx, wz ->
-      //cacheMap[wx to wz]!!
       val zone = generation.zones.sampleZone(ctx, wx, wz)
       zone.biomes.sampleBiomeBlend(ctx, wx, wz)
     }
