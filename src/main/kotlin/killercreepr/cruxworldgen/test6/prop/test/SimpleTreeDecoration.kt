@@ -4,6 +4,7 @@ import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -27,10 +28,11 @@ class SimpleTreeDecoration(
   private val borderPadding: Int = 1
 ) : Decoration {
 
-  override fun shouldTry(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
+  override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     // If you later add biome-specific toggles, put them here.
     // For now: deterministic chance gate.
     //val r01 = hash01(point.seed xor TREE_SALT)
+    val ctx = region.ctx
     val r01 = CruxNoise.fast(ctx.worldContext.seed.toInt())
       .frequency(0.01)
       .noiseType(CruxNoise.NoiseType.OpenSimplex2)
@@ -39,7 +41,8 @@ class SimpleTreeDecoration(
     return r01 <= chancePerPoint
   }
 
-  override fun findPlacement(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+  override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
 
     val localX = point.localX
@@ -81,8 +84,9 @@ class SimpleTreeDecoration(
     )
   }
 
-  override fun place(ctx: GenerateContext, placement: Placement, biomeBlend: BiomeBlendSample) {
+  override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
     val p = placement as TreePlacement
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
 
     // Trunk

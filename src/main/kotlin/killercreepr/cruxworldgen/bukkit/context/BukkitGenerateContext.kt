@@ -4,7 +4,6 @@ import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.WorldContext
 import killercreepr.cruxworldgen.api.noise.NoiseBank
-import sun.jvm.hotspot.interpreter.Bytecodes.depth
 import java.util.*
 
 class BukkitGenerateContext(

@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.test6.biome
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -29,10 +30,11 @@ class MagmaFissureDecoration(
   private val magmaDepthMax: Int = 6
 ) : Decoration {
 
-  override fun shouldTry(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
+  override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     // Domain warp so fissures snake
     val wx = point.worldX.toDouble()
     val wz = point.worldZ.toDouble()
+    val ctx = region.ctx
     val warpX = ctx.noise.get(CharredWastes.Noise.FissureWarp2D).noise2D(wx, wz) * warpAmp
     val warpZ = ctx.noise.get(CharredWastes.Noise.FissureWarp2D).noise2D(wx + 1000.0, wz + 1000.0) * warpAmp
 
@@ -46,7 +48,8 @@ class MagmaFissureDecoration(
     return ridge01 >= fissureThreshold01
   }
 
-  override fun findPlacement(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+  override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
     val x = point.localX
     val z = point.localZ
@@ -80,8 +83,9 @@ class MagmaFissureDecoration(
     return null
   }
 
-  override fun place(ctx: GenerateContext, placement: Placement, biomeBlend: BiomeBlendSample) {
+  override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
     val p = placement as MagmaFissurePlacement
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
 
     // Fill magma *above* the floor into air

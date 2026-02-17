@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.core.feature
 
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 
 class SimpleFeaturePipeline(
@@ -9,25 +10,26 @@ class SimpleFeaturePipeline(
 ) : FeaturePipeline {
 
   override fun runForChunk(
-    ctx: GenerateContext,
+    region: LimitedRegion,
     chunkX: Int,
     chunkZ: Int,
     biomeBlendSampler: (Int, Int) -> BiomeBlendSample
   ) {
+    val ctx = region.ctx
     val rng = java.util.Random((ctx.worldContext.seed xor (chunkX.toLong() * 341873128712L) xor (chunkZ.toLong() * 132897987541L)))
 
     val positions = ArrayList<BlockPos>(128)
 
-    applyFeatures(ctx, rng, chunkX, chunkZ, globalFeatures, positions)
+    applyFeatures(region, rng, chunkX, chunkZ, globalFeatures, positions)
 
     sampleChunkBlend(ctx, chunkX, chunkZ, biomeBlendSampler).forEach { (biome, weight) ->
       if(weight < 0.25) return@forEach
-      applyFeatures(ctx, rng, chunkX, chunkZ, biome.features, positions)
+      applyFeatures(region, rng, chunkX, chunkZ, biome.features, positions)
     }
   }
 
   fun applyFeatures(
-    ctx: GenerateContext,
+    region: LimitedRegion,
     rng : java.util.Random,
     chunkX: Int,
     chunkZ: Int,
@@ -40,7 +42,7 @@ class SimpleFeaturePipeline(
 
       // run modifiers to create attempt centers
       for (m in pf.modifiers) {
-        m.emitPositions(ctx, rng, chunkX, chunkZ, positions)
+        m.emitPositions(region, rng, chunkX, chunkZ, positions)
       }
 
       // place feature at each position
@@ -49,7 +51,7 @@ class SimpleFeaturePipeline(
       val cfg = pf.cfg
 
       for (pos in positions) {
-        feature.place(ctx, rng, pos, cfg)
+        feature.place(region, rng, pos, cfg)
       }
     }
   }

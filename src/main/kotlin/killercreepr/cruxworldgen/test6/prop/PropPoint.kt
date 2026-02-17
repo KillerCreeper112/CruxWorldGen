@@ -4,6 +4,7 @@ import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.cave.CavePocket
 import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -119,10 +120,11 @@ class CavernPillarRule(
 
   /** Controls distribution. Examples: grid spacing, noise chance, biome-weight scaling */
   override fun shouldTry(
-    ctx: GenerateContext,
+    region: LimitedRegion,
     point: PropPoint,
     biomeBlend: BiomeBlendSample
   ): Boolean {
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
     val minY = chunk.minHeight
     val maxY = chunk.maxHeight
@@ -145,7 +147,8 @@ class CavernPillarRule(
   }
 
   /** Pattern scan: find an anchor/placement candidate */
-  override fun findPlacement(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+  override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
     val minY = chunk.minHeight
     val maxY = chunk.maxHeight
@@ -206,8 +209,9 @@ class CavernPillarRule(
 
 
   /** Apply: place blocks using placement info */
-  override fun place(ctx: GenerateContext, placement: Placement, biomeBlend: BiomeBlendSample) {
+  override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
     val p = placement as CavernPillarRulePlacement
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
 
     val height = (p.yMax - p.yMin + 1).coerceAtLeast(1)

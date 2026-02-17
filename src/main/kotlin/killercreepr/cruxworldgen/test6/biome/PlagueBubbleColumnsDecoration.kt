@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.test6.biome
 
 import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -30,7 +31,7 @@ class PlagueBubbleColumnsDecoration(
 
   private val SALT: Long = 0x1F2E3D4C5B6A798L
 
-  override fun shouldTry(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
+  override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     val patch01 = 1.0//todo (ctx.noise.mireBubblePatch2D.noise(point.worldX.toDouble(), point.worldZ.toDouble()) + 1.0) * 0.5
     if (patch01 < patchThreshold01) return false
 
@@ -38,7 +39,8 @@ class PlagueBubbleColumnsDecoration(
     return r01 < chancePerPoint
   }
 
-  override fun findPlacement(ctx: GenerateContext, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+  override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
     val x = point.localX
     val z = point.localZ
@@ -63,8 +65,9 @@ class PlagueBubbleColumnsDecoration(
     return BubbleColumnPlacement(x, z, floorY, height)
   }
 
-  override fun place(ctx: GenerateContext, placement: Placement, biomeBlend: BiomeBlendSample) {
+  override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
     val p = placement as BubbleColumnPlacement
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
 
     // Base for upward bubbles

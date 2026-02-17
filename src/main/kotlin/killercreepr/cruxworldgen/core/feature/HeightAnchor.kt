@@ -1,31 +1,31 @@
 package killercreepr.cruxworldgen.core.feature
 
-import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 
 interface HeightAnchor {
-  fun resolve(ctx: GenerateContext, worldX: Int, worldZ: Int): Int
+  fun resolve(region: LimitedRegion, worldX: Int, worldZ: Int): Int
 
   data class Absolute(val y: Int) : HeightAnchor {
-    override fun resolve(ctx: GenerateContext, worldX: Int, worldZ: Int) = y
+    override fun resolve(region: LimitedRegion, worldX: Int, worldZ: Int) = y
   }
 
   data class AboveBottom(val offset: Int) : HeightAnchor {
-    override fun resolve(ctx: GenerateContext, worldX: Int, worldZ: Int) =
-      ctx.chunkContext.minHeight + offset
+    override fun resolve(region: LimitedRegion, worldX: Int, worldZ: Int) =
+      region.ctx.chunkContext.minHeight + offset
   }
 
   data class BelowTop(val offset: Int) : HeightAnchor {
-    override fun resolve(ctx: GenerateContext, worldX: Int, worldZ: Int) =
-      (ctx.chunkContext.maxHeight - 1) - offset
+    override fun resolve(region: LimitedRegion, worldX: Int, worldZ: Int) =
+      (region.ctx.chunkContext.maxHeight - 1) - offset
   }
 
   data class AboveSea(val offset: Int) : HeightAnchor {
-    override fun resolve(ctx: GenerateContext, worldX: Int, worldZ: Int) =
-      ctx.chunkContext.seaLevel + offset
+    override fun resolve(region: LimitedRegion, worldX: Int, worldZ: Int) =
+      region.ctx.chunkContext.seaLevel + offset
   }
 
   data class BelowSurface(val depth: Int) : HeightAnchor {
-    override fun resolve(ctx: GenerateContext, worldX: Int, worldZ: Int) =
-      surfaceY - depth
+    override fun resolve(region: LimitedRegion, worldX: Int, worldZ: Int) =
+      region.terrainSnapshot.terrain2D.surfaceY(worldX, worldZ) - depth
   }
 }

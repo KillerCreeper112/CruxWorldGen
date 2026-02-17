@@ -2,7 +2,6 @@ package killercreepr.cruxworldgen.api.context
 
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.util.Curve
-import sun.jvm.hotspot.interpreter.Bytecodes.depth
 import java.util.*
 import kotlin.times
 

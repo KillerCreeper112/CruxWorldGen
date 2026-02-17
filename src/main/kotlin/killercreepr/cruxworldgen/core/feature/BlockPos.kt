@@ -3,13 +3,14 @@ package killercreepr.cruxworldgen.core.feature
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.util.Curve.lerp
 import java.util.*
 
 data class BlockPos(val x: Int, val y: Int, val z: Int)
 
 interface Feature<Cfg> {
-  fun place(ctx: GenerateContext, rng : Random, origin: BlockPos, cfg: Cfg)
+  fun place(region: LimitedRegion, rng : Random, origin: BlockPos, cfg: Cfg)
 }
 
 interface HeightSampler {
@@ -26,14 +27,15 @@ class NearAirFilter(
 ) : PlacementModifier {
 
   override fun emitPositions(
-    ctx: GenerateContext,
+    region: LimitedRegion,
     rng: Random,
     chunkX: Int,
     chunkZ: Int,
     out: MutableList<BlockPos>
   ) {
+    val ctx = region.ctx
     val tmp = ArrayList<BlockPos>(128)
-    base.emitPositions(ctx, rng, chunkX, chunkZ, tmp)
+    base.emitPositions(region, rng, chunkX, chunkZ, tmp)
 
     fun nearAir(p: BlockPos): Boolean {
       var air = 0
@@ -99,13 +101,13 @@ class TrapezoidHeight(val min: Int, val max: Int, val plateau: Int) : HeightSamp
 }
 
 class Repeat(val n: Int, val inner: PlacementModifier) : PlacementModifier {
-  override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    repeat(n) { inner.emitPositions(ctx, rng, chunkX, chunkZ, out) }
+  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+    repeat(n) { inner.emitPositions(region, rng, chunkX, chunkZ, out) }
   }
 }
 
 class InChunkSquare : PlacementModifier {
-  override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
     val wx = chunkX * 16 + rng.nextInt(16)
     val wz = chunkZ * 16 + rng.nextInt(16)
     out.add(BlockPos(wx, 0, wz)) // y filled by Height modifier later or combined modifier
@@ -113,7 +115,8 @@ class InChunkSquare : PlacementModifier {
 }
 
 class XZHeight(val height: HeightSampler) : PlacementModifier {
-  override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+    val ctx = region.ctx
     val wx = chunkX * ctx.chunkContext.width + rng.nextInt(ctx.chunkContext.width)
     val wz = chunkZ * ctx.chunkContext.depth + rng.nextInt(ctx.chunkContext.depth)
     val y = height.sampleY(rng, ctx.chunkContext.minHeight, ctx.chunkContext.maxHeight - 1)
@@ -122,8 +125,8 @@ class XZHeight(val height: HeightSampler) : PlacementModifier {
 }
 
 class Rarity(val chance: Double, val inner: PlacementModifier) : PlacementModifier {
-  override fun emitPositions(ctx: GenerateContext, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
-    if (rng.nextDouble() <= chance) inner.emitPositions(ctx, rng, chunkX, chunkZ, out)
+  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+    if (rng.nextDouble() <= chance) inner.emitPositions(region, rng, chunkX, chunkZ, out)
   }
 }
 
@@ -135,12 +138,12 @@ data class OreConfig(
 )
 
 fun interface OreConfigGetter{
-  fun getOre(ctx: GenerateContext, section : BlockSection)
+  fun getOre(region: LimitedRegion, section : BlockSection)
 }
 
 class OreVeinFeature : Feature<OreConfig> {
 
-  override fun place(ctx: GenerateContext, rng : Random, origin: BlockPos, cfg: OreConfig) {
+  override fun place(region: LimitedRegion, rng : Random, origin: BlockPos, cfg: OreConfig) {
     // Random line endpoints
     val angle = rng.nextDouble() * Math.PI
     val dx = kotlin.math.sin(angle)
@@ -175,6 +178,7 @@ class OreVeinFeature : Feature<OreConfig> {
       val minZ = kotlin.math.floor(cz - rz).toInt()
       val maxZ = kotlin.math.floor(cz + rz).toInt()
 
+      val ctx = region.ctx
       for (x in minX..maxX) for (y in minY..maxY) for (z in minZ..maxZ) {
         // only write inside current chunk; if you want cross-chunk veins later, see note below
         //todo if (!isInChunk(ctx, x, z)) continue

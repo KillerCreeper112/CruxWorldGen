@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.api.structure.standard
 
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.structure.*
 import kotlin.math.max
 import kotlin.math.min
@@ -13,10 +14,11 @@ class BlockListTemplate(
   override val bounds: Aabb = computeBounds(blocks)
 
   override fun placeIntoChunk(
-    ctx: GenerateContext,
+    region: LimitedRegion,
     inst: StructureInstance,
     processors: List<BlockProcessor>
   ) {
+    val ctx = region.ctx
     val chunk = ctx.chunkContext
 
     val chunkWidth = chunk.width

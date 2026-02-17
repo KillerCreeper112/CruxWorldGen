@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.bukkit.generation
 
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
@@ -14,13 +15,15 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.bukkit.region.SimpleLimitedRegion
 import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
+import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
 import killercreepr.cruxworldgen.core.feature.FeaturePipeline
-import net.minecraft.world.level.levelgen.Heightmap
-import org.bukkit.HeightMap
 import org.bukkit.Material
+import org.bukkit.World
+import org.bukkit.generator.BlockPopulator
 import org.bukkit.generator.ChunkGenerator
+import org.bukkit.generator.LimitedRegion
 import org.bukkit.generator.WorldInfo
 import org.codehaus.plexus.util.FastMap
 import java.util.*
@@ -54,6 +57,10 @@ class BukkitGenerationChunkGenerator(
     }
     return minY
   }
+
+  val cache = hashMapOf<Pair<Int, Int>, Cache>()
+
+  data class Cache(val region : killercreepr.cruxworldgen.api.context.LimitedRegion)
 
   override fun generateNoise(
     worldInfo: WorldInfo,
@@ -194,13 +201,17 @@ class BukkitGenerationChunkGenerator(
 
     fillFluids(ctx, chunkX, chunkZ, density, terrain2D, minY, maxY)
 
+    val terrain = SimpleTerrainSnapshot(terrain2D)
+
     val region = SimpleLimitedRegion(
       ctx, bufferX, bufferZ,
       minY, maxY,
       terrain
     )
 
-    features.runForChunk(ctx, chunkX, chunkZ){ wx, wz ->
+    cache[chunkX to chunkZ] = Cache(region)
+
+    /*features.runForChunk(ctx, chunkX, chunkZ){ wx, wz ->
       val zone = generation.zones.sampleZone(ctx, wx, wz)
       zone.biomes.sampleBiomeBlend(ctx, wx, wz)
     }
@@ -210,7 +221,33 @@ class BukkitGenerationChunkGenerator(
     decorations.runAllPasses(ctx, chunkX, chunkZ) { wx, wz ->
       val zone = generation.zones.sampleZone(ctx, wx, wz)
       zone.biomes.sampleBiomeBlend(ctx, wx, wz)
-    }
+    }*/
+  }
+
+  override fun getDefaultPopulators(world: World): List<BlockPopulator?> {
+    return listOf(object : BlockPopulator() {
+      override fun populate(
+        worldInfo: WorldInfo,
+        random: Random,
+        chunkX: Int,
+        chunkZ: Int,
+        limitedRegion: LimitedRegion
+      ) {
+        val cache = cache.remove(chunkX to chunkZ) ?: throw IllegalStateException("No cache for ${chunkX}x${chunkZ}")
+        val region = cache.region
+        features.runForChunk(region, chunkX, chunkZ){ wx, wz ->
+          val zone = generation.zones.sampleZone(region.ctx, wx, wz)
+          zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
+        }
+
+        structures.runForChunk(region, chunkX, chunkZ)
+
+        decorations.runAllPasses(region, chunkX, chunkZ) { wx, wz ->
+          val zone = generation.zones.sampleZone(region.ctx, wx, wz)
+          zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
+        }
+      }
+    })
   }
 
   fun fillFluids(

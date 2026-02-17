@@ -3,6 +3,7 @@ package killercreepr.cruxworldgen.core.structure
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.ChunkContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.structure.Aabb
 import killercreepr.cruxworldgen.api.structure.StructureInstance
 import killercreepr.cruxworldgen.api.structure.StructureTemplate
@@ -334,7 +335,8 @@ class NaturalPadTerraformer(
   )
 ) : Terraformer {
 
-  override fun terraformChunk(ctx: GenerateContext, inst: StructureInstance, template: StructureTemplate) {
+  override fun terraformChunk(region: LimitedRegion, inst: StructureInstance, template: StructureTemplate) {
+    val ctx = region.ctx
     val state = TerraformState(
       ctx = ctx,
       inst = inst,

@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.core.structure
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.structure.StructureInstance
 import killercreepr.cruxworldgen.api.structure.StructurePlacementRule
 import killercreepr.cruxworldgen.api.util.HashUtil
@@ -14,7 +15,7 @@ class CellPlacementRule(
   private val borderPadding: Int = 3
 ) : StructurePlacementRule {
 
-  override fun pickInstancesForChunk(ctx: GenerateContext, chunkX: Int, chunkZ: Int): List<StructureInstance> {
+  override fun pickInstancesForChunk(region: LimitedRegion, chunkX: Int, chunkZ: Int): List<StructureInstance> {
     val out = ArrayList<StructureInstance>()
 
     val cellSize = cellSizeChunks
@@ -23,6 +24,7 @@ class CellPlacementRule(
 
     // You only need to check *this* cell in single-anchor-per-cell mode
     // (later for overlap you can check neighbors)
+    val ctx = region.ctx
     val baseSeed = ctx.worldContext.seed
     val cellSeed = HashUtil.hash2D(baseSeed, cellX, cellZ) xor featureId.hashCode().toLong()
 

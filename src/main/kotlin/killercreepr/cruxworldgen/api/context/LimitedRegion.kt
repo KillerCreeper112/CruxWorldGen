@@ -12,7 +12,7 @@ interface LimitedRegion : RegionAccessor {
     get() = ctx.chunkX
   val centerChunkZ : Int
     get() = ctx.chunkZ
-  val terrain : TerrainSnapshot
+  val terrainSnapshot : TerrainSnapshot
 
   fun isInRegion(worldX : Int, worldY : Int, worldZ : Int) : Boolean
   fun isInRegion(worldX : Int, worldZ : Int) : Boolean

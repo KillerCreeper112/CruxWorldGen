@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.core.decor
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
@@ -8,11 +9,12 @@ import killercreepr.cruxworldgen.api.prop.PropPointGrid
 
 class SimpleDecorationPipeline(override val grid: PropPointGrid) : DecorationPipeline {
   override fun runAllPasses(
-    ctx: GenerateContext,
+    region: LimitedRegion,
     chunkX: Int,
     chunkZ: Int,
     sampleBlendAt: (worldX: Int, worldZ: Int) -> BiomeBlendSample
   ){
+    val ctx = region.ctx
     val points = grid.pointsForChunk(ctx, chunkX, chunkZ)
 
     for (point in points) {
@@ -25,9 +27,9 @@ class SimpleDecorationPipeline(override val grid: PropPointGrid) : DecorationPip
 
         for (decoration in decorations) {
           if(decoration.pass != pass) continue
-          if (!decoration.shouldTry(ctx, point, blend)) continue
-          val placement = decoration.findPlacement(ctx, point, blend) ?: continue
-          decoration.place(ctx, placement, blend)
+          if (!decoration.shouldTry(region, point, blend)) continue
+          val placement = decoration.findPlacement(region, point, blend) ?: continue
+          decoration.place(region, placement, blend)
         }
       }
     }
