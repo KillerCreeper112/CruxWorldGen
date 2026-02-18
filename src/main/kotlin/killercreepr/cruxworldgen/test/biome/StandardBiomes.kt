@@ -24,7 +24,7 @@ import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.math.*
 
-val gCaves: CaveShape = CaveProfile(
+val gCaves: CaveProfile = CaveProfile(
   listOf(
     LavaTubes(),
     RavineCarver(),

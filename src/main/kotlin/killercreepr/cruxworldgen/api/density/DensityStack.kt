@@ -15,4 +15,5 @@ interface DensityStack{
   val add: Double
   val carve: Double
   fun finalDensity(): Double = base + add - carve
+  fun toBank() : DensityBank
 }

@@ -11,6 +11,18 @@ interface DensityBank{
     ) : DensityBank = SimpleDensityBank(base, carve, add)
   }
 
+  fun add(bank : DensityBank){
+    addBase(bank.base)
+    addCarve(bank.carve)
+    addAdditive(bank.add)
+  }
+
+  fun add(bank : DensityStack){
+    addBase(bank.base)
+    addCarve(bank.carve)
+    addAdditive(bank.add)
+  }
+
   var base: Double         // main terrain density
   var carve: Double      // subtract to carve (caves/overhangs)
   var add: Double            // add to add solids (pillars)
@@ -20,4 +32,6 @@ interface DensityBank{
   fun addAdditive(v: Double) { add += v }
 
   fun finalDensity(): Double = base + add - carve
+
+  fun toStack() : DensityStack
 }

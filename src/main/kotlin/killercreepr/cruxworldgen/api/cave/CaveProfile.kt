@@ -18,7 +18,7 @@ open class CaveProfile(
     val fade = depthFade(cave.depthBelowSurface, strongestType)
     val edgeFade = Curve.smoothstep01((1.0 - cave.edge.edgeBlendFactor()).coerceIn(0.0, 1.0))
 
-    val carved = strongestCarve * fade * edgeFade
+    val carved = strongestCarve * fade// * edgeFade
 
     // Safety cap: never carve more than local solid density + margin
     val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
@@ -28,24 +28,18 @@ open class CaveProfile(
 
   override fun add(ctx: GenerateContext, c: CaveContext): Double {
     // Above surface => no cave additions
-    if (c.depthBelowSurface < 100) return 0.0
+    //if (c.depthBelowSurface < 100) return 0.0
 
-    val (strongestCarve, strongestType) = strongestCarveAndType(ctx, c)
-    if (strongestCarve <= 0.0001) return 0.0
+    val (strongestAdd, strongestType) = strongestAddAndType(ctx, c, strongestCarveAndType(ctx, c).first)
+    //if (strongestCarve <= 0.0001) return 0.0
 
     val fade = depthFade(c.depthBelowSurface, strongestType)
     val edgeFade = Curve.smoothstep01((1.0 - c.edge.edgeBlendFactor()).coerceIn(0.0, 1.0))
 
-    var strongestAdd = 0.0
-    for (type in caveTypes) {
-      strongestAdd = maxOf(strongestAdd, type.addBlocks(ctx, c, strongestCarve))
-    }
-
-    val added = strongestAdd * fade * edgeFade
+    val added = strongestAdd// * fade// * edgeFade
 
     // SAFETY: never add more than carve + margin (prevents filling caves back in)
-    val maxAllowedAdd = strongestCarve + 0.75
-    return added.coerceIn(0.0, maxAllowedAdd)
+    return added//.coerceIn(0.0, maxAllowedAdd)
   }
 
   fun strongestCarveAndType(ctx: GenerateContext, cave: CaveContext): Pair<Double, CaveType?> {
@@ -53,6 +47,19 @@ open class CaveProfile(
     var bestType: CaveType? = null
     for (type in caveTypes) {
       val v = type.carveBlocks(ctx, cave)
+      if (v > best) {
+        best = v
+        bestType = type
+      }
+    }
+    return best to bestType
+  }
+
+  fun strongestAddAndType(ctx: GenerateContext, cave: CaveContext, strongestCarve: Double): Pair<Double, CaveType?> {
+    var best = 0.0
+    var bestType: CaveType? = null
+    for (type in caveTypes) {
+      val v = type.addBlocks(ctx, cave, strongestCarve)
       if (v > best) {
         best = v
         bestType = type

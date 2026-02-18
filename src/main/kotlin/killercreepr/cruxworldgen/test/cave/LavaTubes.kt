@@ -6,6 +6,7 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
 
 class LavaTubes(
   val noodleRadius: Double = 0.5,
@@ -17,6 +18,8 @@ class LavaTubes(
   val strength: Double = 1.12,
   val openMarginBlocks: Double = 10.0,
   val warpBlocks: Double = 18.0,
+  val halfWidthBlocks: Double = 48.0,
+  val centerYBlocks: GenerateHeightSampler = GenerateHeightSampler.relative(0.5),
   override val surfaceFadeStart : Int = 4,
   override val surfaceFadeRamp: Int = 8
 ) : CaveType, Noised {
@@ -61,13 +64,12 @@ class LavaTubes(
     //if (cave.depthBelowSurface <= 0) return 0.0
 
     // centerline depth slowly varies across XZ
-    val hNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
-    val centerY = cave.surfaceY - (baseDepthBelowSurface + hNoise * depthVariationBlocks)
+    //todo val hNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
+    //todo val centerY = cave.surfaceY - (baseDepthBelowSurface + hNoise * depthVariationBlocks)
 
-    val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
-    val vT = ((verticalRadiusBlocks - dy) / verticalRadiusBlocks).coerceIn(0.0, 1.0)
-    val verticalMask = smoothstep01(vT)
-
+    val dy = kotlin.math.abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
+    val bandT = ((halfWidthBlocks - dy) / halfWidthBlocks).coerceIn(0.0, 1.0)
+    val verticalMask = smoothstep01(bandT)
     if (verticalMask <= 0.001) return 0.0
 
     val warp = ctx.noise.get(Noise.Warp3D).noise3D(cave.worldX, 0, cave.worldZ)

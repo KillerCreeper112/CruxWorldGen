@@ -14,11 +14,13 @@ val ironHigh = PlacedFeature(
     canReplace = {
       val data = it.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig data.data.material == Material.STONE
+      return@OreConfig true// data.data.material == Material.STONE
     }
   ),
   modifiers = listOf(
-    Repeat(20, XZHeight(TriangleHeight(min = 80, max = 256)))
+    Repeat(20, XZHeight(TriangleHeight(
+      baseHeight = UniformHeightSampler.relative(0.5, 0.9)
+    )))
   )
 )
 
@@ -30,10 +32,13 @@ val ironLow = PlacedFeature(
     canReplace = {
       val data = it.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig data.data.material == Material.STONE
+      return@OreConfig true//data.data.material == Material.STONE
     }
   ),
   modifiers = listOf(
-    Repeat(10, XZHeight(TrapezoidHeight(min = -50, max = 72, plateau = 24)))
+    Repeat(10, XZHeight(TrapezoidHeight(
+      baseHeight = UniformHeightSampler.relative(0.25, 0.75),
+      plateau = 24
+    )))
   )
 )

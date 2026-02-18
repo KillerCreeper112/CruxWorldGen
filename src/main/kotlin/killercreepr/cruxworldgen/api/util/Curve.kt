@@ -6,6 +6,11 @@ object Curve {
     return x * x * (3.0 - 2.0 * x)
   }
 
+  fun smoothstep(a: Double, b: Double, x: Double): Double {
+    val t = ((x - a) / (b - a)).coerceIn(0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+  }
+
   fun smootherstep01(t: Double): Double {
     val x = t.coerceIn(0.0, 1.0)
     return x * x * x * (x * (x * 6 - 15) + 10)

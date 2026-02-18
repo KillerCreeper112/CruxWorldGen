@@ -5,6 +5,7 @@ import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.util.Curve.lerp
+import net.minecraft.util.Mth.frac
 import java.util.*
 
 data class BlockPos(val x: Int, val y: Int, val z: Int)
@@ -13,8 +14,65 @@ interface Feature<Cfg> {
   fun place(region: LimitedRegion, rng : Random, origin: BlockPos, cfg: Cfg)
 }
 
+interface UniformHeightSampler{
+  companion object{
+    fun relative(
+      minFrac: Double,
+      maxFrac: Double
+    ) = RelativeHeight(minFrac, maxFrac)
+  }
+
+  fun sampleMinY(
+    rng: Random,
+    region : LimitedRegion,
+    wx : Int,
+    wz : Int
+  ): Int
+  fun sampleMaxY(
+    rng: Random,
+    region : LimitedRegion,
+    wx : Int,
+    wz : Int
+  ): Int
+}
+
+interface GenerateHeightSampler{
+  companion object{
+    fun relative(
+      frac: Double
+    ) = RelativeGenerateHeightSampler(frac)
+  }
+
+  fun sampleY(
+    ctx: GenerateContext
+  ): Int
+}
+
+class RelativeGenerateHeightSampler(
+  val frac: Double
+) : GenerateHeightSampler{
+  override fun sampleY(
+    ctx: GenerateContext
+  ): Int {
+    val minY = ctx.chunkContext.minHeight
+    val maxY = ctx.chunkContext.maxHeight-1
+    val span = (maxY - minY).coerceAtLeast(1)
+    return (minY + span * frac).toInt()
+  }
+}
+
 interface HeightSampler {
-  fun sampleY(rng: java.util.Random, minY: Int, maxY: Int): Int
+  companion object{
+    fun relative(
+      frac: Double
+    ) = RelativeHeightSampler(frac)
+  }
+  fun sampleY(
+    rng: Random,
+    region : LimitedRegion,
+    wx : Int,
+    wz : Int
+  ): Int
 }
 
 class NearAirFilter(
@@ -61,23 +119,91 @@ class NearAirFilter(
   }
 }
 
+/**
+ * If value is 0, will be at the bottom of the world,
+ * If value is 1, will be at the top of the world.
+ *
+ * minFrac = 0-1
+ * maxFrac = 0-1
+ *
+ * Example:
+ * minFrac = 0.25 (25% above min height)
+ * maxFrac = 0.75 (25% below max height)
+ */
+class RelativeHeight(
+  val minFrac: Double,
+  val maxFrac: Double
+) : UniformHeightSampler{
+  override fun sampleMinY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val minY = region.regionBounds.minY
+    val maxY = region.regionBounds.maxY
+    val span = (maxY - minY).coerceAtLeast(1)
 
+    return (minY + span * minFrac).toInt()
+  }
+
+  override fun sampleMaxY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val minY = region.regionBounds.minY
+    val maxY = region.regionBounds.maxY
+    val span = (maxY - minY).coerceAtLeast(1)
+
+    return (minY + span * maxFrac).toInt()
+  }
+
+}
+
+class RelativeHeightSampler(
+  val frac: Double
+) : HeightSampler{
+  override fun sampleY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val minY = region.regionBounds.minY
+    val maxY = region.regionBounds.maxY
+    val span = (maxY - minY).coerceAtLeast(1)
+
+    return (minY + span * frac).toInt()
+  }
+}
 
 /** Uniform between */
-class UniformHeight(val min: Int, val max: Int) : HeightSampler {
-  override fun sampleY(rng: java.util.Random, minY: Int, maxY: Int): Int {
-    val lo = kotlin.math.max(this.min, minY)
-    val hi = kotlin.math.min(this.max, maxY)
+class UniformHeight(val baseHeight : UniformHeightSampler) : HeightSampler {
+  override fun sampleY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
     if (hi < lo) return lo
     return lo + rng.nextInt(hi - lo + 1)
   }
 }
 
 /** Triangle distribution peaking at center */
-class TriangleHeight(val min: Int, val max: Int) : HeightSampler {
-  override fun sampleY(rng: java.util.Random, minY: Int, maxY: Int): Int {
-    val lo = kotlin.math.max(this.min, minY)
-    val hi = kotlin.math.min(this.max, maxY)
+class TriangleHeight(val baseHeight : UniformHeightSampler) : HeightSampler {
+  override fun sampleY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
     if (hi < lo) return lo
     val a = rng.nextInt(hi - lo + 1)
     val b = rng.nextInt(hi - lo + 1)
@@ -86,11 +212,18 @@ class TriangleHeight(val min: Int, val max: Int) : HeightSampler {
 }
 
 /** Trapezoid-ish: flat middle, fades at edges (very useful for “wide band” ores) */
-class TrapezoidHeight(val min: Int, val max: Int, val plateau: Int) : HeightSampler {
-  override fun sampleY(rng: java.util.Random, minY: Int, maxY: Int): Int {
-    val lo = kotlin.math.max(this.min, minY)
-    val hi = kotlin.math.min(this.max, maxY)
+class TrapezoidHeight(val baseHeight : UniformHeightSampler,
+                      val plateau: Int) : HeightSampler {
+  override fun sampleY(
+    rng: Random,
+    region : LimitedRegion,
+    wx : Int,
+    wz : Int
+  ): Int {
+    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
     if (hi < lo) return lo
+
     val range = hi - lo + 1
     val p = plateau.coerceIn(0, range)
     // pick from [0..range+p) then clamp => creates a plateau in the middle
@@ -101,13 +234,13 @@ class TrapezoidHeight(val min: Int, val max: Int, val plateau: Int) : HeightSamp
 }
 
 class Repeat(val n: Int, val inner: PlacementModifier) : PlacementModifier {
-  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(region: LimitedRegion, rng: Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
     repeat(n) { inner.emitPositions(region, rng, chunkX, chunkZ, out) }
   }
 }
 
 class InChunkSquare : PlacementModifier {
-  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(region: LimitedRegion, rng: Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
     val wx = chunkX * region.bufferX + rng.nextInt(region.bufferX)
     val wz = chunkZ * region.bufferZ + rng.nextInt(region.bufferZ)
     out.add(BlockPos(wx, 0, wz)) // y filled by Height modifier later or combined modifier
@@ -115,19 +248,24 @@ class InChunkSquare : PlacementModifier {
 }
 
 class XZHeight(val height: HeightSampler) : PlacementModifier {
-  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(region: LimitedRegion, rng: Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
     val center = region.centerBounds
 
     val wx = rng.nextInt(center.minX, center.maxX+1)
     val wz = rng.nextInt(center.minZ, center.maxZ+1)
-    val y  = height.sampleY(rng, center.minY, center.maxY)
+
+    val y  = height.sampleY(
+      rng,
+      region,
+      wx, wz
+    )
 
     out.add(BlockPos(wx, y, wz))
   }
 }
 
 class Rarity(val chance: Double, val inner: PlacementModifier) : PlacementModifier {
-  override fun emitPositions(region: LimitedRegion, rng: java.util.Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
+  override fun emitPositions(region: LimitedRegion, rng: Random, chunkX: Int, chunkZ: Int, out: MutableList<BlockPos>) {
     if (rng.nextDouble() <= chance) inner.emitPositions(region, rng, chunkX, chunkZ, out)
   }
 }

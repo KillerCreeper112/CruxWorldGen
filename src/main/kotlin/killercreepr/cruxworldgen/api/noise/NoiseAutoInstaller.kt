@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.api.noise
 
+import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 
@@ -10,6 +11,10 @@ class NoiseAutoInstaller(val noise : NoiseBank) {
       install(zone as? Noised)
       zone.biomes.biomes.forEach { biome ->
         install(biome as? Noised)
+        (biome.shape as? BiomeShapeProfile)?.let { profile ->
+          profile.types.forEach { type -> install(type as? Noised) }
+        }
+
         install(biome.caves as? Noised)
         (biome.caves as? CaveProfile)?.let {
           for (type in it.caveTypes) {

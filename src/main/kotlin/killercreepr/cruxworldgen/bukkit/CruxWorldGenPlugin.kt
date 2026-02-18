@@ -51,7 +51,7 @@ class CruxWorldGenPlugin : CruxPlugin() {
                   val decorations = SimpleDecorationPipeline(SimplePropPointGrid())
                   val structures = SimpleStructurePipeline(structureRegistry)
 
-                  val seed = CruxMath.random().nextLong()
+                  val seed = -3821261185915076750L//todo temp seed CruxMath.random().nextLong()
                   val noise = SimpleNoiseBank(seed)
 
                   BaseNoiseModule.install(noise)

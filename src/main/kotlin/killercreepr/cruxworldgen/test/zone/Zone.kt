@@ -4,6 +4,7 @@ import killercreepr.cruxworldgen.api.biome.BiomeRegistry
 import killercreepr.cruxworldgen.api.zone.Zone
 import killercreepr.cruxworldgen.test.biome.AmplifiedHighlands
 import killercreepr.cruxworldgen.test.biome.CharredWastes
+import killercreepr.cruxworldgen.test.biome.TestAmp
 import killercreepr.cruxworldgen.test.biome.ToxicFogBasins
 
 class TestZone : Zone{

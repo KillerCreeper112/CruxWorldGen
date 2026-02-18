@@ -124,11 +124,11 @@ class BukkitGenerationChunkGenerator(
     val chunkWidth = worldDetails.chunkWidth
     val chunkDepth = worldDetails.chunkDepth
 
-    val baseWX = chunkX * chunkWidth   // world X of localX=0
-    val baseWZ = chunkZ * chunkDepth   // world Z of localZ=0
+    val baseWX = chunkX * chunkWidth
+    val baseWZ = chunkZ * chunkDepth
 
-    val bufferX = 32  // blocks
-    val bufferZ = 32  // blocks
+    val bufferX = 32
+    val bufferZ = 32
 
     val minWX = baseWX - bufferX
     val minWZ = baseWZ - bufferZ
@@ -172,7 +172,6 @@ class BukkitGenerationChunkGenerator(
         val col = DoubleArray(H)
         val surfaceY = findSurfaceY(ctx, biomeBlend, worldX, worldZ)
         terrain2D.surfaceY[terrain2D.idxUnsafe(worldX, worldZ)] = surfaceY
-        //surfaceYArr[localX + (localZ shl 4)] = surfaceY
 
         for (y in maxY downTo minY) {
           val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter).finalDensity()

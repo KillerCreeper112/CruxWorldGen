@@ -31,10 +31,10 @@ import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
 
-class CharredWastes(
+class CharredWastesAlt(
   override val caves: CaveShape = CaveProfile(
     buildList {
-      addAll(gCaves.caveTypes)
+      //addAll(gCaves.caveTypes)
     }
   ),
   override val decorations: List<Decoration> = listOf(),
@@ -62,7 +62,7 @@ class CharredWastes(
   },
 
   // ===== Plateau knobs =====
-  private val baseHeight: Double = 70.0,     // how high above sea level the wastes sit
+  private val baseHeight: Double = 90.0,     // how high above sea level the wastes sit
   private val rollAmp: Double = 18.0,        // broad rolling
   private val ridgeAmp: Double = 55.0,       // raised ridges/knuckles
 
@@ -159,7 +159,7 @@ class CharredWastes(
       }
       bank.register(OverhangMask2D){ seed ->
         NoiseField.noiseField(seed){
-          frequency(0.02)
+          frequency(0.02) // big patches (~100 blocks)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
             .fractalOctaves(2)
@@ -168,7 +168,7 @@ class CharredWastes(
 
       bank.register(OverhangHeight2D){ seed ->
         NoiseField.noiseField(seed){
-          frequency(0.006)
+          frequency(0.006) // very slow drift; steps will do the layering
             .noiseType(CruxNoise.NoiseType.Perlin)
             .fractalType(CruxNoise.FractalType.FBm)
             .fractalOctaves(2)
@@ -177,7 +177,7 @@ class CharredWastes(
 
       bank.register(OverhangWarp2D){ seed ->
         NoiseField.noiseField(seed){
-          frequency(0.005)
+          frequency(0.005) // very slow drift; steps will do the layering
             .noiseType(CruxNoise.NoiseType.Perlin)
             .fractalType(CruxNoise.FractalType.FBm)
             .fractalOctaves(3)
@@ -255,48 +255,29 @@ class CharredWastes(
           crackLine
         )
 
-        val yNormalized = ctx.normalizedY(y)
-        val overhangGate = smoothstep(0.45, 0.85, yNormalized)
-
-        val overhang3D = shaper.shape(ctx.noise.get(Noise.Overhang3D).noise3D(worldX, y, worldZ))
-        val ridge = 1.0 - abs(overhang3D)  // keep linear (no pow)
-
-        val baseThreshold = 0.2
-        val strength = 500.0
-
-        val aboveSurface = (-baseDensity).coerceAtLeast(0.0)
-
-// Past this height above the local surface, start suppressing floaters
-        val start = 18.0   // try 12..30
-        val end   = 90.0   // try 60..140 (bigger keeps “squish” taller)
-        val extra = 0.35   // how much stricter it gets at high air (0.2..0.6)
-
-        val t = smoothstep(start, end, aboveSurface)
-        val threshold = baseThreshold + extra * t
-
-        val overhang = overhangGate *
-          ((ridge - threshold).coerceAtLeast(0.0)) *
-          strength
-
         /*val yNormalized = ctx.normalizedY(y)
         val overhangGate = smoothstep(0.45, 0.85, yNormalized)
         val overhang3D = shaper.shape(ctx.noise.get(Noise.Overhang3D).noise3D(worldX, y, worldZ))
-        var ridge = 1.0 - abs(overhang3D)
-        //ridge = ridge.pow(3.0)
+        val ridge = 1.0 - abs(overhang3D)
         val threshold = 0.2
         val strength = 500.0//500.0
         val overhang = overhangGate * (ridge - threshold) * strength*/
 
-        /*val yNormalized = ctx.normalizedY(y)
-        val overhangGate = smoothstep(0.45, 0.85, yNormalized)
 
-        val overhang3D = shaper.shape(ctx.noise.get(Noise.Overhang3D).noise3D(worldX, y, worldZ))
-        var ridge = 1.0 - abs(overhang3D)
-        ridge = ridge.pow(3.0)   // try 2.0..5.0
-        val threshold = 0.2
-        val strength = 500.0
-        val attach = nearSurfaceAirMask(baseDensity, attachRange = 10.0) // try 6..16
-        val overhang = overhangGate * attach * ((ridge - threshold).coerceAtLeast(0.0)) * strength*/
+        val ridge3 = 1.0 - abs(
+          shaper.shape(ctx.noise.get(Noise.Overhang3D).noise3D(worldX, y, worldZ))
+        )
+
+// stacked layers
+        val layerGate = shelfGate(y, worldX, worldZ, ctx, spacing = 24.0, halfWidth = 3.0)
+
+// only build shelves into air (prevents “thickening”)
+        val inAir = airMask01(baseDensity, falloff = 10.0)
+
+// final
+        val threshold = 0.12
+        val strength  = 260.0
+        val overhang  = inAir * layerGate * (ridge3 - threshold) * strength
 
         return DensityStack.densityStack(
           base = baseDensity,
@@ -308,14 +289,56 @@ class CharredWastes(
     listOf(
     )
   )
-
-  fun nearSurfaceAirMask(baseDensity: Double, attachRange: Double): Double {
-    // 1 when baseDensity in [-attachRange .. 0], 0 when far above surface (< -attachRange)
-    val near = smoothstep(-attachRange, 0.0, baseDensity)
-    // 1 in air, 0 in solid
-    val airOnly = smoothstep(0.0, attachRange, -baseDensity)
-    return near * airOnly
+  fun overhangPass(
+    ctx: GenerateContext,
+    wx: Int, y: Int, wz: Int,
+    baseDensity: Double,
+    noiseKey: NoiseKey,          // your Noise.Overhang3D variants
+    spacing: Double,
+    halfWidth: Double,
+    threshold: Double,
+    strength: Double
+  ): Double {
+    val ridge3 = 1.0 - abs(shaper.shape(ctx.noise.get(noiseKey).noise3D(wx, y, wz)))
+    val layer = shelfGate(y, wx, wz, ctx, spacing, halfWidth)
+    val air = airMask01(baseDensity, falloff = spacing * 0.45)
+    return air * layer * (ridge3 - threshold) * strength
   }
+  fun shelfGate(
+    y: Int,
+    wx: Int,
+    wz: Int,
+    ctx: GenerateContext,
+    spacing: Double,     // e.g. 18..32 blocks
+    halfWidth: Double    // e.g. 2..5 blocks
+  ): Double {
+    // Warp the layer phase per (x,z) so shelves “wave”
+    val warp = ctx.noise.get(Noise.OverhangWarp2D).noise2D(wx.toDouble(), wz.toDouble()) * (spacing * 0.35)
+
+    val yp = (y.toDouble() + warp) / spacing           // repeats every spacing
+    val phase = fract(yp)                              // 0..1
+    val halfWidth01 = (halfWidth / spacing).coerceIn(0.01, 0.45)
+
+    // band centered at mid-layer
+    return band01(center01 = 0.5, halfWidth01 = halfWidth01, t01 = phase)
+  }
+
+  // 0 when solid (baseDensity positive), 1 when air (baseDensity negative), smooth around boundary
+  fun airMask01(baseDensity: Double, falloff: Double = 6.0): Double {
+    // if baseDensity = surfaceY - y, then negative => air
+    val t = (-baseDensity / falloff).coerceIn(0.0, 1.0)
+    // smoothstep
+    return t * t * (3.0 - 2.0 * t)
+  }
+  fun fract(x: Double) = x - kotlin.math.floor(x)
+
+  fun band01(center01: Double, halfWidth01: Double, t01: Double): Double {
+    val d = kotlin.math.abs(t01 - center01) / halfWidth01
+    val c = d.coerceIn(0.0, 1.0)
+    val s = c * c * (3.0 - 2.0 * c)     // smoothstep
+    return 1.0 - s                       // 1 at center, 0 outside
+  }
+
 
   fun fissureMask01(ctx: GenerateContext, wx: Int, y: Int, wz: Int, surfaceY: Double): Double {
     val x = wx.toDouble()

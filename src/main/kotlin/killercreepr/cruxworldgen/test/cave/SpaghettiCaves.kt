@@ -5,6 +5,7 @@ import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.util.Curve
 
 class SpaghettiCaves(
   val noodleRadius: Double = 1.0,        // thickness of noodles in XZ-mask space
@@ -15,13 +16,14 @@ class SpaghettiCaves(
   val openMarginBlocks: Double = 6.0,
   val warpBlocks: Double = 22.0,
   override val surfaceFadeStart : Int = 0,
-  override val surfaceFadeRamp: Int = 16
+  override val surfaceFadeRamp: Int = 0
 ) : CaveType, Noised {
 
   object Noise : NoiseModule{
     object Warp3D : NoiseKey{ override val id = "cave.spaghetti.warp3D" }
     object Worm3D : NoiseKey{ override val id = "cave.spaghetti.worm3D" }
     object Height2D : NoiseKey{ override val id = "cave.spaghetti.height2D" }
+    object Entrance2D : NoiseKey { override val id = "cave.spaghetti.entrance2D" }
 
     override fun install(bank: NoiseBank) {
       bank.register(Warp3D){ seed ->
@@ -48,6 +50,14 @@ class SpaghettiCaves(
             .fractalOctaves(2)
         }
       }
+      bank.register(Entrance2D){ seed ->
+        NoiseField.noiseField(seed){
+          frequency(0.0015) // big blobs
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+        }
+      }
     }
   }
 
@@ -59,7 +69,7 @@ class SpaghettiCaves(
     //if (cave.depthBelowSurface <= 0) return 0.0
 
     // ---------- Pick a center Y for the spaghetti layer ----------
-    val heightNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
+    /*val heightNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
     val targetDepth = baseDepthBelowSurface + heightNoise * depthVariationBlocks
     val centerY = cave.surfaceY - targetDepth
 
@@ -67,7 +77,31 @@ class SpaghettiCaves(
     val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
     val vT = ((verticalRadiusBlocks - dy) / verticalRadiusBlocks).coerceIn(0.0, 1.0)
     val verticalMask = vT * vT * (3.0 - 2.0 * vT)
+    if (verticalMask <= 0.001) return 0.0*/
+
+    val entranceN = ctx.noise.get(Noise.Entrance2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
+    val entrance01 = ((entranceN * 0.5) + 0.5) // [0..1]
+
+// Make entrances rare by thresholding
+    val e = ((entrance01 - 0.78) / (1.0 - 0.78)).coerceIn(0.0, 1.0) // 0 unless in top ~22%
+    val entranceMask = Curve.smoothstep01(e)
+
+    val heightNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
+    val baseTargetDepth = baseDepthBelowSurface + heightNoise * depthVariationBlocks
+
+// Lift towards surface in entrance zones (minDepth controls how open it can get)
+    val minDepth = 2.0
+    val targetDepth = baseTargetDepth * (1.0 - entranceMask) + minDepth * entranceMask
+
+    val centerY = cave.surfaceY - targetDepth
+
+// Optional: widen vertical radius inside entrances so it actually reaches the surface
+    val vRadius = verticalRadiusBlocks + entranceMask * 8.0
+    val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
+    val vT = ((vRadius - dy) / vRadius).coerceIn(0.0, 1.0)
+    val verticalMask = vT * vT * (3.0 - 2.0 * vT)
     if (verticalMask <= 0.001) return 0.0
+
 
     // ---------- Build a noodle network in XZ ----------
     // Warp in XZ only (stable with Y)
@@ -83,7 +117,8 @@ class SpaghettiCaves(
     val noodleMask = nT * nT * nT
 
     // Cutoff to prevent tiny 1–2 block pimples
-    if (noodleMask < 0.55) return 0.0
+    //if (noodleMask < 0.55) return 0.0
+    if (noodleMask < 0.35) return 0.0
 
     val mask = noodleMask * verticalMask
 
