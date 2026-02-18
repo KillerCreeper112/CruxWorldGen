@@ -26,11 +26,7 @@ import org.bukkit.HeightMap
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Biome
-import org.bukkit.generator.BiomeProvider
-import org.bukkit.generator.BlockPopulator
-import org.bukkit.generator.ChunkGenerator
-import org.bukkit.generator.LimitedRegion
-import org.bukkit.generator.WorldInfo
+import org.bukkit.generator.*
 import org.codehaus.plexus.util.FastMap
 import java.util.*
 
