@@ -28,8 +28,8 @@ class RavineCarver(
   override val surfaceFadeRamp: Int = 3
 ) : CaveType, Noised {
   object Signal {
-    object RavineFloor : SignalKey.Companion.DoubleKey()
-    object RavineMask : SignalKey.Companion.DoubleKey()
+    object RavineFloor : SignalKey.Companion.DoubleSignalKey()
+    object RavineMask : SignalKey.Companion.DoubleSignalKey()
   }
 
   object Noise : NoiseModule{

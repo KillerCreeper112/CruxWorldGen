@@ -16,6 +16,21 @@ class SimpleSignalWriter(
     set(x,y,z,key, key.max(existing, value))
   }
 
+  override fun <T> min(
+    x: Int,
+    y: Int,
+    z: Int,
+    key: SignalKey<T>,
+    value: T
+  ) {
+    val existing = getIfPresent(x,y,z, key)
+    if(existing == null){
+      set(x,y,z,key, value)
+      return
+    }
+    set(x,y,z,key, key.min(existing, value))
+  }
+
   override fun <T> set(x : Int, y : Int, z : Int, key: SignalKey<T>, value: T){
     val existing = data[key] as? SignalLayer<T>
     if(existing == null){

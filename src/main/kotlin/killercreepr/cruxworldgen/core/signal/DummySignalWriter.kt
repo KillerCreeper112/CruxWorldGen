@@ -13,6 +13,15 @@ class DummySignalWriter : SignalHandler {
   ) {
   }
 
+  override fun <T> min(
+    x: Int,
+    y: Int,
+    z: Int,
+    key: SignalKey<T>,
+    value: T
+  ) {
+  }
+
   override fun <T> set(
     x: Int,
     y: Int,

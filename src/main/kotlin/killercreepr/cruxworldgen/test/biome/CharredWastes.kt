@@ -15,8 +15,12 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.signal.SignalKey
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.api.util.NoiseShaper
+import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
+import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
@@ -30,53 +34,22 @@ class CharredWastes(
     override fun chooseMaterial(context: MaterialContext): BlockData {
       if (!context.isSolid) return BlockData.NONE
 
+      val x = context.worldX
+      val y = context.y
+      val z = context.worldZ
 
-      // Recompute the same 2D fissure mask the shape uses (world-based, deterministic)
-      val fissure = fissureMask01(context.worldX, context.worldZ, context.surfaceY, context.y, context)
-
-      // Paint magma seams in/near fissures.
-      // (These are SOLID blocks; later you can add real lava fluid with a decoration pass.)
-      if (fissure > 0.55 && context.depthBelowSurface >= 2) {
-        // More magma deeper down; more basalt near surface
-        return if (context.depthBelowSurface > 10) BukkitBlockResolver.Companion.INSTANCE.resolve(Material.MAGMA_BLOCK)
-        else BukkitBlockResolver.Companion.INSTANCE.resolve(Material.BASALT)
+      val crackMagma = context.signalView.getOrDefault(
+        x,y+1,z,
+        Signal.CRACK_MAGMA, 0.0
+      )
+      if (crackMagma > 0.8 && context.depthBelowSurface < 9) {
+        return BukkitBlockResolver.Companion.INSTANCE.resolve(Material.MAGMA_BLOCK)
       }
 
-      // Cracked-looking surface palette
       if (context.depthBelowSurface <= 0) return BukkitBlockResolver.INSTANCE.resolve(Material.BLACKSTONE)
       if (context.depthBelowSurface <= 2) return BukkitBlockResolver.Companion.INSTANCE.resolve(Material.BASALT)
 
-      // Bulk filler
       return BukkitBlockResolver.Companion.INSTANCE.resolve(Material.BASALT)
-    }
-
-    private fun fissureMask01(wx: Int, wz: Int, surfaceY: Int, y: Int, context: MaterialContext): Double {
-      // Must match the biome shape's fissure mask parameters (copy/paste)
-      val x = wx.toDouble()
-      val z = wz.toDouble()
-      val ctxRef = context.generateContext
-
-      // domain warp so fissures meander
-      val warpAmp = 18.0
-      val warpX = ctxRef.noise.get(Noise.FissureWarp2D).noise2D(x, z) * warpAmp
-      val warpZ = ctxRef.noise.get(Noise.FissureWarp2D).noise2D(x + 1000.0, z + 1000.0) * warpAmp
-      val xw = x + warpX
-      val zw = z + warpZ
-
-      // ribbon lines: ridge = 1 - abs(noise)
-      val ridge01 = 1.0 - abs(ctxRef.noise.get(Noise.FissureMask2D).noise2D(xw, zw))
-
-      // threshold -> thin lines
-      val threshold01 = 0.83
-      val t = ((ridge01 - threshold01) / (1.0 - threshold01)).coerceIn(0.0, 1.0)
-      val line = smoothstep01(t)
-
-      // vertical presence (strong near surface down to depth)
-      val depth = 40.0
-      val d = (surfaceY - y).toDouble()
-      val vertical = smoothstep01(((depth - d) / depth).coerceIn(0.0, 1.0))
-
-      return (line * vertical).coerceIn(0.0, 1.0)
     }
   },
 
@@ -98,6 +71,10 @@ class CharredWastes(
 ) : Biome.Noised, BukkitBiome {
 
   override fun toBukkitBiome(): org.bukkit.block.Biome = org.bukkit.block.Biome.JUNGLE
+
+  object Signal {
+    val CRACK_MAGMA = SignalKey.doubleSignalKey()
+  }
 
   object Noise : NoiseModule {
     object FissureWarp2D : NoiseKey { override val id = "biome.charred_wastes.fissure.warp2D" }
@@ -164,6 +141,17 @@ class CharredWastes(
   }
   override val noiseModule = Noise
 
+  val shaper = NoiseShaper(
+    listOf(
+      Point(-1.0, ShapingFunction.VALLEY),
+      Point(-0.3, ShapingFunction.FLAT),
+      Point(0.0, ShapingFunction.FLAT),
+      Point(0.7, ShapingFunction.FLAT),
+      Point(0.8, ShapingFunction.HILLS),
+      Point(1.0, ShapingFunction.MOUNTAIN)
+    )
+  )
+
   override val shape = object : BiomeShape {
     override fun density(
       ctx: GenerateContext,
@@ -173,23 +161,13 @@ class CharredWastes(
       edge: BiomeEdgeContext,
       signalWriter : SignalWriter
     ): DensityStack {
-
-
-      // Bind ctx into the material provider so it can sample the same fissure noise
-      (materialProvider as? Any)?.let {
-        if (it is Any) {
-          // safe cast to our anonymous provider's method via reflection isn't worth it;
-          // simplest: make materialProvider a named class if you want this clean.
-        }
-      }
-
       val sea = ctx.chunkContext.seaLevel
 
       // ----- 1) High-elevation plateau base -----
-      val roll = ctx.noise.get(Noise.Base2D).noise2D(worldX, worldZ) // [-1..1]
+      val roll = shaper.smoothShape(ctx.noise.get(Noise.Base2D).noise2D(worldX, worldZ)) // [-1..1]
       val rollY = roll * rollAmp
 
-      val ridgeN = ctx.noise.get(Noise.Ridge2D).noise2D(worldX, worldZ) // [-1..1]
+      val ridgeN = shaper.smoothShape(ctx.noise.get(Noise.Ridge2D).noise2D(worldX, worldZ)) // [-1..1]
       val ridge01 = (1.0 - abs(ridgeN)).pow(3.0)            // [0..1]
       val ridgeY = ridge01 * ridgeAmp
 
@@ -222,7 +200,12 @@ class CharredWastes(
       // Base density is simple surface field
       val baseDensity = surfaceY - y.toDouble()
 
-      return DensityStack.Companion.densityStack(
+      signalWriter.max(
+        worldX, y, worldZ,
+        Signal.CRACK_MAGMA,
+        crackLine
+      )
+      return DensityStack.densityStack(
         base = baseDensity,
         add = 0.0,
         carve = fissureCarve
@@ -230,7 +213,7 @@ class CharredWastes(
     }
   }
 
-  private fun fissureMask01(ctx: GenerateContext, wx: Int, y: Int, wz: Int, surfaceY: Double): Double {
+  fun fissureMask01(ctx: GenerateContext, wx: Int, y: Int, wz: Int, surfaceY: Double): Double {
     val x = wx.toDouble()
     val z = wz.toDouble()
 

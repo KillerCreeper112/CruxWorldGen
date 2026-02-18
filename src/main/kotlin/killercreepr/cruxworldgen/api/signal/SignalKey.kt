@@ -10,8 +10,11 @@ interface SignalKey<T> {
     open class FloatKey : SignalKey<Float> {
       override fun max(oldValue: Float, newValue: Float): Float = oldValue.coerceAtLeast(newValue)
     }*/
-    open class DoubleKey : SignalKey<Double> {
+    fun doubleSignalKey() : SignalKey<Double> = DoubleSignalKey()
+
+    open class DoubleSignalKey : SignalKey<Double> {
       override fun max(oldValue: Double, newValue: Double): Double = oldValue.coerceAtLeast(newValue)
+      override fun min(oldValue: Double, newValue: Double): Double = oldValue.coerceAtMost(newValue)
       override fun buildSignalLayer(): SignalLayer<Double> = DoubleSignalLayer()
     }
     open class DoubleSignalLayer : SignalLayer<Double> {
@@ -42,6 +45,7 @@ interface SignalKey<T> {
 
   }
   fun max(oldValue : T, newValue : T) : T
+  fun min(oldValue : T, newValue : T) : T
 
   fun buildSignalLayer(): SignalLayer<T>
 }
