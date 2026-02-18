@@ -8,6 +8,7 @@ import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
@@ -120,7 +121,7 @@ class SimpleTreeDecoration(
         for (dz in -r..r) {
           val x = cx + dx
           val z = cz + dz
-          if (!region.isInRegion(x,y,z)) continue//todo hard coded chunk borders
+          if (!region.isInRegion(x,y,z)) continue
 
           val manhattan = abs(dx) + abs(dz)
           if (manhattan > r + 1) continue // soft corners
@@ -131,21 +132,6 @@ class SimpleTreeDecoration(
         }
       }
     }
-  }
-
-  private fun hash01(seed: Long): Double {
-    var v = seed
-    v = (v xor (v ushr 30)) * -4658895280553007687L
-    v = (v xor (v ushr 27)) * -7723592293110705685L
-    v = v xor (v ushr 31)
-    val positive = v and Long.MAX_VALUE
-    return positive.toDouble() / Long.MAX_VALUE.toDouble()
-  }
-
-  private fun chooseInt(seed: Long, min: Int, max: Int): Int {
-    if (max <= min) return min
-    val r = hash01(seed)
-    return (min + (r * (max - min + 1)).toInt()).coerceIn(min, max)
   }
 }
 

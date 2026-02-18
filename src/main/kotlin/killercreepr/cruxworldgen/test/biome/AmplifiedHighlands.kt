@@ -17,11 +17,13 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
 import killercreepr.cruxworldgen.test.cave.*
+import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
@@ -117,7 +119,9 @@ class AmplifiedHighlands(
     CavernRooms(),
     CheeseCaves()*/
   )),
-  override val decorations: List<Decoration> = listOf(),
+  override val decorations: List<Decoration> = listOf(
+    SimpleTreeDecoration(chancePerPoint = 0.75)
+  ),
   override val features: List<PlacedFeature<*>> = listOf(
     ironLow, ironHigh
   ),
@@ -173,7 +177,8 @@ class AmplifiedHighlands(
   // Optional: adds a subtle “shelf” feel. Set to 0.0 to disable.
   private val terraceStep: Double = 0.0,      // e.g. 6.0 for stylized terracing
   private val terraceBlend: Double = 0.35     // 0..1 (higher = smoother terraces)
-) : Biome.Noised {
+) : Biome.Noised, BukkitBiome {
+  override fun toBukkitBiome(): org.bukkit.block.Biome = org.bukkit.block.Biome.END_HIGHLANDS
 
   object Noise : NoiseModule {
     object Warp2D : NoiseKey { override val id = "biome.amplified.warp2D" }

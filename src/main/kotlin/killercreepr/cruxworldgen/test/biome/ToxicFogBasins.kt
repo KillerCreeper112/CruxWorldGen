@@ -16,6 +16,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
@@ -46,7 +47,9 @@ class ToxicFogBasins(
 
   // floor imperfections
   private val floorAmpBlocks: Double = 2.5
-) : Biome.Noised {
+) : Biome.Noised, BukkitBiome {
+
+  override fun toBukkitBiome(): org.bukkit.block.Biome = org.bukkit.block.Biome.JAGGED_PEAKS
 
   object Noise : NoiseModule{
     object Warp2D : NoiseKey{ override val id = "biome.toxic_fog_basins.warp2D" }

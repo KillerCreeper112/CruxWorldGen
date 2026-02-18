@@ -15,6 +15,8 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
@@ -76,8 +78,6 @@ class CharredWastes(
 
       return (line * vertical).coerceIn(0.0, 1.0)
     }
-
-    private fun smoothstep01(t: Double): Double = t * t * (3.0 - 2.0 * t)
   },
 
   // ===== Plateau knobs =====
@@ -95,7 +95,9 @@ class CharredWastes(
   private val fissureDepth: Double = 40.0,       // how far down the slit carves
   private val fissureStrength: Double = 26.0,    // how strongly it punches open
   private val fissureWallSoftness: Double = 1.6  // higher => sharper walls
-) : Biome.Noised {
+) : Biome.Noised, BukkitBiome {
+
+  override fun toBukkitBiome(): org.bukkit.block.Biome = org.bukkit.block.Biome.JUNGLE
 
   object Noise : NoiseModule {
     object FissureWarp2D : NoiseKey { override val id = "biome.charred_wastes.fissure.warp2D" }
