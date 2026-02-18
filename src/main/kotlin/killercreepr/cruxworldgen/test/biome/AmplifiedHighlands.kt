@@ -16,6 +16,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
@@ -281,7 +282,8 @@ class AmplifiedHighlands(
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val sea = ctx.chunkContext.seaLevel.toDouble()

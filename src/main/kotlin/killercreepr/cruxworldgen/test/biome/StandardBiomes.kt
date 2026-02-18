@@ -15,6 +15,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
@@ -93,7 +94,8 @@ class Plains : Biome.Noised{
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val seaLevelY = ctx.chunkContext.seaLevel
@@ -154,7 +156,8 @@ class Mountains : Biome.Noised {
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val seaLevelY = ctx.chunkContext.seaLevel
@@ -240,7 +243,8 @@ class Plateaus : Biome.Noised {
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val seaLevelY = ctx.chunkContext.seaLevel
@@ -340,7 +344,8 @@ class SpiralHills : Biome.Noised {
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val seaLevelY = ctx.chunkContext.seaLevel
@@ -442,7 +447,8 @@ class FjordIce : Biome.Noised {
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val seaLevelY = ctx.chunkContext.seaLevel

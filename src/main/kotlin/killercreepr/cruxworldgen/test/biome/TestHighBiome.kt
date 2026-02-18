@@ -16,6 +16,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
@@ -218,7 +219,8 @@ class TestHighBiome(
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
       val noise = ctx.noise
 

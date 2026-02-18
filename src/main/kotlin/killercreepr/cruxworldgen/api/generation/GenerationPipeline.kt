@@ -12,7 +12,8 @@ interface GenerationPipeline{
     biomeBlend: BiomeBlendSample,
     worldX: Int,
     y: Int,
-    worldZ: Int
+    worldZ: Int,
+    signalWriter : SignalWriter
   ): Double
   fun blendedBiomeCarve(
     ctx: GenerateContext,
@@ -40,6 +41,7 @@ interface GenerationPipeline{
     biomeBlend: BiomeBlendSample,
     worldX: Int,
     y: Int,
-    worldZ: Int
+    worldZ: Int,
+    signalWriter : SignalWriter
   ): DensityStack
 }

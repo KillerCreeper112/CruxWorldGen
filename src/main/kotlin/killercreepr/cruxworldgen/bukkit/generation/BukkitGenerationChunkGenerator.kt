@@ -7,6 +7,7 @@ import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.noise.NoiseBank
+import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.structure.StructurePipeline
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
@@ -47,7 +48,7 @@ class BukkitGenerationChunkGenerator(
   val worldDetails : WorldDetails,
   val features : FeaturePipeline
 ) : ChunkGenerator() {
-  val bukkitBiomes : List<org.bukkit.block.Biome>;
+  val bukkitBiomes : List<org.bukkit.block.Biome>
   init{
     val buildingBiomes = mutableListOf<org.bukkit.block.Biome>()
     generation.zones.zones.forEach { zone ->
@@ -65,7 +66,7 @@ class BukkitGenerationChunkGenerator(
     val maxY = ctx.chunkContext.maxHeight - 1
 
     for (y in maxY downTo minY) {
-      val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
+      val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
 
       val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX,  y, worldZ) * 3.0
       val terrainFinal = terrainMacro + detail
@@ -178,7 +179,7 @@ class BukkitGenerationChunkGenerator(
         //surfaceYArr[localX + (localZ shl 4)] = surfaceY
 
         for (y in maxY downTo minY) {
-          val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
+          val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter).finalDensity()
           val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
           val terrainFinal = terrainMacro + detail
 

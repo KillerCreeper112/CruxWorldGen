@@ -18,9 +18,10 @@ class SimpleGenerationPipeline(
     biomeBlend: BiomeBlendSample,
     worldX: Int,
     y: Int,
-    worldZ: Int
+    worldZ: Int,
+    signalWriter : SignalWriter
   ): Double {
-    val terrainStack = blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ)
+    val terrainStack = blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter)
     val detailDensity = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
     //val detailDensity = ctx.noise.detail3D(worldX, y, worldZ) * 3.0  // keep or set 0 while tuning
     return terrainStack.finalDensity() + detailDensity
@@ -107,7 +108,8 @@ class SimpleGenerationPipeline(
     biomeBlend: BiomeBlendSample,
     worldX: Int,
     y: Int,
-    worldZ: Int
+    worldZ: Int,
+    signalWriter : SignalWriter
   ): DensityStack {
     var blendedBase = 0.0
     var blendedAdd = 0.0
@@ -118,7 +120,8 @@ class SimpleGenerationPipeline(
       val weight = weightedBiome.weight
 
       val stack = biome.shape.density(
-        generateCtx, worldX, y, worldZ, biomeBlend.edgeContext
+        generateCtx, worldX, y, worldZ, biomeBlend.edgeContext,
+        signalWriter
       )
 
       blendedBase += weight * stack.base

@@ -15,12 +15,12 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
-import kotlin.math.floor
 import kotlin.math.pow
 
 class CharredWastes(
@@ -170,8 +170,10 @@ class CharredWastes(
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
+
 
       // Bind ctx into the material provider so it can sample the same fissure noise
       (materialProvider as? Any)?.let {
@@ -251,7 +253,4 @@ class CharredWastes(
 
     return (line * vertical).coerceIn(0.0, 1.0)
   }
-
-  private fun smoothstep01(t: Double): Double = t * t * (3.0 - 2.0 * t)
-  private fun floorDiv(a: Int, b: Int): Int = floor(a.toDouble() / b.toDouble()).toInt()
 }

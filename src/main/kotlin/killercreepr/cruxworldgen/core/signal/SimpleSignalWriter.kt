@@ -1,12 +1,12 @@
 package killercreepr.cruxworldgen.core.signal
 
+import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.signal.SignalKey
 import killercreepr.cruxworldgen.api.signal.SignalLayer
-import killercreepr.cruxworldgen.api.signal.SignalWriter
 
 class SimpleSignalWriter(
   override val data : MutableMap<SignalKey<*>, SignalLayer<*>>
-) : SimpleSignalView(data), SignalWriter {
+) : SimpleSignalView(data), SignalHandler {
   override fun <T> max(x : Int, y : Int, z : Int, key: SignalKey<T>, value: T) {
     val existing = getIfPresent(x,y,z, key)
     if(existing == null){

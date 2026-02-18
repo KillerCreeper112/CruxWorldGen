@@ -4,6 +4,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.Terrain2D
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
+import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 
 class SimpleTerrain2D(
@@ -34,7 +35,7 @@ class SimpleTerrain2D(
     val maxY = ctx.chunkContext.maxHeight - 1
 
     for (y in maxY downTo minY) {
-      val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ).finalDensity()
+      val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
 
       val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX,  y, worldZ) * 3.0
       val terrainFinal = terrainMacro + detail

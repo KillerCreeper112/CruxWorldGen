@@ -10,6 +10,7 @@ import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
@@ -55,7 +56,8 @@ class PlagueMire(
       worldX: Int,
       y: Int,
       worldZ: Int,
-      edge: BiomeEdgeContext
+      edge: BiomeEdgeContext,
+      signalWriter : SignalWriter
     ): DensityStack {
 
       val sea = ctx.chunkContext.seaLevel.toDouble()
