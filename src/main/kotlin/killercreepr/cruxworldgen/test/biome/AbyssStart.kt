@@ -25,6 +25,7 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
+import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.math.abs
@@ -42,7 +43,7 @@ class AbyssStart(
     )
   ),
   override val decorations: List<Decoration> = listOf(
-    SimpleTreeDecoration(chancePerPoint = 0.75)
+    AbyssTreeDecor(chancePerPoint = 0.75)
   ),
   override val features: List<PlacedFeature<*>> = listOf(
     ironLow, ironHigh
