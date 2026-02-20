@@ -14,7 +14,7 @@ val ironHigh = PlacedFeature(
     canReplace = {
       val data = it.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig true// data.data.material == Material.STONE
+      return@OreConfig data.data.material.isSolid// data.data.material == Material.STONE
     }
   ),
   modifiers = listOf(
@@ -32,7 +32,7 @@ val ironLow = PlacedFeature(
     canReplace = {
       val data = it.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig true//data.data.material == Material.STONE
+      return@OreConfig data.data.material.isSolid//data.data.material == Material.STONE
     }
   ),
   modifiers = listOf(

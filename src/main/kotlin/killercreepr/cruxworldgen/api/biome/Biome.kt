@@ -14,5 +14,8 @@ interface Biome {
   val features: List<PlacedFeature<*>>
     get() = listOf()
 
+  val rarityWeight: Double
+    get() = 1.0
+
   interface Noised : Biome, killercreepr.cruxworldgen.api.noise.Noised
 }
