@@ -108,6 +108,22 @@ open class NoiseShaper(
       val VALLEY = ShapingFunction { n -> valleyBias(n, amount = 0.35, width = 0.70) }
       val HILLS = ShapingFunction { n -> contrast(n, power = 0.85) }
       val MOUNTAIN = ShapingFunction { n -> mountainize(n, start = 0.35, power = 2.6) }
+      val MOUNTAIN_SMOOTH = ShapingFunction { n ->
+        mountainize(n, start = 0.55, power = 1.55)
+      }
+      val MOUNTAIN_SMOOTH_PLATEAU = ShapingFunction { n ->
+        val m = mountainize(n, start = 0.52, power = 1.6)
+        plateau(m, top = 0.70, softness = 0.22)
+      }
+      val MOUNTAIN_SHOULDERS = ShapingFunction { n ->
+        val m = mountainize(n, start = 0.50, power = 1.55)
+        // bulgeMiddle widens mid-range; apply lightly by blending
+        val b = bulgeMiddle(m, strength = 0.18)
+        (m * 0.65 + b * 0.35).coerceIn(-1.0, 1.0)
+      }
+      val MOUNTAIN_GENTLE = ShapingFunction { n ->
+        mountainize(n, start = 0.62, power = 1.35)
+      }
 
       val EPIC = ShapingFunction { n ->
         // Work in [-1..1]

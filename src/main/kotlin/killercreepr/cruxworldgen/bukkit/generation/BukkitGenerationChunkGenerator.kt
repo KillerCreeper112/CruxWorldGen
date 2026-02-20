@@ -328,6 +328,7 @@ class BukkitGenerationChunkGenerator(
     block.setAt(chunkData, x, y, z)
   }
 
+  //todo make filling fluid better (some chunks don't get filled)
   fun fillFluids(
     chunkData : ChunkData,
     ctx: BukkitGenerateContext,
@@ -441,7 +442,7 @@ class BukkitGenerationChunkGenerator(
     val lavaThreshold = 0.74
 
 // "snap" reduces cross-chunk disagreements because we sample noises at a stable anchor
-    val SNAP = 64               // 32/64/96/128; higher = more coherence
+    val SNAP = 96               // 32/64/96/128; higher = more coherence
 
     fun snapToGrid(v: Int, snap: Int): Int = Math.floorDiv(v, snap) * snap + snap / 2
 

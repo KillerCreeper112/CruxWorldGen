@@ -43,8 +43,8 @@ class AbyssStartOverhang(
     val sy = y.toDouble() + wy
     val sz = worldZ.toDouble() + wz
 
-    val threshold = 0.28
-    val strength = 210.0
+    val threshold = 0.38//0.28
+    val strength = 170.0//210.0
 
     val shelves = shelfGateJittered(
       y, worldX, worldZ, ctx,

@@ -154,6 +154,9 @@ class AbyssStart(
     object Undercut3D : NoiseKey {
       override val id = "biome.amplified.undercut3D"
     }
+    object Spike2D : NoiseKey {
+      override val id = "biome.amplified.spike2D"
+    }
 
     override fun install(bank: NoiseBank) {
       bank.register(Warp2D) { seed ->
@@ -176,7 +179,7 @@ class AbyssStart(
 
       bank.register(Hills2D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.0002)
+          frequency(0.003)
           noiseType(CruxNoise.NoiseType.OpenSimplex2)
           fractalType(CruxNoise.FractalType.FBm)
           fractalOctaves(4)//3
@@ -185,16 +188,16 @@ class AbyssStart(
 
       bank.register(Ridges2D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.0008)
+          frequency(0.006)
           noiseType(CruxNoise.NoiseType.OpenSimplex2)
           fractalType(CruxNoise.FractalType.FBm)
-          fractalOctaves(4)
+          fractalOctaves(2)
         }
       }
 
       bank.register(Valleys2D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.00009)
+          frequency(0.002)
           noiseType(CruxNoise.NoiseType.OpenSimplex2)
           fractalType(CruxNoise.FractalType.FBm)
           fractalOctaves(3)
@@ -203,7 +206,7 @@ class AbyssStart(
 
       bank.register(Detail2D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.015)
+          frequency(0.02)
           noiseType(CruxNoise.NoiseType.OpenSimplex2)
           fractalType(CruxNoise.FractalType.FBm)
           fractalOctaves(3)
@@ -279,6 +282,15 @@ class AbyssStart(
           fractalOctaves(2)
         }
       }
+
+      bank.register(Spike2D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0045) // 0.003..0.007: lower = broader spike fields
+          noiseType(CruxNoise.NoiseType.OpenSimplex2)
+          fractalType(CruxNoise.FractalType.FBm)
+          fractalOctaves(2) // keep low to avoid noisy mess
+        }
+      }
     }
   }
 
@@ -296,7 +308,7 @@ class AbyssStart(
       Point(0.93, ShapingFunction.HILLS),
       Point(0.965, ShapingFunction.MOUNTAIN),
       Point(1.0, ShapingFunction.MOUNTAIN)*/
-      NoiseShaper.Point(-1.0, NoiseShaper.ShapingFunction.VALLEY),
+      /*NoiseShaper.Point(-1.0, NoiseShaper.ShapingFunction.VALLEY),
       NoiseShaper.Point(-0.55, NoiseShaper.ShapingFunction.VALLEY),
 
       // Lower mid: flatten for plains/basins
@@ -310,7 +322,15 @@ class AbyssStart(
       // High: epic composite, then mountains
       NoiseShaper.Point( 0.86, NoiseShaper.ShapingFunction.EPIC),
       NoiseShaper.Point( 0.94, NoiseShaper.ShapingFunction.MOUNTAIN),
-      NoiseShaper.Point( 1.0,  NoiseShaper.ShapingFunction.MOUNTAIN)
+      NoiseShaper.Point( 1.0,  NoiseShaper.ShapingFunction.MOUNTAIN)*/
+      NoiseShaper.Point(-1.0, NoiseShaper.ShapingFunction.VALLEY),
+      NoiseShaper.Point(-0.55, NoiseShaper.ShapingFunction.VALLEY),
+      NoiseShaper.Point(-0.20, NoiseShaper.ShapingFunction.FLAT),
+      NoiseShaper.Point( 0.35, NoiseShaper.ShapingFunction.FLAT),
+      NoiseShaper.Point( 0.65, NoiseShaper.ShapingFunction.HILLS),
+      NoiseShaper.Point( 0.82, NoiseShaper.ShapingFunction.HILLS),
+      NoiseShaper.Point( 0.92, NoiseShaper.ShapingFunction.FLAT),
+      NoiseShaper.Point( 1.0,  NoiseShaper.ShapingFunction.FLAT)
     )
   )
 
@@ -337,35 +357,74 @@ class AbyssStart(
         val xw = wx + warpX
         val zw = wz + warpZ
 
-        val contN = shaper.shape(ctx.noise.get(Noise.Continent2D).noise2D(xw, zw)) // [-1..1]
-        val hillsN = shaper.shape(ctx.noise.get(Noise.Hills2D).noise2D(xw, zw))
-        val ridgesN = shaper.shape(ctx.noise.get(Noise.Ridges2D).noise2D(xw, zw))
-        val valleysN = shaper.shape(ctx.noise.get(Noise.Valleys2D).noise2D(xw, zw))
+        val contN = shaper.smoothShape(ctx.noise.get(Noise.Continent2D).noise2D(xw, zw)) // [-1..1]
+        val hillsN = shaper.smoothShape(ctx.noise.get(Noise.Hills2D).noise2D(xw, zw))
+        val ridgesN = shaper.smoothShape(ctx.noise.get(Noise.Ridges2D).noise2D(xw, zw))
+        val valleysN = shaper.smoothShape(ctx.noise.get(Noise.Valleys2D).noise2D(xw, zw))
         val detailN = ctx.noise.get(Noise.Detail2D).noise2D(wx, wz)
 
         val cont01 = (contN + 1.0) * 0.5
         val hills01 = (hillsN + 1.0) * 0.5
+
         val valleys01 = (valleysN + 1.0) * 0.5
+
+        /*val ridge01 = (1.0 - abs(ridgesN)).coerceIn(0.0, 1.0)
+
+        val t = ((ridge01 - peakStart01) / (peakEnd01 - peakStart01)).coerceIn(0.0, 1.0)
+        val peakMask = smoothstep01(t).pow(peakPower)*/
 
         val ridge01 = (1.0 - abs(ridgesN)).coerceIn(0.0, 1.0)
 
         val t = ((ridge01 - peakStart01) / (peakEnd01 - peakStart01)).coerceIn(0.0, 1.0)
         val peakMask = smoothstep01(t).pow(peakPower)
 
-        val valleyMask = (1.0 - peakMask).coerceIn(0.0, 1.0)
+        //
+        // Highlands gate (prevents crazy spikes in lowlands)
+        val highland01 = smoothstep01(((cont01 - 0.56) / (0.90 - 0.56)).coerceIn(0.0, 1.0))
+
+        // Broad range mask: where hills noise is high AND we're in highlands
+        val range01 = smoothstep01(((hills01 - 0.55) / (0.85 - 0.55)).coerceIn(0.0, 1.0)) * highland01
+
+// Tame factor: 1 in plains, ~0.35 in mountain ranges
+        val tame = 1.0 - 0.85 * range01 //1.0 - 0.65 * range01
+
+// Dedicated spike driver (rare by construction: we use the top tail)
+        val spikeRaw = ctx.noise.get(Noise.Spike2D).noise2D(xw + 2000.0, zw - 2000.0) // [-1..1]
+        val spike01 = ((spikeRaw + 1.0) * 0.5).coerceIn(0.0, 1.0)
+
+// Make spikes rare: only trigger near the extreme high end
+        val spikeStart = 0.40   // 0.88..0.94 (higher = rarer)
+        val spikeEnd   = 0.985  // 0.97..0.995
+        val tt = ((spike01 - spikeStart) / (spikeEnd - spikeStart)).coerceIn(0.0, 1.0)
+
+// Sharpness: 4..7 is a good range
+        val spikeMask = smoothstep01(tt).pow(3.0) * highland01
+        val valleyMask = (1.0 - spikeMask).coerceIn(0.0, 1.0)
         val valleyDepth = smoothstep01(valleys01).pow(valleyPower) * valleyMask
+        //
+
+
+        /*val valleyMask = (1.0 - peakMask).coerceIn(0.0, 1.0)
+        val valleyDepth = smoothstep01(valleys01).pow(valleyPower) * valleyMask*/
 
         var offset = 0.0
 
-        offset += (cont01 - 0.5) * 2.0 * continentAmp
+        offset += (cont01 - 0.5) * 2.0 * continentAmp * (0.85 + 0.15 * range01)
+        //offset += (cont01 - 0.5) * 2.0 * continentAmp
 
-        offset += (hills01 - 0.5) * 2.0 * hillsAmp
+        offset += (hills01 - 0.5) * 2.0 * hillsAmp * tame
+        //offset += (hills01 - 0.5) * 2.0 * hillsAmp
 
-        offset += peakMask * peakAmp
+        val peakBase = peakMask * highland01 * range01
+        offset += peakBase * (peakAmp * 0.25)   // 0.15..0.35
+        //offset += peakMask * peakAmp
 
+        offset += spikeMask * peakAmp
         offset -= valleyDepth * valleyAmp
 
-        offset += detailN * detailAmp
+
+        offset += detailN * detailAmp * (0.55 + 0.45 * range01)
+        //offset += detailN * detailAmp
 
         if (terraceStep > 0.0) {
           val q = floor(offset / terraceStep) * terraceStep
