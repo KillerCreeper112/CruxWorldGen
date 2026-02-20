@@ -3,6 +3,7 @@ package killercreepr.cruxworldgen.api.noise
 import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
+import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 
 class NoiseAutoInstaller(val noise : NoiseBank) {
   val installed = mutableSetOf<NoiseModule>()
@@ -22,6 +23,12 @@ class NoiseAutoInstaller(val noise : NoiseBank) {
           }
         }
       }
+    }
+  }
+
+  fun installFromAll(reg : VolumetricBiomeRegistry){
+    reg.biomes.forEach { biome ->
+      install(biome as? Noised)
     }
   }
 

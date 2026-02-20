@@ -9,6 +9,7 @@ interface Biome {
   val shape: BiomeShape
   val materialProvider: MaterialProvider
   val caves: CaveShape?
+    get() = null
   val decorations: List<Decoration>
     get() = listOf()
   val features: List<PlacedFeature<*>>

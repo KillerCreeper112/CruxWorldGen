@@ -178,10 +178,35 @@ class BukkitGenerationChunkGenerator(
           val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
           val terrainFinal = terrainMacro + detail
 
+          val env = killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv(
+            surfaceY = surfaceY,
+            depthBelowSurface = surfaceY - y,
+            heightAboveSurface = y - surfaceY,
+            terrainDensity = terrainFinal,
+            seaLevel = ctx.chunkContext.seaLevel
+          )
+
+          val volBlend = generation.volumetricBiomes.sample(ctx, worldX, y, worldZ, env, signalWriter)
+
+          val volStack = generation.blendedVolumetricDensity(ctx, volBlend, worldX, y, worldZ, env, signalWriter)
+          val terrainPlusVol = terrainFinal + volStack.add + volStack.base - volStack.carve
+
+          val surfaceCarve = generation.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainPlusVol, signalWriter)
+          val surfaceAdd   = generation.blendedBiomeAdd  (ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainPlusVol, signalWriter)
+
+          val volCarve = generation.blendedVolumetricCarve(ctx, volBlend, worldX, y, worldZ, surfaceY, terrainPlusVol,env, signalWriter)
+          val volAdd   = generation.blendedVolumetricAdd  (ctx, volBlend, worldX, y, worldZ, surfaceY, terrainPlusVol,env, signalWriter)
+
+          val finalDensity = terrainPlusVol - surfaceCarve + surfaceAdd - volCarve + volAdd
+
+          /*val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter).finalDensity()
+          val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+          val terrainFinal = terrainMacro + detail
+
           val caveCarve = generation.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal, signalWriter)
           val caveAdd   = generation.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainFinal, signalWriter)
 
-          val finalDensity = terrainFinal - caveCarve + caveAdd
+          val finalDensity = terrainFinal - caveCarve + caveAdd*/
 
           val iy = y - minY
           col[iy] = finalDensity
@@ -236,7 +261,25 @@ class BukkitGenerationChunkGenerator(
             signalView = signalWriter
           )
 
-          val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
+          val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter).finalDensity()
+          val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+          val terrainFinal = terrainMacro + detail
+          val env = killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv(
+            surfaceY = surfaceY,
+            depthBelowSurface = surfaceY - y,
+            heightAboveSurface = y - surfaceY,
+            terrainDensity = terrainFinal,
+            seaLevel = ctx.chunkContext.seaLevel
+          )
+          val volBlend = generation.volumetricBiomes.sample(ctx, worldX, y, worldZ, env, signalWriter)
+
+          val matProvider =
+            if (!volBlend.isEmpty()) volBlend.dominant().materialProvider
+            else biomeBlend.primaryBiome().materialProvider
+
+          val chosenMaterial = matProvider.chooseMaterial(materialContext)
+
+          //val chosenMaterial = biomeBlend.primaryBiome().materialProvider.chooseMaterial(materialContext)
           if (chosenMaterial != BlockData.NONE) {
             setBlock(chunkData,localX, y, localZ, chosenMaterial)
           }

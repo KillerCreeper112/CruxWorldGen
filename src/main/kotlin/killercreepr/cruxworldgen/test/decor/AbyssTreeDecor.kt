@@ -135,7 +135,7 @@ class AbyssTreePlacer(
           break
         }
 
-        if (dy > 0 && placedBranches < cfg.maxBranches) {
+        if (dy > 2 && placedBranches < cfg.maxBranches) {
 
           for (dir in branchDirections) {
             if (region.ctx.random.nextBoolean()) continue

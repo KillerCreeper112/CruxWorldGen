@@ -9,6 +9,7 @@ import killercreepr.crux.core.util.CruxWorldUtil
 import killercreepr.cruxworldgen.api.noise.NoiseAutoInstaller
 import killercreepr.cruxworldgen.bukkit.generation.BukkitGenerationChunkGenerator
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
+import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 import killercreepr.cruxworldgen.core.decor.SimpleDecorationPipeline
 import killercreepr.cruxworldgen.core.decor.SimplePropPointGrid
 import killercreepr.cruxworldgen.core.feature.SimpleFeaturePipeline
@@ -18,6 +19,7 @@ import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
+import killercreepr.cruxworldgen.test.biome.volumetric.SkyIslands
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
@@ -46,8 +48,14 @@ class CruxWorldGenPlugin : CruxPlugin() {
                   val zones = SimpleZoneRegistry(
                     listOf(TestZone())
                   )
+                  val volBiomes = VolumetricBiomeRegistry(listOf(
+                    SkyIslands()
+                  ))
                   val structureRegistry = SimpleStructureRegistry(listOf())
-                  val generation = SimpleGenerationPipeline(zones)
+                  val generation = SimpleGenerationPipeline(
+                    zones,
+                    volBiomes
+                  )
                   val decorations = SimpleDecorationPipeline(SimplePropPointGrid())
                   val structures = SimpleStructurePipeline(structureRegistry)
 
@@ -57,7 +65,10 @@ class CruxWorldGenPlugin : CruxPlugin() {
                   BaseNoiseModule.install(noise)
 
                   //auto install noises
-                  NoiseAutoInstaller(noise).installAllFromZones(zones)
+                  NoiseAutoInstaller(noise).apply {
+                    installAllFromZones(zones)
+                    installFromAll(volBiomes)
+                  }
 
                   val worldDetails = WorldDetails(
                     62,

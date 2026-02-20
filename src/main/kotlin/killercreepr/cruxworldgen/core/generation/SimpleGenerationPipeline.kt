@@ -1,17 +1,46 @@
 package killercreepr.cruxworldgen.core.generation
 
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
+import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
+import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
+import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 import killercreepr.cruxworldgen.core.context.SimpleCaveContext
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 
 class SimpleGenerationPipeline(
-  override val zones : ZoneRegistry
+  override val zones : ZoneRegistry,
+  override val volumetricBiomes: VolumetricBiomeRegistry
 ) : GenerationPipeline {
+
+  fun sampleBiome(ctx: GenerateContext, biomeBlend : BiomeBlendSample,
+                  worldX: Int, y : Int, worldZ: Int,
+                  terrainSnapshot : TerrainSnapshot,
+                  signalWriter : SignalWriter)
+  : Biome{
+    val terrainMacro = blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter).finalDensity()
+    val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+    val terrainFinal = terrainMacro + detail
+    val terrain2D = terrainSnapshot.terrain2D
+    val surfaceY = terrain2D.surfaceY(worldX, worldZ)
+    val env = VolumeEnv(
+      surfaceY = surfaceY,
+      depthBelowSurface = surfaceY - y,
+      heightAboveSurface = y - surfaceY,
+      terrainDensity = terrainFinal,
+      seaLevel = ctx.chunkContext.seaLevel
+    )
+    val volBlend = volumetricBiomes.sample(ctx, worldX, y, worldZ, env, signalWriter)
+
+    return if (!volBlend.isEmpty()) volBlend.dominant()
+    else biomeBlend.primaryBiome()
+  }
 
   override fun terrainDensityNoCaves(
     ctx: GenerateContext,
@@ -130,5 +159,58 @@ class SimpleGenerationPipeline(
     }
 
     return DensityStack.densityStack(blendedBase, blendedAdd, blendedCarve)
+  }
+
+  override fun blendedVolumetricDensity(
+    ctx: GenerateContext,
+    volBlend: VolBiomeBlendSample,
+    worldX: Int, y: Int, worldZ: Int,
+    env: VolumeEnv,
+    signals: SignalWriter
+  ): DensityStack {
+    var base = 0.0
+    var add = 0.0
+    var carve = 0.0
+
+    for (wb in volBlend.weighted) {
+      val s = wb.biome.shape.density(ctx, worldX, y, worldZ, env, signals) ?: continue
+      base  += wb.weight * s.base
+      add   += wb.weight * s.add
+      carve += wb.weight * s.carve
+    }
+
+    return DensityStack.densityStack(base, add, carve)
+  }
+
+  override fun blendedVolumetricCarve(
+    ctx: GenerateContext,
+    volBlend: VolBiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double,
+    env: VolumeEnv,
+    signalWriter : SignalWriter
+  ): Double {
+    var sum = 0.0
+    for (wb in volBlend.weighted) sum += wb.weight * wb.biome.shape.carve(ctx, worldX, y, worldZ, env, signalWriter)
+    return sum
+  }
+
+  override fun blendedVolumetricAdd(
+    ctx: GenerateContext,
+    volBlend: VolBiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double,
+    env: VolumeEnv,
+    signalWriter : SignalWriter
+  ): Double {
+    var sum = 0.0
+    for (wb in volBlend.weighted) sum += wb.weight * wb.biome.shape.add(ctx, worldX, y, worldZ, env, signalWriter)
+    return sum
   }
 }

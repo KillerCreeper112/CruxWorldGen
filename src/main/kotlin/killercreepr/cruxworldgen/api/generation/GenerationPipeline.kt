@@ -1,9 +1,12 @@
 package killercreepr.cruxworldgen.api.generation
 
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
+import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
+import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 
 interface GenerationPipeline{
   val zones : ZoneRegistry
@@ -44,4 +47,37 @@ interface GenerationPipeline{
     worldZ: Int,
     signalWriter : SignalWriter
   ): DensityStack
+
+  val volumetricBiomes: VolumetricBiomeRegistry
+
+  fun blendedVolumetricDensity(
+    ctx: GenerateContext,
+    volBlend: VolBiomeBlendSample,
+    worldX: Int, y: Int, worldZ: Int,
+    env: VolumeEnv,
+    signals: SignalWriter
+  ): DensityStack
+
+  fun blendedVolumetricCarve(
+    ctx: GenerateContext,
+    volBlend: VolBiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double,
+    env: VolumeEnv,
+    signalWriter : SignalWriter
+  ): Double
+  fun blendedVolumetricAdd(
+    ctx: GenerateContext,
+    volBlend: VolBiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    terrainDensity: Double,
+    env: VolumeEnv,
+    signalWriter : SignalWriter
+  ): Double
 }
