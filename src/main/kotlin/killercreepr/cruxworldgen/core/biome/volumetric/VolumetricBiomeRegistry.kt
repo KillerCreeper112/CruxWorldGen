@@ -5,6 +5,7 @@ import killercreepr.cruxworldgen.api.biome.volumetric.WeightedVolBiome
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 
 class VolumetricBiomeRegistry(
@@ -13,6 +14,7 @@ class VolumetricBiomeRegistry(
   fun sample(
     ctx: GenerateContext,
     worldX: Int, y: Int, worldZ: Int,
+    surfaceBlend : BiomeBlendSample,
     env: VolumeEnv,
     signals: SignalWriter
   ): VolBiomeBlendSample {
@@ -20,6 +22,7 @@ class VolumetricBiomeRegistry(
     val tmp = ArrayList<WeightedVolBiome>(biomes.size)
 
     for (b in biomes) {
+      if(!b.allowedIn(surfaceBlend)) continue
       val s = b.suitability(ctx, worldX, y, worldZ, env, signals).coerceIn(0.0, 1.0)
       if (s <= 1e-6) continue
       tmp.add(WeightedVolBiome(b, s))

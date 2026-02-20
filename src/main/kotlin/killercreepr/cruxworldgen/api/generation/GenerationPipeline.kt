@@ -1,16 +1,29 @@
 package killercreepr.cruxworldgen.api.generation
 
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 
 interface GenerationPipeline{
   val zones : ZoneRegistry
+  fun resolveMainBiome(
+    ctx: GenerateContext,
+    signalWriter: SignalWriter,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    surfaceBlend: BiomeBlendSample,
+    // optional: pass a cached blend if you already sampled it
+    cachedVolBlend: VolBiomeBlendSample? = null
+  ): Biome
   fun terrainDensityNoCaves(
     ctx: GenerateContext,
     biomeBlend: BiomeBlendSample,

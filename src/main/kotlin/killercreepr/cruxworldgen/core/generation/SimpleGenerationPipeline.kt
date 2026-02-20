@@ -2,12 +2,12 @@ package killercreepr.cruxworldgen.core.generation
 
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
+import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
@@ -41,6 +41,40 @@ class SimpleGenerationPipeline(
     return if (!volBlend.isEmpty()) volBlend.dominant()
     else biomeBlend.primaryBiome()
   }*/
+
+  override fun resolveMainBiome(
+    ctx: GenerateContext,
+    signalWriter: SignalWriter,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    surfaceBlend: BiomeBlendSample,
+    // optional: pass a cached blend if you already sampled it
+    cachedVolBlend: VolBiomeBlendSample?
+  ): Biome {
+    // surface-only density for env (important: don’t include vol density here)
+    val terrainMacro = blendedBiomeDensity(ctx, surfaceBlend, worldX, y, worldZ, signalWriter).finalDensity()
+    val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+    val terrainFinal = terrainMacro + detail
+
+    val env = killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv(
+      surfaceY = surfaceY,
+      depthBelowSurface = surfaceY - y,
+      heightAboveSurface = y - surfaceY,
+      terrainDensity = terrainFinal,
+      seaLevel = ctx.chunkContext.seaLevel
+    )
+
+    val volBlend = cachedVolBlend ?: volumetricBiomes.sample(ctx, worldX, y, worldZ, surfaceBlend,env, signalWriter)
+
+    // pick provider
+    return if (!volBlend.isEmpty()) {
+      volBlend.dominant()
+    } else {
+      surfaceBlend.primaryBiome()
+    }
+  }
 
   override fun terrainDensityNoCaves(
     ctx: GenerateContext,
