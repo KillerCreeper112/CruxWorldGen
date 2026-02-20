@@ -43,7 +43,7 @@ class AbyssStart(
     )
   ),
   override val decorations: List<Decoration> = listOf(
-    AbyssTreeDecor(chancePerPoint = 0.75)
+    AbyssTreeDecor()
   ),
   override val features: List<PlacedFeature<*>> = listOf(
     ironLow, ironHigh

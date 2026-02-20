@@ -6,6 +6,62 @@ object HashUtil {
   const val HASH_MIX_1: Long = -4658895280553007687L
   const val HASH_MIX_2: Long = -7723592293110705685L
 
+  val PHI: Long = 0x9E3779B97F4A7C15uL.toLong()
+
+  fun chance(seed: Long, pTrue: Double): Boolean {
+    val clamped = pTrue.coerceIn(0.0, 1.0)
+    val r = chooseInt(seed, 0, 9999)
+    return r < (clamped * 10000.0).toInt()
+  }
+
+  fun mixSeed(
+    seed: Long,
+    x: Int, y: Int, z: Int,
+    salt: Long
+  ): Long {
+    var h = seed xor salt
+
+    // Accumulate all fields (multiplication overflow is intended)
+    h = h * PHI + x.toLong()
+    h = h * PHI + y.toLong()
+    h = h * PHI + z.toLong()
+
+    // SplitMix64 finalizer (avalanche)
+    h = h xor (h ushr 30)
+    h *= 0xBF58476D1CE4E5B9uL.toLong()
+    h = h xor (h ushr 27)
+    h *= 0x94D049BB133111EBuL.toLong()
+    h = h xor (h ushr 31)
+
+    return h
+  }
+
+  fun mixSeed(
+    seed: Long,
+    x: Int, y: Int, z: Int,
+    dx: Int, dy: Int, dz: Int,
+    salt: Long
+  ): Long {
+    var h = seed xor salt
+
+    // Accumulate all fields (multiplication overflow is intended)
+    h = h * PHI + x.toLong()
+    h = h * PHI + y.toLong()
+    h = h * PHI + z.toLong()
+    h = h * PHI + dx.toLong()
+    h = h * PHI + dy.toLong()
+    h = h * PHI + dz.toLong()
+
+    // SplitMix64 finalizer (avalanche)
+    h = h xor (h ushr 30)
+    h *= 0xBF58476D1CE4E5B9uL.toLong()
+    h = h xor (h ushr 27)
+    h *= 0x94D049BB133111EBuL.toLong()
+    h = h xor (h ushr 31)
+
+    return h
+  }
+
   /** Mixes bits well (SplitMix64 mix). */
   fun mix64(x0: Long): Long {
     var x = x0

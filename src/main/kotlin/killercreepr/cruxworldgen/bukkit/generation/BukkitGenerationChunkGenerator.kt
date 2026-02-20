@@ -340,8 +340,7 @@ class BukkitGenerationChunkGenerator(
     val sea = ctx.chunkContext.seaLevel
     val H = maxY - minY + 1
 
-    fun vid(x:Int, z:Int, y:Int) =
-      (x and 15) + ((z and 15) shl 4) + ((y - minY) shl 8)
+    fun vid(x:Int, z:Int, y:Int) = (x and 15) + ((z and 15) shl 4) + ((y - minY) shl 8)
 
     val oceanConn = BooleanArray(16 * 16 * H)
     val q = IntArray(16 * 16 * H)
@@ -352,11 +351,11 @@ class BukkitGenerationChunkGenerator(
     val LAVA = BukkitBlockResolver.INSTANCE.resolve(Material.LAVA)
     val seaCap = minOf(sea, maxY)
     // 1) Fill surface water columns up to sea and seed BFS
-    for (x in 0 until 16) for (z in 0 until 16) {
+    for (x in 0 until ctx.chunkContext.width) for (z in 0 until ctx.chunkContext.depth) {
       val worldX = ctx.toWorldX(x)
       val worldZ = ctx.toWorldZ(z)
 
-      val sY = terrain2D.surfaceY(worldX, worldZ)//surfaceY[x + (z shl 4)]
+      val sY = terrain2D.surfaceY(worldX, worldZ)
       val idx2D = terrain2D.idxUnsafe(worldX, worldZ)
       if (sY >= sea){
         terrain2D.oceanFloorY[idx2D] = -1
@@ -381,7 +380,6 @@ class BukkitGenerationChunkGenerator(
         }
       }
     }
-
     // 2) BFS into air below sea level
     while (qh < qt) {
       val i = q[qh++]

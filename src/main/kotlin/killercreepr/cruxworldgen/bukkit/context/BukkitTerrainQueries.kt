@@ -9,6 +9,8 @@ import kotlin.math.sqrt
 class BukkitTerrainQueries(
   val region : BukkitLimitedRegion
 ) : TerrainQueries {
+  override fun isReplaceable(worldX: Int, worldY: Int, worldZ: Int): Boolean = isEmpty(worldX, worldY, worldZ) //todo proper implementation for isReplaceable
+
   override fun isEmpty(worldX: Int, worldY: Int, worldZ: Int): Boolean = region.region.getType(worldX, worldY, worldZ).isEmpty
 
   override fun isSolid(worldX: Int, worldY: Int, worldZ: Int): Boolean = region.region.getType(worldX, worldY, worldZ).isSolid

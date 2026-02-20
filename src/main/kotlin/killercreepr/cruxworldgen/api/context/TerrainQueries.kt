@@ -3,6 +3,7 @@ package killercreepr.cruxworldgen.api.context
 import killercreepr.cruxworldgen.api.cave.CavePocket
 
 interface TerrainQueries{
+  fun isReplaceable(worldX: Int, worldY: Int, worldZ: Int): Boolean
   fun isEmpty(worldX: Int, worldY: Int, worldZ: Int): Boolean
   fun isSolid(worldX: Int, worldY: Int, worldZ: Int): Boolean
   fun isLiquid(worldX: Int, worldY: Int, worldZ: Int): Boolean

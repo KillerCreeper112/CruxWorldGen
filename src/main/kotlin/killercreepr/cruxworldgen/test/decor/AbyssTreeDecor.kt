@@ -1,7 +1,5 @@
 package killercreepr.cruxworldgen.test.decor
 
-import killercreepr.cruxblocks.api.block.CruxBlock
-import killercreepr.cruxblocks.core.block.component.CruxBlockComponents
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
@@ -10,51 +8,44 @@ import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
+import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
 import org.bukkit.Axis
 import org.bukkit.Material
 import org.bukkit.block.BlockType
-import java.util.*
 
 class AbyssTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
-  private val chancePerPoint: Double = 0.18,
-  private val minAirAbove: Int = 7,
-  private val maxSlope01: Double = 100.0,
+  val chancePerPoint: Double = 0.18,
+  val minAirAbove: Int = 7,
+  val maxSlope01: Double = 100.0,
 
-  private val minHeight: Int = 4,
-  private val maxHeight: Int = 7,
-  val minWidth: Int = 3,
-  val maxWidth: Int = 5,
-  val wartMinHeight : Int = 2,
-  val wartMaxHeight : Int = 4
+  val minHeight: Int = 4,
+  val maxHeight: Int = 9,
+  val minBranchLength: Int = 1,
+  val maxBranchLength: Int = 4,
+  val wartMinHeight : Int = 1,
+  val wartMaxHeight : Int = 4,
+  val maxBranches : Int = 4,
+  val maxBranchesOnBranches : Int = 3,
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
-    // If you later add biome-specific toggles, put them here.
-    // For now: deterministic chance gate.
-    //val r01 = hash01(point.seed xor TREE_SALT)
-    val ctx = region.ctx
-    val r01 = CruxNoise.fast(ctx.worldContext.seed.toInt())
-      .frequency(0.01)
-      .noiseType(CruxNoise.NoiseType.OpenSimplex2)
-      .fractalType(CruxNoise.FractalType.FBm)
-      .fractalOctaves(1).noise(point.worldX.toDouble(), point.worldZ.toDouble())
-    return r01 <= chancePerPoint
+    val s = mixSeed(
+      seed = region.ctx.worldContext.seed,
+      x = point.worldX, y = 0, z = point.worldZ,
+      salt = 1L
+    )
+    return chance(s, chancePerPoint)
   }
 
   override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
-    //val chunk = ctx.chunkContext
-
     val worldX = point.worldX
     val worldZ = point.worldZ
-
-    // Must be inside chunk bounds + padding (avoid cross-chunk canopy writes)
-    //if (localX !in borderPadding..(15 - borderPadding)) return null
-    //if (localZ !in borderPadding..(15 - borderPadding)) return null
 
     val terrain2D = region.terrainSnapshot.terrain2D
 
@@ -72,86 +63,21 @@ class AbyssTreeDecor(
     if (airAbove < minAirAbove) return null
 
     val height = chooseInt(point.seed xor 0x12345678L, minHeight, maxHeight)
-    val width = chooseInt(point.seed xor 0x22325678L, minWidth, maxWidth)
-    //val canopyRadius = 2 + chooseInt(point.seed xor 0x9ABCDEF0L, 0, 1) // 2..3
     return AbyssTreePlacement(
       worldX = worldX,
       worldZ = worldZ,
       baseY = baseY,
       height = height,
-      width = width,
       seed = point.seed,
       this
     )
   }
 
   override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
-    val p = placement as AbyssTreePlacement
-    val queries = region.terrainQueries
-    val bounds = region.regionBounds
-
-    // Trunk
-    var topY = 0
-    for (dy in 0 until p.height) {
-      val y = p.baseY + dy
-      if (y < bounds.minY || y > bounds.maxY) break
-      if (queries.isEmpty(p.worldX, y, p.worldZ)) {
-        region.setBlock(p.worldX, y, p.worldZ, BukkitBlockResolver.INSTANCE.resolve(Material.OAK_LOG))
-        topY = y
-      }
-    }
-
-    val rng = region.ctx.random
-    generateBranch(
-      region,
-      p.worldX + if(rng.nextBoolean()) -1 else 1,
-      topY,
-      p.worldZ,
-      p.width,
-      1, 0,
-      p.parent
-    )
+    AbyssTreePlacer(this, region, placement as AbyssTreePlacement, biomeBlend).place()
   }
-  fun generateBranch(region : LimitedRegion, x : Int, y : Int , z : Int, length : Int, dirX : Int, dirZ : Int,
-                     parent : AbyssTreeDecor) {
-    val block = fromDirection(dirX, dirZ)
-    val queries = region.terrainQueries
-
-    for(i in 0..length){
-      val xx = addDirection(x, dirX, i)
-      val yy = y
-      val zz = addDirection(z, dirZ, i)
-
-      if(!region.isInRegion(xx, yy, zz)) continue
-      if(!queries.isEmpty(xx, yy, zz)) continue
-
-      region.setBlock(xx, yy, zz, block)
-
-      if(i == length){
-        val height = chooseInt(
-          region.ctx.worldContext.seed, parent.wartMinHeight, parent.wartMaxHeight
-        )
-        generateWart(region,
-          addDirection(xx, dirX, 1),
-          yy,
-          addDirection(zz, dirZ, 1), height)
-      }
-    }
-  }
-
-  fun generateWart(region : LimitedRegion, x : Int, y : Int , z : Int, height : Int){
-    val queries = region.terrainQueries
-    for(i in 0..height){
-      val xx = x
-      val yy = y + i
-      val zz = z
-
-      if(!region.isInRegion(xx, yy, zz)) continue
-      if(!queries.isEmpty(xx, yy, zz)) continue
-
-      region.setBlock(xx, yy, zz, BukkitBlockResolver.INSTANCE.resolve("nether_wart_block"))
-    }
-  }
+  fun randomBranchLength(seed : Long) = chooseInt(seed, minBranchLength, maxBranchLength)
+  fun randomWartHeight(seed : Long) = chooseInt(seed, wartMinHeight, wartMaxHeight)
 }
 
 fun fromDirection(xDir: Int, zDir: Int): BlockData {
@@ -164,19 +90,190 @@ fun fromDirection(xDir: Int, zDir: Int): BlockData {
   return BukkitDataBlockData(BlockType.OAK_LOG.createBlockData{ c -> c.axis = Axis.Y })
 }
 
-fun addDirection(value : Int, dir: Int, amount: Int): Int {
-  if (dir == 1 || dir == -1) {
-    return value + (dir * amount)
-  }
-  return value
-}
-
 data class AbyssTreePlacement(
   val worldX: Int,
   val worldZ: Int,
   val baseY: Int,
   val height: Int,
-  val width: Int,
   val seed: Long,
   val parent : AbyssTreeDecor
 ) : Placement
+
+class AbyssTreePlacer(
+  val cfg : AbyssTreeDecor,
+  val region: LimitedRegion,
+  val p: AbyssTreePlacement,
+  val biomeBlend: BiomeBlendSample
+) {
+  val branchDirections = listOf(
+    1 to 0,
+    -1 to 0,
+    0 to 1,
+    0 to -1
+  )
+
+  fun place() {
+    val queries = region.terrainQueries
+    val bounds = region.regionBounds
+
+    val seed = region.ctx.worldContext.seed
+    var placedBranches = 0
+    for (dy in 0 until p.height) {
+      val y = p.baseY + dy
+      if (y < bounds.minY || y > bounds.maxY) break
+      if (queries.isReplaceable(p.worldX, y, p.worldZ)) {
+        region.setBlock(p.worldX, y, p.worldZ, BukkitBlockResolver.INSTANCE.resolve(Material.OAK_LOG))
+
+        if (dy == p.height - 1) {
+          val wartHeight = cfg.randomWartHeight(seed xor 0x32382)
+
+          generateWart(
+            region,
+            p.worldX, y + 1, p.worldZ,
+            wartHeight
+          )
+          break
+        }
+
+        if (dy > 0 && placedBranches < cfg.maxBranches) {
+
+          for (dir in branchDirections) {
+            if (region.ctx.random.nextBoolean()) continue
+
+            BranchPlacer(
+              cfg, region, p, biomeBlend,
+              p.worldX + dir.first, y, p.worldZ + dir.second,
+              dir.first, 0, dir.second, 0
+            ).place()
+
+            placedBranches++
+          }
+        }
+      } else break
+    }
+  }
+
+  fun generateWart(region: LimitedRegion, x: Int, y: Int, z: Int, height: Int) {
+    val queries = region.terrainQueries
+    for (i in 0..height) {
+      val xx = x
+      val yy = y + i
+      val zz = z
+
+      if (!region.isInRegion(xx, yy, zz)) break
+      if (!queries.isReplaceable(xx, yy, zz)) break
+
+      region.setBlock(xx, yy, zz, BukkitBlockResolver.INSTANCE.resolve("nether_wart_block"))
+    }
+  }
+
+  class BranchPlacer(
+    val cfg: AbyssTreeDecor,
+    val region: LimitedRegion,
+    val p: AbyssTreePlacement,
+    val biomeBlend: BiomeBlendSample,
+    val x: Int,
+    val y: Int,
+    val z: Int,
+    val dirX: Int,
+    val dirY: Int,
+    val dirZ: Int,
+    val subBranchID: Short
+  ) {
+    private val branchDirections = listOf(
+      Triple(1, 0, 0),
+      Triple(-1, 0, 0),
+      Triple(0, 0, 1),
+      Triple(0, 0, -1),
+      Triple(0, 1, 0)
+    )
+
+    fun place() {
+      val queries = region.terrainQueries
+
+      // Branch seed tied to the *tree* and this branch’s start/direction
+      val branchSeed = mixSeed(
+        seed = p.seed,
+        x = x, y = y, z = z,
+        dx = dirX, dy = dirY, dz = dirZ,
+        salt = 1L
+      )
+
+      val length = cfg.randomBranchLength(branchSeed xor 0x1111)
+      val block = fromDirection(dirX, dirZ)
+
+      var spawnedSubBranches = 0
+      val maxSub = cfg.maxBranchesOnBranches
+
+      // Optional: small chance this branch is shorter (adds irregularity)
+      val effectiveLength = if (chance(branchSeed xor 0x2222, 0.18)) {
+        (length - 1).coerceAtLeast(1)
+      } else length
+
+      for (i in 0..effectiveLength) {
+        val xx = x + dirX * i
+        val yy = y + dirY * i
+        val zz = z + dirZ * i
+
+        if (!region.isInRegion(xx, yy, zz)) break
+        if (!queries.isReplaceable(xx, yy, zz)) break
+
+        region.setBlock(xx, yy, zz, block)
+
+        if (i == effectiveLength) {
+          val wartHeight = cfg.randomWartHeight(branchSeed xor 0x3333)
+
+          generateWart(
+            region,
+            xx + dirX,
+            yy + dirY,
+            zz + dirZ,
+            wartHeight
+          )
+          break
+        }
+
+        if (subBranchID > 2) break
+        if (i > 0 && spawnedSubBranches < maxSub) {
+          for ((sdx, sdy, sdz) in branchDirections) {
+            if (spawnedSubBranches >= maxSub) break
+
+            // Bias vertical sub-branches lower than horizontals
+            val baseP = if (sdy != 0) 0.18 else 0.35
+            val dirHash = (sdx * 31 + sdy * 17 + sdz * 13).toLong()
+
+            if (!chance(branchSeed xor (i.toLong() * 0x9E37L) xor dirHash, baseP)) continue
+
+            BranchPlacer(
+              cfg, region, p, biomeBlend,
+              x = xx + sdx,
+              y = yy + sdy,
+              z = zz + sdz,
+              dirX = sdx,
+              dirY = sdy,
+              dirZ = sdz,
+              subBranchID = (subBranchID + 1).toShort()
+            ).place()
+
+            spawnedSubBranches++
+          }
+        }
+      }
+    }
+
+
+    fun generateWart(region: LimitedRegion, x: Int, y: Int, z: Int, height: Int) {
+      val queries = region.terrainQueries
+      for (i in 0..height) {
+        val xx = x
+        val yy = y + i
+        val zz = z
+
+        if (!region.isInRegion(xx, yy, zz)) break
+        if (!queries.isReplaceable(xx, yy, zz)) break
+
+        region.setBlock(xx, yy, zz, BukkitBlockResolver.INSTANCE.resolve("nether_wart_block"))
+      }
+    }
+  }
+}
