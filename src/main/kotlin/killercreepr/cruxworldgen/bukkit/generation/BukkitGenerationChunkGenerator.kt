@@ -9,7 +9,6 @@ import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
-import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.structure.StructurePipeline
@@ -80,15 +79,6 @@ class BukkitGenerationChunkGenerator(
   }
 
   val cache = hashMapOf<Pair<Int, Int>, Cache>()
-
-  fun colIdx(lx: Int, lz: Int) = (lz shl 4) or lx
-
-  fun stepIndex(maxY: Int, y: Int, step: Int, stepsCount: Int): Int =
-    ((maxY - y) / step).coerceIn(0, stepsCount - 1)
-
-  fun biomeIdx(lx: Int, lz: Int, si: Int, stepsCount: Int): Int =
-    colIdx(lx, lz) * stepsCount + si
-
   data class Cache(
     val ctx: GenerateContext,
     val bufferX: Int,
@@ -105,6 +95,7 @@ class BukkitGenerationChunkGenerator(
     z: Int,
     heightMap: HeightMap
   ): Int {
+    if(true) return 0//todo implement back in for MC
     val chunkWidth = worldDetails.chunkWidth
     val chunkDepth = worldDetails.chunkDepth
     val chunkX = chunkXFromWorld(x, chunkWidth)
@@ -173,7 +164,6 @@ class BukkitGenerationChunkGenerator(
 
     val surfaceYCell = IntArray(cellXCount * cellZCount)
     fun cell2DIdx(cx: Int, cz: Int) = cz * cellXCount + cx
-    val stepsCount = ((maxY - minY) / volumetricBiomeCellSize) + 1
 
     val cellBiome = arrayOfNulls<Biome>(cellXCount * cellZCount * cellYCount)
     fun cellIdx(cx: Int, cz: Int, cy: Int) = (cy * cellZCount + cz) * cellXCount + cx
@@ -319,8 +309,6 @@ class BukkitGenerationChunkGenerator(
         val sea = ctx.chunkContext.seaLevel
         val columnUnderwater = surfaceY < sea
 
-        //val cellX = (localX / volumetricBiomeCellSize).coerceIn(0, cellXCount - 1)
-        //val cellZ = (localZ / volumetricBiomeCellSize).coerceIn(0, cellZCount - 1)
         for (y in maxY downTo minY) {
           val iy = y - minY
           val d = col[iy]
@@ -350,8 +338,6 @@ class BukkitGenerationChunkGenerator(
             depthFromSeaFloor = depthFromSeaFloor,
             signalView = signalWriter
           )
-          //val cellY = ((y - minY) / volumetricBiomeCellSize).coerceIn(0, cellYCount - 1)
-
           val mainBiome = primaryBiomeUse[vid(localX, localZ, y)]!!//cellBiome[cellIdx(cellX, cellZ, cellY)] ?: biomeBlend.primaryBiome()
           val chosenMaterial = mainBiome.materialProvider.chooseMaterial(materialContext)
           if (chosenMaterial != BlockData.NONE) {
