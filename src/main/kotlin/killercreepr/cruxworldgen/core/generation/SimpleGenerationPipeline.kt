@@ -19,7 +19,7 @@ class SimpleGenerationPipeline(
   override val volumetricBiomes: VolumetricBiomeRegistry
 ) : GenerationPipeline {
 
-  fun sampleBiome(ctx: GenerateContext, biomeBlend : BiomeBlendSample,
+  /*override fun sampleBiome(ctx: GenerateContext, biomeBlend : BiomeBlendSample,
                   worldX: Int, y : Int, worldZ: Int,
                   terrainSnapshot : TerrainSnapshot,
                   signalWriter : SignalWriter)
@@ -40,7 +40,7 @@ class SimpleGenerationPipeline(
 
     return if (!volBlend.isEmpty()) volBlend.dominant()
     else biomeBlend.primaryBiome()
-  }
+  }*/
 
   override fun terrainDensityNoCaves(
     ctx: GenerateContext,
