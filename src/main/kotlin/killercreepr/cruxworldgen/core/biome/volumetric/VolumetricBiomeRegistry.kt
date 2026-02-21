@@ -18,6 +18,7 @@ class VolumetricBiomeRegistry(
     env: VolumeEnv,
     signals: SignalWriter
   ): VolBiomeBlendSample {
+    if(biomes.isEmpty()) return VolBiomeBlendSample(listOf())
     var sum = 0.0
     val tmp = ArrayList<WeightedVolBiome>(biomes.size)
 

@@ -24,6 +24,15 @@ interface GenerationPipeline{
     // optional: pass a cached blend if you already sampled it
     cachedVolBlend: VolBiomeBlendSample? = null
   ): Biome
+  fun resolveMainBiome3D(
+    ctx: GenerateContext,
+    signalWriter: SignalWriter,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    surfaceBlend: BiomeBlendSample
+  ): Pair<Biome, VolBiomeBlendSample>
   fun terrainDensityNoCaves(
     ctx: GenerateContext,
     biomeBlend: BiomeBlendSample,

@@ -76,6 +76,38 @@ class SimpleGenerationPipeline(
     }
   }
 
+  override fun resolveMainBiome3D(
+    ctx: GenerateContext,
+    signalWriter: SignalWriter,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    surfaceY: Int,
+    surfaceBlend: BiomeBlendSample
+  ): Pair<Biome, VolBiomeBlendSample> {
+    // surface-only density for env (important: don’t include vol density here)
+    val terrainMacro = blendedBiomeDensity(ctx, surfaceBlend, worldX, y, worldZ, signalWriter).finalDensity()
+    val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+    val terrainFinal = terrainMacro + detail
+
+    val env = killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv(
+      surfaceY = surfaceY,
+      depthBelowSurface = surfaceY - y,
+      heightAboveSurface = y - surfaceY,
+      terrainDensity = terrainFinal,
+      seaLevel = ctx.chunkContext.seaLevel
+    )
+
+    val volBlend = volumetricBiomes.sample(ctx, worldX, y, worldZ, surfaceBlend,env, signalWriter)
+
+    // pick provider
+    return if (!volBlend.isEmpty()) {
+      volBlend.dominant() to volBlend
+    } else {
+      surfaceBlend.primaryBiome() to volBlend
+    }
+  }
+
   override fun terrainDensityNoCaves(
     ctx: GenerateContext,
     biomeBlend: BiomeBlendSample,

@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.core.feature
 
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 
@@ -8,6 +9,7 @@ interface FeaturePipeline {
     region: LimitedRegion,
     chunkX: Int,
     chunkZ: Int,
-    biomeBlendSampler: (Int, Int) -> BiomeBlendSample
+    biomeBlendSampler: (Int, Int) -> BiomeBlendSample,
+    volumetricBiomeSampler: ((Int, Int, Int) -> Biome)? = null
   )
 }
