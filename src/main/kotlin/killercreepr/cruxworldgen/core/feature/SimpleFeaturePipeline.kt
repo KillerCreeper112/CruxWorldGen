@@ -29,8 +29,6 @@ class SimpleFeaturePipeline(
     }
 
     if (volumetricBiomeSampler != null) {
-      // Option 1 (simple): iterate all biomes and let placement be gated per-position
-      // Option 2 (faster): maintain a registry/list of volumetric biomes present in chunk cache first
       val candidateBiomes = collectCandidateBiomesForChunk3D(region, chunkX, chunkZ, volumetricBiomeSampler)
 
       for (biome in candidateBiomes) {
@@ -47,7 +45,7 @@ class SimpleFeaturePipeline(
     dominantBiomeAt: (Int, Int, Int) -> Biome
   ): Set<Biome> {
     val out = LinkedHashSet<Biome>()
-    val cell = 4//todo
+    val cell = 4//todo don't hardcode this
     val startX = chunkX * region.ctx.chunkContext.width
     val startZ = chunkZ * region.ctx.chunkContext.depth
     val minY = region.ctx.chunkContext.minHeight

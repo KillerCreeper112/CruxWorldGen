@@ -18,6 +18,10 @@ import killercreepr.cruxworldgen.api.noise.Noised
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.core.feature.PlacedFeature
+import killercreepr.cruxworldgen.core.feature.diamondSkyIslands
+import killercreepr.cruxworldgen.core.feature.ironHigh
+import killercreepr.cruxworldgen.core.feature.ironLow
 import org.bukkit.block.Biome
 
 class SkyIslands : VolumetricBiome, Noised, BukkitBiome {
@@ -52,6 +56,9 @@ class SkyIslands : VolumetricBiome, Noised, BukkitBiome {
       return BlockData.NONE
     }
   }
+  override val features: List<PlacedFeature<*>> = listOf(
+    diamondSkyIslands
+  )
 
   override fun suitability(ctx: GenerateContext, worldX: Int, y: Int, worldZ: Int, env: VolumeEnv, signals: SignalWriter): Double {
     val h = env.heightAboveSurface

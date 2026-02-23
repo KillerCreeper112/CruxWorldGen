@@ -1,11 +1,14 @@
 package killercreepr.cruxworldgen.bukkit.region
 
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.context.terrain.RegionBounds
 import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
+import killercreepr.cruxworldgen.bukkit.BukkitAdaptor
+import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockSection
 import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
@@ -72,5 +75,15 @@ class BukkitLimitedRegion(
     requireRead(x, y, z)
     //todo
     return BukkitBlockSection(BukkitDataBlockData(region.getBlockData(x,y,z)))
+  }
+
+  override fun getBiome(x: Int, y: Int, z: Int): Biome? {
+    val biome = region.getBiome(x,y,z)
+    return BukkitAdaptor.fromBukkit(biome)
+  }
+
+  override fun setBiome(x: Int, y: Int, z: Int, biome: Biome) {
+    if(biome !is BukkitBiome) throw IllegalArgumentException("State must be of type BukkitBiome")
+    region.setBiome(x,y,z, biome.toBukkitBiome())
   }
 }
