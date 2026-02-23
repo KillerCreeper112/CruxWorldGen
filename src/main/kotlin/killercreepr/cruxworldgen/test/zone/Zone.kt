@@ -5,12 +5,13 @@ import killercreepr.cruxworldgen.api.zone.Zone
 import killercreepr.cruxworldgen.test.biome.AbyssStart
 import killercreepr.cruxworldgen.test.biome.AmplifiedHighlands
 import killercreepr.cruxworldgen.test.biome.CharredWastes
+import killercreepr.cruxworldgen.test.biome.EldritchWastes
 import killercreepr.cruxworldgen.test.biome.TestAmp
 import killercreepr.cruxworldgen.test.biome.ToxicFogBasins
 
 class TestZone : Zone{
   override val biomes: BiomeRegistry = BiomeRegistry.biomeRegistry(listOf(
-    AbyssStart()
+    EldritchWastes()
     /*AmplifiedHighlands(
       baseYAboveSea = 0.0
     ),

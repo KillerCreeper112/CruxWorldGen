@@ -48,7 +48,7 @@ val diamondSkyIslands = PlacedFeature(
   feature = ORE_FEATURE,
   cfg = OreConfig(
     ore = BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_DIAMOND_ORE),
-    size = 3,
+    size = 9,
     canReplace = {
       val data = it.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
@@ -56,8 +56,8 @@ val diamondSkyIslands = PlacedFeature(
     }
   ),
   modifiers = listOf(
-    Repeat(20, XZHeight(TriangleHeight(
-      baseHeight = UniformHeightSampler.relative(0.5, 0.9)
+    Repeat(100, XZHeight(TriangleHeight(
+      baseHeight = UniformHeightSampler.relative(0.5, 0.8)
     )))
   )
 )
