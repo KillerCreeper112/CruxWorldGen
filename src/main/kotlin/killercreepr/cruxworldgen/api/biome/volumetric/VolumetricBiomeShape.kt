@@ -16,18 +16,18 @@ interface VolumetricBiomeShape : BiomeShape {
   ): DensityStack? = null
 
   /** Optional extra cave carving influence. */
-  fun carve(
+  /*fun carve(
     ctx: GenerateContext,
     worldX: Int, y: Int, worldZ: Int,
     env: VolumeEnv,
     signals: SignalWriter
   ): Double = 0.0
 
-  /** Optional extra “additive” solids influence. */
+  *//** Optional extra “additive” solids influence. *//*
   fun add(
     ctx: GenerateContext,
     worldX: Int, y: Int, worldZ: Int,
     env: VolumeEnv,
     signals: SignalWriter
-  ): Double = 0.0
+  ): Double = 0.0*/
 }

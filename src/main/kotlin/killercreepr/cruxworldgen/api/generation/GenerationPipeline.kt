@@ -41,7 +41,7 @@ interface GenerationPipeline{
     worldZ: Int,
     signalWriter : SignalWriter
   ): Double
-  fun blendedBiomeCarve(
+  /*fun blendedBiomeCarve(
     ctx: GenerateContext,
     biomeBlend: BiomeBlendSample,
     worldX: Int,
@@ -60,7 +60,7 @@ interface GenerationPipeline{
     surfaceY: Int,
     terrainDensity: Double,
     signalWriter : SignalWriter
-  ): Double
+  ): Double*/
 
   fun blendedBiomeDensity(
     generateCtx: GenerateContext,
@@ -81,7 +81,7 @@ interface GenerationPipeline{
     signals: SignalWriter
   ): DensityStack
 
-  fun blendedVolumetricCarve(
+  /*fun blendedVolumetricCarve(
     ctx: GenerateContext,
     volBlend: VolBiomeBlendSample,
     worldX: Int,
@@ -102,5 +102,5 @@ interface GenerationPipeline{
     terrainDensity: Double,
     env: VolumeEnv,
     signalWriter : SignalWriter
-  ): Double
+  ): Double*/
 }

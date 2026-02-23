@@ -11,7 +11,9 @@ import killercreepr.cruxworldgen.test.biome.ToxicFogBasins
 
 class TestZone : Zone{
   override val biomes: BiomeRegistry = BiomeRegistry.biomeRegistry(listOf(
-    EldritchWastes()
+    EldritchWastes(),
+    AbyssStart(),
+    CharredWastes(),
     /*AmplifiedHighlands(
       baseYAboveSea = 0.0
     ),

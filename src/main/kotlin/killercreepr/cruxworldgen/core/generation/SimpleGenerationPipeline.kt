@@ -121,7 +121,7 @@ class SimpleGenerationPipeline(
     //val detailDensity = ctx.noise.detail3D(worldX, y, worldZ) * 3.0  // keep or set 0 while tuning
     return terrainStack.finalDensity() + detailDensity
   }
-  override fun blendedBiomeCarve(
+  /*override fun blendedBiomeCarve(
     ctx: GenerateContext,
     biomeBlend: BiomeBlendSample,
     worldX: Int,
@@ -137,20 +137,20 @@ class SimpleGenerationPipeline(
 
     val depthBelowSurface = surfaceY - y
 
+    val caveContext = SimpleCaveContext(
+      worldX = worldX,
+      y = y,
+      worldZ = worldZ,
+      surfaceY = surfaceY,
+      depthBelowSurface = depthBelowSurface,
+      terrainDensity = terrainDensity,
+      edge = biomeBlend.edgeContext,
+      signalWriter = signalWriter
+    )
+
     for (wb in biomeBlend.weightedBiomes) {
       val caves = wb.biome.caves ?: continue
       maxWeight = maxOf(maxWeight, wb.weight)
-
-      val caveContext = SimpleCaveContext(
-        worldX = worldX,
-        y = y,
-        worldZ = worldZ,
-        surfaceY = surfaceY,
-        depthBelowSurface = depthBelowSurface,
-        terrainDensity = terrainDensity,
-        edge = biomeBlend.edgeContext,
-        signalWriter = signalWriter
-      )
 
       val carve = caves.carve(ctx, caveContext)
       weightedSum += wb.weight * carve
@@ -175,20 +175,19 @@ class SimpleGenerationPipeline(
 
     val depthBelowSurface = surfaceY - y
 
+    val caveContext = SimpleCaveContext(
+      worldX = worldX,
+      y = y,
+      worldZ = worldZ,
+      surfaceY = surfaceY,
+      depthBelowSurface = depthBelowSurface,
+      terrainDensity = terrainDensity,
+      edge = biomeBlend.edgeContext,
+      signalWriter = signalWriter
+    )
     for (wb in biomeBlend.weightedBiomes) {
       val caves = wb.biome.caves ?: continue
       maxWeight = maxOf(maxWeight, wb.weight)
-
-      val caveContext = SimpleCaveContext(
-        worldX = worldX,
-        y = y,
-        worldZ = worldZ,
-        surfaceY = surfaceY,
-        depthBelowSurface = depthBelowSurface,
-        terrainDensity = terrainDensity,
-        edge = biomeBlend.edgeContext,
-        signalWriter = signalWriter
-      )
 
       val carve = caves.add(ctx, caveContext)
       weightedSum += wb.weight * carve
@@ -196,7 +195,7 @@ class SimpleGenerationPipeline(
 
     // Critical: prevent carve magnitude from shrinking in the middle of a border.
     return weightedSum / maxWeight
-  }
+  }*/
 
   override fun blendedBiomeDensity(
     generateCtx: GenerateContext,
@@ -248,7 +247,7 @@ class SimpleGenerationPipeline(
     return DensityStack.densityStack(base, add, carve)
   }
 
-  override fun blendedVolumetricCarve(
+  /*override fun blendedVolumetricCarve(
     ctx: GenerateContext,
     volBlend: VolBiomeBlendSample,
     worldX: Int,
@@ -278,5 +277,5 @@ class SimpleGenerationPipeline(
     var sum = 0.0
     for (wb in volBlend.weighted) sum += wb.weight * wb.biome.shape.add(ctx, worldX, y, worldZ, env, signalWriter)
     return sum
-  }
+  }*/
 }

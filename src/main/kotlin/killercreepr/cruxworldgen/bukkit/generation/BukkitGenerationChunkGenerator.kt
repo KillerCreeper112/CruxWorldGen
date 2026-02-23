@@ -33,6 +33,7 @@ import org.bukkit.World
 import org.bukkit.generator.*
 import org.codehaus.plexus.util.FastMap
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 data class WorldDetails(
   val seaLevel: Int,
@@ -67,11 +68,12 @@ class BukkitGenerationChunkGenerator(
     val minY = ctx.chunkContext.minHeight
     val maxY = ctx.chunkContext.maxHeight - 1
 
+    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
     for (y in maxY downTo minY) {
       val terrainMacro =
         generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
 
-      val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+      val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
       val terrainFinal = terrainMacro + detail
       if (terrainFinal > 0.0) return y
       val terrainDensity = generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY)
@@ -132,11 +134,12 @@ class BukkitGenerationChunkGenerator(
 
     fun vid(x: Int, z: Int, y: Int) = vid(x, z, y, minY)
 
-    val density = DoubleArray(16 * 16 * H)
+    val density = DoubleArray(chunkWidth * chunkDepth * H)
 
-    val primaryBiomeUse = arrayOfNulls<Biome>(16 * 16 * H)
+    val primaryBiomeUse = arrayOfNulls<Biome>(chunkWidth * chunkDepth * H)
 
     val biomeCache = biomeProviderCache[chunkKey(chunkX, chunkZ)]
+    val createBiomeCache = biomeCache == null
 
     val surfaceBlendCol = biomeCache?.columns?.surfaceBlend ?: arrayOfNulls(chunkWidth * chunkDepth)
     val surfaceYCol = biomeCache?.columns?.surfaceY ?: IntArray(chunkWidth * chunkDepth)
@@ -147,6 +150,11 @@ class BukkitGenerationChunkGenerator(
     val cellsZ = worldDetails.chunkDepth / cellSize
     val cellsY = ((maxY - minY + 1) + cellSize - 1) / cellSize
 
+
+    val volBiomeBlendCell : Array<VolBiomeBlendSample?>? = if(createBiomeCache) arrayOfNulls(cellsX * cellsZ * cellsY) else null
+    val biomeDominantCell = if(createBiomeCache) arrayOfNulls<Biome>(cellsX * cellsZ * cellsY) else null
+
+    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
     for (localX in 0 until chunkWidth) {
       for (localZ in 0 until chunkDepth) {
 
@@ -179,12 +187,10 @@ class BukkitGenerationChunkGenerator(
         val col = DoubleArray(H)
         val surfaceY = surfaceYCol[columnIndex(localX, localZ)]
         terrain2D.surfaceY[terrainIndex] = surfaceY
-        /*var cachedBlend: VolBiomeBlendSample? = null
-        var cachedYTop = Int.MIN_VALUE*/
         for (y in maxY downTo minY) {
           val terrainMacro =
             generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, signalWriter).finalDensity()
-          val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX, y, worldZ) * 3.0
+          val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
           val terrainFinal = terrainMacro + detail
 
           val env = VolumeEnv(
@@ -194,47 +200,21 @@ class BukkitGenerationChunkGenerator(
             terrainDensity = terrainFinal,
             seaLevel = ctx.chunkContext.seaLevel
           )
-
-          /*if (y > cachedYTop) {
-            cachedBlend = generation.volumetricBiomes.sample(ctx, worldX, y, worldZ, biomeBlend, env, signalWriter)
-            cachedYTop = y - (volumetricBiomeCellSize - 1)
-          }*/
           val cellY = cellYFromWorld(y, cellSize, minY).coerceIn(0, cellsY - 1)
           val cellIndex = cellIndex(cellX, cellZ, cellY, cellSize, chunkWidth, chunkDepth)
-          val volBlend = biomeCache!!.columns.volBiomeBlendCell[cellIndex]!!
+          val volBlend = if(biomeCache != null){
+            biomeCache.columns.volBiomeBlendCell[cellIndex]!!
+          }else{
+            var cachedValue = volBiomeBlendCell!![cellIndex]
+            if(cachedValue == null){
+              cachedValue = generation.volumetricBiomes.sample(ctx, worldX, y, worldZ, biomeBlend, env, signalWriter)
+              volBiomeBlendCell[cellIndex] = cachedValue
+            }
+            cachedValue
+          }
 
           val volStack = generation.blendedVolumetricDensity(ctx, volBlend, worldX, y, worldZ, env, signalWriter)
-          val terrainPlusVol = terrainFinal + volStack.add + volStack.base - volStack.carve
-
-          val surfaceCarve =
-            generation.blendedBiomeCarve(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainPlusVol, signalWriter)
-          val surfaceAdd =
-            generation.blendedBiomeAdd(ctx, biomeBlend, worldX, y, worldZ, surfaceY, terrainPlusVol, signalWriter)
-
-          val volCarve = generation.blendedVolumetricCarve(
-            ctx,
-            volBlend,
-            worldX,
-            y,
-            worldZ,
-            surfaceY,
-            terrainPlusVol,
-            env,
-            signalWriter
-          )
-          val volAdd = generation.blendedVolumetricAdd(
-            ctx,
-            volBlend,
-            worldX,
-            y,
-            worldZ,
-            surfaceY,
-            terrainPlusVol,
-            env,
-            signalWriter
-          )
-
-          val finalDensity = terrainPlusVol - surfaceCarve + surfaceAdd - volCarve + volAdd
+          val finalDensity = terrainFinal + volStack.add + volStack.base - volStack.carve
 
           val iy = y - minY
           col[iy] = finalDensity
@@ -248,6 +228,10 @@ class BukkitGenerationChunkGenerator(
             if (!volBlend.isEmpty() && volumetricContribution > 0.01) volBlend.dominant()
             else biomeBlend.primaryBiome()
           primaryBiomeUse[vid(localX, localZ, y)] = materialBiome
+
+          if(createBiomeCache && biomeDominantCell!![cellIndex] == null){
+            biomeDominantCell[cellIndex] = materialBiome
+          }
         }
 
         var run = 0
@@ -322,13 +306,16 @@ class BukkitGenerationChunkGenerator(
       terrain
     )
 
-    if(biomeCache == null){
+    if(createBiomeCache){
       Crux.logError("No biome cache for chunk! $chunkX,$chunkZ")
-      /*biomeProviderCache[chunkKey(chunkX, chunkZ)] = BiomeChunkCache(
-        BiomeColumnCache(
-          surfaceYCol, surfaceBlendCol, null
+      biomeProviderCache.putIfAbsent(
+        chunkKey,
+        BiomeChunkCache(
+          BiomeColumnCache(
+            surfaceYCol, surfaceBlendCol, biomeDominantCell!!, volBiomeBlendCell!!
+          )
         )
-      )*/
+      )
     }
   }
 
@@ -499,9 +486,7 @@ class BukkitGenerationChunkGenerator(
     val columns: BiomeColumnCache
   )
 
-  val biomeProviderCache = object : LinkedHashMap<Long, BiomeChunkCache>(256, 0.75f, true) {
-    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Long, BiomeChunkCache>) = size > 256
-  }
+  val biomeProviderCache = object : ConcurrentHashMap<Long, BiomeChunkCache>(256){}
 
   private fun chunkKey(cx: Int, cz: Int): Long = (cx.toLong() shl 32) xor (cz.toLong() and 0xffffffffL)
 

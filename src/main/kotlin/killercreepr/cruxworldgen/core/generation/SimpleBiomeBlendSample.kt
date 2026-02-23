@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.core.generation
 
+import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
@@ -10,7 +11,12 @@ class SimpleBiomeBlendSample(
   override val edgeContext: BiomeEdgeContext
 ) : BiomeBlendSample {
 
-  override fun primaryBiome(): Biome = weightedBiomes.maxBy { it.weight }.biome
+  var cachePrimaryBiome : Biome? = null
+
+  override fun primaryBiome(): Biome = if(cachePrimaryBiome == null){
+    cachePrimaryBiome = weightedBiomes.maxBy { it.weight }.biome
+    cachePrimaryBiome!!
+  }else cachePrimaryBiome!!
 
   override fun totalWeight(): Double = weightedBiomes.sumOf { it.weight }
 }
