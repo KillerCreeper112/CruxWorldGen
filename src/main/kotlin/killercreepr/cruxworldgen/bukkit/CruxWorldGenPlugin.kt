@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType
 import io.papermc.paper.command.brigadier.Commands
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
+import killercreepr.crux.core.util.CruxMath
 import killercreepr.crux.core.util.CruxWorldUtil
 import killercreepr.cruxworldgen.api.noise.NoiseAutoInstaller
 import killercreepr.cruxworldgen.bukkit.generation.BukkitGenerationChunkGenerator
@@ -20,6 +21,7 @@ import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.test.biome.volumetric.EldritchIslands
+import killercreepr.cruxworldgen.test.biome.volumetric.SkyIslands
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player

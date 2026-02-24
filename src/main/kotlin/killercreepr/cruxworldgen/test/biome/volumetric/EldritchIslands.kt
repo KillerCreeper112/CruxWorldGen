@@ -81,6 +81,81 @@ class EldritchIslands(
       env: VolumeEnv,
       signals: SignalWriter
     ): DensityStack? {
+      // Tunables
+      val centerAboveSurface = 115.0
+      val halfHeight = 58.0
+
+      val bodyThreshold = 0.56
+      val coreThreshold = 0.66
+      val bodyStrength = 120.0
+      val coreStrength = 70.0
+
+      val voidThreshold = 0.74
+      val voidStrength = 70.0
+      val undersideBiteBoost = 1.45
+
+      val warpAmp = 26.0
+      val yScale = 0.62
+
+      // Relative sky belt (more stable over varying terrain)
+      val h = env.heightAboveSurface.toDouble()
+      val layerT = ((halfHeight - kotlin.math.abs(h - centerAboveSurface)) / halfHeight).coerceIn(0.0, 1.0)
+      val layerMask = smoothstep01(layerT)
+      if (layerMask <= 0.001) return DensityStack.densityStack(base = 0.0, add = -9999.0, carve = 0.0)
+
+      val maskN = ctx.noise.get(noise.skyMask3D)
+      val bodyN = ctx.noise.get(noise.skyBody3D)
+
+      // Domain warp
+      val wx = worldX + maskN.noise3D(worldX, y, worldZ) * warpAmp
+      val wy = y + maskN.noise3D(worldX + 777, y - 333, worldZ + 111) * (warpAmp * 0.45)
+      val wz = worldZ + maskN.noise3D(worldX - 444, y + 222, worldZ + 999) * warpAmp
+
+      // Macro body
+      val bodyRaw = (bodyN.noise3D(wx, wy * yScale, wz) * 0.5 + 0.5).coerceIn(0.0, 1.0)
+
+      val bt = ((bodyRaw - bodyThreshold) / (1.0 - bodyThreshold)).coerceIn(0.0, 1.0)
+      val bodyMask = smoothstep01(bt) // soft shell
+
+      val ct = ((bodyRaw - coreThreshold) / (1.0 - coreThreshold)).coerceIn(0.0, 1.0)
+      val coreMask = smoothstep01(ct).pow(1.6) // denser core, survives coarse blending
+
+      // Core + shell mass (blend-friendly)
+      var add = (bodyMask * bodyStrength + coreMask * coreStrength) * layerMask
+
+      // Void carving (more at edges / undersides than in core)
+      val voidRaw = (maskN.noise3D(wx + 1300.0, wy * 0.9 - 800.0, wz - 1700.0) * 0.5 + 0.5).coerceIn(0.0, 1.0)
+      val vt = ((voidRaw - voidThreshold) / (1.0 - voidThreshold)).coerceIn(0.0, 1.0)
+      val voidMask = smoothstep01(vt).pow(2.4)
+
+      val underside01 = ((centerAboveSurface - h) / halfHeight).coerceIn(0.0, 1.0)
+      val undersideBias = 1.0 + underside01 * (undersideBiteBoost - 1.0)
+
+      val edge01 = (1.0 - coreMask).coerceIn(0.0, 1.0)
+      add -= voidMask * voidStrength * layerMask * undersideBias * (0.35 + 0.65 * edge01)
+
+      // Fold / wrinkle detail (small amplitude, mostly near edges)
+      val foldRaw = (bodyN.noise3D(wx - 2100.0, wy * 0.35 + 999.0, wz + 2100.0) * 0.5 + 0.5).coerceIn(0.0, 1.0)
+      val fold = (foldRaw - 0.5) * 16.0
+      add += fold * layerMask * (0.25 + 0.75 * edge01)
+
+      // Slight downward taper to reduce slab tops
+      val topness = ((h - centerAboveSurface) / halfHeight).coerceIn(-1.0, 1.0)
+      add -= topness.coerceAtLeast(0.0) * 10.0 * layerMask
+
+      return DensityStack.densityStack(base = 0.0, add = add, carve = 0.0)
+    }
+  }
+
+  /*override val shape = object : VolumetricBiomeShape {
+    override fun density(
+      ctx: GenerateContext,
+      worldX: Int,
+      y: Int,
+      worldZ: Int,
+      env: VolumeEnv,
+      signals: SignalWriter
+    ): DensityStack? {
       // --- Tunables (move to constructor later if you like) ---
       val islandCenterY = 190.0         // preferred island layer height (absolute Y) if yRange is broad
       val islandHalfHeight = 42.0       // vertical layer thickness
@@ -133,7 +208,7 @@ class EldritchIslands(
 
       return DensityStack.densityStack(base = 0.0, add = add, carve = 0.0)
     }
-  }
+  }*/
 
   override fun toBukkitBiome(): Biome = Biome.BASALT_DELTAS
 }

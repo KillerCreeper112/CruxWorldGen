@@ -1,5 +1,7 @@
 package killercreepr.cruxworldgen.bukkit.generation
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap
+import killercreepr.crux.core.Crux
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
@@ -25,6 +27,7 @@ import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
 import killercreepr.cruxworldgen.core.feature.FeaturePipeline
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
+import net.minecraft.core.SectionPos.y
 import org.bukkit.HeightMap
 import org.bukkit.Material
 import org.bukkit.World
@@ -46,7 +49,7 @@ class BukkitGenerationChunkGenerator(
   val noise: NoiseBank,
   val worldDetails: WorldDetails,
   val features: FeaturePipeline,
-  val volumetricBiomeCellSize: Int = 4
+  val volumetricBiomeCellSize: Int = 16
 ) : ChunkGenerator() {
   val bukkitBiomes: List<org.bukkit.block.Biome>
 
