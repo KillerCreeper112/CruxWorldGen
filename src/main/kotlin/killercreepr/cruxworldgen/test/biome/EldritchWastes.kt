@@ -1,15 +1,19 @@
 package killercreepr.cruxworldgen.test.biome
 
 import killercreepr.cruxgeneration.util.CruxNoise
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
 import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
+import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.MaterialContext
+import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
+import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
@@ -17,22 +21,18 @@ import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.core.feature.ironLow
-import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
-import kotlin.math.abs
-import kotlin.math.floor
-import kotlin.math.pow
-import killercreepr.cruxworldgen.api.biome.Biome
-import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
+import killercreepr.cruxworldgen.core.feature.ironLow
 import killercreepr.cruxworldgen.test.cave.eldritch.CathedralChambers
 import killercreepr.cruxworldgen.test.cave.eldritch.OffsetTunnels
 import killercreepr.cruxworldgen.test.cave.eldritch.VerticalTears
 import killercreepr.cruxworldgen.test.cave.eldritch.VoidPockets
+import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
 import org.bukkit.Material
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.pow
 
 class EldritchWastes(
   override val caves: CaveShape = CaveProfile(

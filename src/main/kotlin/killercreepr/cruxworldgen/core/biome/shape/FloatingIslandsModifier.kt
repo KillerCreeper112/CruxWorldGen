@@ -10,7 +10,6 @@ import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.sqrt
 
 class FloatingIslandsModifier(
   private val region2D: NoiseKey,     // large blobs where islands can exist

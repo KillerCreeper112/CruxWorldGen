@@ -30,4 +30,20 @@ object Curve {
     val s = clamped * clamped * (3.0 - 2.0 * clamped)
     return 1.0 - s
   }
+
+  fun trilerp(
+    v000: Double, v100: Double, v010: Double, v110: Double,
+    v001: Double, v101: Double, v011: Double, v111: Double,
+    tx: Double, ty: Double, tz: Double
+  ): Double {
+    val x00 = lerp(v000, v100, tx)
+    val x10 = lerp(v010, v110, tx)
+    val x01 = lerp(v001, v101, tx)
+    val x11 = lerp(v011, v111, tx)
+
+    val y0 = lerp(x00, x10, tz) // z then x is also fine if consistent
+    val y1 = lerp(x01, x11, tz)
+
+    return lerp(y0, y1, ty)
+  }
 }

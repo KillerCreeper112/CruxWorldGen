@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.api.biome.volumetric
 
 import killercreepr.cruxworldgen.api.biome.BiomeShape
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
@@ -14,6 +15,15 @@ interface VolumetricBiomeShape : BiomeShape {
     env: VolumeEnv,
     signals: SignalWriter
   ): DensityStack? = null
+
+  override fun density(
+    ctx: GenerateContext,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    edge: BiomeEdgeContext,
+    signalWriter: SignalWriter
+  ): DensityStack = DensityStack.densityStack(0.0,0.0,0.0)
 
   /** Optional extra cave carving influence. */
   /*fun carve(

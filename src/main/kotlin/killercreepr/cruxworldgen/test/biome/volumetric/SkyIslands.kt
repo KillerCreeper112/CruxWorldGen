@@ -10,18 +10,10 @@ import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
-import killercreepr.cruxworldgen.api.noise.NoiseBank
-import killercreepr.cruxworldgen.api.noise.NoiseField
-import killercreepr.cruxworldgen.api.noise.NoiseKey
-import killercreepr.cruxworldgen.api.noise.NoiseModule
-import killercreepr.cruxworldgen.api.noise.Noised
+import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.core.feature.PlacedFeature
-import killercreepr.cruxworldgen.core.feature.diamondSkyIslands
-import killercreepr.cruxworldgen.core.feature.ironHigh
-import killercreepr.cruxworldgen.core.feature.ironLow
 import org.bukkit.block.Biome
 
 class SkyIslands(val noise : Noise = DefaultNoise) : VolumetricBiome, Noised, BukkitBiome {

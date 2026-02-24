@@ -26,7 +26,6 @@ import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
 import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
-import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.floor

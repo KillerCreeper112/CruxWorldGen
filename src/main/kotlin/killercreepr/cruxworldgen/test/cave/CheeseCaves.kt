@@ -7,8 +7,6 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
-import killercreepr.cruxworldgen.core.feature.HeightSampler
-import killercreepr.cruxworldgen.core.feature.UniformHeightSampler
 
 class CheeseCaves(
   val threshold01: Double = 0.65,      // higher = rarer

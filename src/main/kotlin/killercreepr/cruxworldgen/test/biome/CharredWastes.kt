@@ -26,7 +26,6 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
 import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.core.biome.shape.MountainShelfOverhangModifierOld
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow

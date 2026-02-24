@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.core.generation
 
-import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample

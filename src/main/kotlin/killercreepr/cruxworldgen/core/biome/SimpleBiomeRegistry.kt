@@ -8,12 +8,6 @@ import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.WeightedBiome
 import killercreepr.cruxworldgen.api.util.HashUtil.HASH_SALT
 import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
-import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
-import net.minecraft.core.SectionPos.y
-import kotlin.math.abs
-import kotlin.math.exp
-import kotlin.math.floor
-import kotlin.math.sqrt
 
 class SimpleBiomeRegistry(
   override val biomes: List<Biome>,

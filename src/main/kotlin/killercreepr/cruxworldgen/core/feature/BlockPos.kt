@@ -5,13 +5,31 @@ import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.util.Curve.lerp
-import net.minecraft.util.Mth.frac
 import java.util.*
 
 data class BlockPos(val x: Int, val y: Int, val z: Int)
 
 interface Feature<Cfg> {
   fun place(region: LimitedRegion, rng : Random, origin: BlockPos, cfg: Cfg)
+}
+
+interface HeightFilter{
+  fun isWithinRange(minY : Int, maxY : Int, wy : Int) : Boolean
+  fun isWithinRange(ctx : GenerateContext, wy : Int) : Boolean =
+    isWithinRange(ctx.chunkContext.minHeight,ctx.chunkContext.maxHeight-1, wy)
+}
+
+data class RelativeHeightFilter(
+  val minFrac : Float,
+  val maxFrac : Float
+) : HeightFilter{
+  override fun isWithinRange(minY: Int, maxY: Int, wy: Int): Boolean {
+    val span = (maxY - minY).coerceAtLeast(1)
+
+    val checkMin = (minY + span * minFrac).toInt()
+    val checkMax = (minY + span * maxFrac).toInt()
+    return wy in checkMin..checkMax
+  }
 }
 
 interface UniformHeightSampler{
@@ -34,6 +52,10 @@ interface UniformHeightSampler{
     wx : Int,
     wz : Int
   ): Int
+
+  fun isWithinRange(rng: Random,
+                    region: LimitedRegion,
+                    wy : Int) : Boolean
 }
 
 interface GenerateHeightSampler{
@@ -160,6 +182,11 @@ class RelativeHeight(
     return (minY + span * maxFrac).toInt()
   }
 
+  override fun isWithinRange(
+    rng: Random,
+    region: LimitedRegion,
+    wy: Int
+  ): Boolean = wy in sampleMinY(rng, region, 0, 0)..sampleMaxY(rng, region, 0,0)
 }
 
 class RelativeHeightSampler(

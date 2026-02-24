@@ -1,15 +1,10 @@
 package killercreepr.cruxworldgen.test.biome
 
-import killercreepr.cruxworldgen.api.biome.BiomeShapeType
-import killercreepr.cruxworldgen.api.density.DensityBank
-import killercreepr.cruxworldgen.api.util.Curve.band
-import kotlin.math.floor
-import kotlin.math.max
-
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
 import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
+import killercreepr.cruxworldgen.api.biome.BiomeShapeType
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.cave.CaveShape
@@ -17,6 +12,7 @@ import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.decor.Decoration
+import killercreepr.cruxworldgen.api.density.DensityBank
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.api.noise.NoiseBank
@@ -24,6 +20,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.signal.SignalWriter
+import killercreepr.cruxworldgen.api.util.Curve.band
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
@@ -32,6 +29,8 @@ import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import org.bukkit.Material
 import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.pow
 
 class TestAmp(

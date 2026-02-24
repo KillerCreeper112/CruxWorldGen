@@ -19,14 +19,12 @@ import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.signal.SignalKey
 import killercreepr.cruxworldgen.api.signal.SignalWriter
-import killercreepr.cruxworldgen.api.util.Curve.smoothstep
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
 import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.core.biome.shape.MountainShelfOverhangModifierOld
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow

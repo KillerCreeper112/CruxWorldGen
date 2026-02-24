@@ -2,11 +2,9 @@ package killercreepr.cruxworldgen.api.generation
 
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
-import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
