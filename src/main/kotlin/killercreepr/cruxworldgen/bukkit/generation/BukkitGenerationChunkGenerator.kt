@@ -49,7 +49,7 @@ class BukkitGenerationChunkGenerator(
   val noise: NoiseBank,
   val worldDetails: WorldDetails,
   val features: FeaturePipeline,
-  val volumetricBiomeCellSize: Int = 16
+  val volumetricBiomeCellSize: Int = 8
 ) : ChunkGenerator() {
   val bukkitBiomes: List<org.bukkit.block.Biome>
 
