@@ -25,8 +25,115 @@ class SimpleBiomeRegistry(
 ) : BiomeRegistry {
 
   // --------- Biome blending (unchanged idea) ---------
-
   override fun sampleBiomeBlend(generateCtx: GenerateContext, worldX: Int, worldZ: Int): BiomeBlendSample {
+    val seed = generateCtx.worldContext.seed
+    val biomeCellSize = biomeCellSizeBlocks.toDouble()
+
+    val cellX = Math.floorDiv(worldX, biomeCellSizeBlocks)
+    val cellZ = Math.floorDiv(worldZ, biomeCellSizeBlocks)
+
+    // Track nearest 3 using squared distance (avoid sorting 25 entries)
+    var biome1: Biome? = null
+    var biome2: Biome? = null
+    var biome3: Biome? = null
+    var dist1Sq = Double.POSITIVE_INFINITY
+    var dist2Sq = Double.POSITIVE_INFINITY
+    var dist3Sq = Double.POSITIVE_INFINITY
+
+    for (neighborCellX in (cellX - 2)..(cellX + 2)) {
+      for (neighborCellZ in (cellZ - 2)..(cellZ + 2)) {
+        val center = cellPoint(seed, neighborCellX, neighborCellZ, biomeCellSizeBlocks)
+        val dx = (worldX - center.worldX).toDouble()
+        val dz = (worldZ - center.worldZ).toDouble()
+        val distSq = dx * dx + dz * dz
+
+        val biome = getCellBiome(seed, neighborCellX, neighborCellZ)
+
+        when {
+          distSq < dist1Sq -> {
+            dist3Sq = dist2Sq; biome3 = biome2
+            dist2Sq = dist1Sq; biome2 = biome1
+            dist1Sq = distSq;  biome1 = biome
+          }
+          distSq < dist2Sq -> {
+            dist3Sq = dist2Sq; biome3 = biome2
+            dist2Sq = distSq;  biome2 = biome
+          }
+          distSq < dist3Sq -> {
+            dist3Sq = distSq;  biome3 = biome
+          }
+        }
+      }
+    }
+
+    // Should never be null in practice, but keep safe defaults
+    val nearestBiome = biome1 ?: return BiomeBlendSample.biomeBlendSample(
+      weightedBiomes = emptyList(),
+      edgeContext = BiomeEdgeContext.biomeEdgeContext(Double.POSITIVE_INFINITY, blendRadiusBlocks)
+    )
+    val secondBiome = biome2 ?: nearestBiome
+    val thirdBiome = biome3 ?: secondBiome
+
+    val nearestDist = kotlin.math.sqrt(dist1Sq)
+    val secondDist = kotlin.math.sqrt(dist2Sq)
+    val thirdDist = kotlin.math.sqrt(dist3Sq)
+
+    val distanceToEdgeBlocks = kotlin.math.abs(secondDist - nearestDist)
+
+    val softness = (blendRadiusBlocks * 0.75).coerceAtLeast(1.0)
+
+    fun weightFromDelta(delta: Double): Double = kotlin.math.exp(-delta / softness)
+
+    // delta from nearest (same as your logic)
+    val w1 = 1.0
+    val w2 = weightFromDelta(secondDist - nearestDist)
+    val w3 = weightFromDelta(thirdDist - nearestDist)
+
+    // Merge duplicate biomes among top 3 without map allocations (max unique = 3)
+    var mergedBiomeA: Biome? = null; var mergedWeightA = 0.0
+    var mergedBiomeB: Biome? = null; var mergedWeightB = 0.0
+    var mergedBiomeC: Biome? = null; var mergedWeightC = 0.0
+
+    fun addMerged(biome: Biome, weight: Double) {
+      when {
+        mergedBiomeA == null || mergedBiomeA === biome -> {
+          if (mergedBiomeA == null) mergedBiomeA = biome
+          mergedWeightA += weight
+        }
+        mergedBiomeB == null || mergedBiomeB === biome -> {
+          if (mergedBiomeB == null) mergedBiomeB = biome
+          mergedWeightB += weight
+        }
+        mergedBiomeC == null || mergedBiomeC === biome -> {
+          if (mergedBiomeC == null) mergedBiomeC = biome
+          mergedWeightC += weight
+        }
+        else -> {
+          // unreachable (only adding 3 items)
+        }
+      }
+    }
+
+    addMerged(nearestBiome, w1)
+    addMerged(secondBiome, w2)
+    addMerged(thirdBiome, w3)
+
+    val total = (mergedWeightA + mergedWeightB + mergedWeightC).coerceAtLeast(1e-9)
+
+    val weighted = ArrayList<WeightedBiome>(3)
+    mergedBiomeA?.let { weighted += WeightedBiome.weightedBiome(it, mergedWeightA / total) }
+    mergedBiomeB?.let { weighted += WeightedBiome.weightedBiome(it, mergedWeightB / total) }
+    mergedBiomeC?.let { weighted += WeightedBiome.weightedBiome(it, mergedWeightC / total) }
+
+    val edgeCtx = if (weighted.size <= 1) {
+      BiomeEdgeContext.biomeEdgeContext(Double.POSITIVE_INFINITY, blendRadiusBlocks)
+    } else {
+      BiomeEdgeContext.biomeEdgeContext(distanceToEdgeBlocks, blendRadiusBlocks)
+    }
+
+    return BiomeBlendSample.biomeBlendSample(weighted, edgeContext = edgeCtx)
+  }
+  /*override fun sampleBiomeBlend(generateCtx: GenerateContext, worldX: Int, worldZ: Int): BiomeBlendSample {
     val seed = generateCtx.worldContext.seed
     val cellX = floor(worldX.toDouble() / biomeCellSizeBlocks.toDouble()).toInt()
     val cellZ = floor(worldZ.toDouble() / biomeCellSizeBlocks.toDouble()).toInt()
@@ -77,7 +184,7 @@ class SimpleBiomeRegistry(
     }
 
     return BiomeBlendSample.biomeBlendSample(weighted, edgeContext = edgeCtx)
-  }
+  }*/
 
   // --------- Predicate rules ---------
 

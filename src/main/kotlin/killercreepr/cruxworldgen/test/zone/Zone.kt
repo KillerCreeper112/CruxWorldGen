@@ -6,6 +6,11 @@ import killercreepr.cruxworldgen.test.biome.AbyssStart
 import killercreepr.cruxworldgen.test.biome.AmplifiedHighlands
 import killercreepr.cruxworldgen.test.biome.CharredWastes
 import killercreepr.cruxworldgen.test.biome.EldritchWastes
+import killercreepr.cruxworldgen.test.biome.FjordIce
+import killercreepr.cruxworldgen.test.biome.Mountains
+import killercreepr.cruxworldgen.test.biome.Plains
+import killercreepr.cruxworldgen.test.biome.Plateaus
+import killercreepr.cruxworldgen.test.biome.SpiralHills
 import killercreepr.cruxworldgen.test.biome.TestAmp
 import killercreepr.cruxworldgen.test.biome.ToxicFogBasins
 
@@ -14,6 +19,15 @@ class TestZone : Zone{
     EldritchWastes(),
     AbyssStart(),
     CharredWastes(),
+    ToxicFogBasins(),
+    AmplifiedHighlands(
+      baseYAboveSea = 0.0
+    ),
+    Plains(),
+    Mountains(),
+    Plateaus(),
+    SpiralHills(),
+    FjordIce()
     /*AmplifiedHighlands(
       baseYAboveSea = 0.0
     ),

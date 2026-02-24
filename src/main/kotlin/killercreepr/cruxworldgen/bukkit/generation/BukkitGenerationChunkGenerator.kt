@@ -307,7 +307,6 @@ class BukkitGenerationChunkGenerator(
     )
 
     if(createBiomeCache){
-      Crux.logError("No biome cache for chunk! $chunkX,$chunkZ")
       biomeProviderCache.putIfAbsent(
         chunkKey,
         BiomeChunkCache(
@@ -358,6 +357,17 @@ class BukkitGenerationChunkGenerator(
       override fun getBiomes(worldInfo: WorldInfo): List<org.bukkit.block.Biome?> = bukkitBiomes
     }
   }
+
+  data class BiomeColumnCache(
+    val surfaceY: IntArray,
+    val surfaceBlend: Array<BiomeBlendSample?>,
+    val biomeDominantCell : Array<Biome?>,
+    val volBiomeBlendCell : Array<VolBiomeBlendSample?>
+  )
+
+  data class BiomeChunkCache(
+    val columns: BiomeColumnCache
+  )
 
   private fun blockIndex(localX: Int, localZ: Int, localY: Int, minY: Int): Int {
     return (localX and 15) + ((localZ and 15) shl 4) + ((localY - minY) shl 8)
@@ -473,18 +483,6 @@ class BukkitGenerationChunkGenerator(
     biomeProviderCache[key] = built
     return built
   }
-
-  data class BiomeColumnCache(
-    val surfaceY: IntArray,              // size 16*16
-    val surfaceBlend: Array<BiomeBlendSample?>, // size 16*16 (or store primary biome id)
-    //val volDominant: Array<Biome?>        // size 16*16 * stepsCount (optional)
-    val biomeDominantCell : Array<Biome?>,
-    val volBiomeBlendCell : Array<VolBiomeBlendSample?>
-  )
-
-  data class BiomeChunkCache(
-    val columns: BiomeColumnCache
-  )
 
   val biomeProviderCache = object : ConcurrentHashMap<Long, BiomeChunkCache>(256){}
 

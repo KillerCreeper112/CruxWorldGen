@@ -299,31 +299,6 @@ class AbyssStart(
 
   val shaper = NoiseShaper(
     listOf(
-      /*Point(-1.0, ShapingFunction.VALLEY),
-      Point(-0.5, ShapingFunction.VALLEY),
-      Point(-0.3, ShapingFunction.FLAT),
-      Point(0.0, ShapingFunction.FLAT),
-      Point(0.7, ShapingFunction.DUMMY),
-      Point(0.8, ShapingFunction.HILLS),
-      Point(0.88, ShapingFunction.HILLS),
-      Point(0.93, ShapingFunction.HILLS),
-      Point(0.965, ShapingFunction.MOUNTAIN),
-      Point(1.0, ShapingFunction.MOUNTAIN)*/
-      /*NoiseShaper.Point(-1.0, NoiseShaper.ShapingFunction.VALLEY),
-      NoiseShaper.Point(-0.55, NoiseShaper.ShapingFunction.VALLEY),
-
-      // Lower mid: flatten for plains/basins
-      NoiseShaper.Point(-0.20, NoiseShaper.ShapingFunction.FLAT),
-      NoiseShaper.Point( 0.25, NoiseShaper.ShapingFunction.FLAT),
-
-      // Upper mid: hills / ridges
-      NoiseShaper.Point( 0.55, NoiseShaper.ShapingFunction.HILLS),
-      NoiseShaper.Point( 0.75, NoiseShaper.ShapingFunction.RIDGES),
-
-      // High: epic composite, then mountains
-      NoiseShaper.Point( 0.86, NoiseShaper.ShapingFunction.EPIC),
-      NoiseShaper.Point( 0.94, NoiseShaper.ShapingFunction.MOUNTAIN),
-      NoiseShaper.Point( 1.0,  NoiseShaper.ShapingFunction.MOUNTAIN)*/
       NoiseShaper.Point(-1.0, NoiseShaper.ShapingFunction.VALLEY),
       NoiseShaper.Point(-0.55, NoiseShaper.ShapingFunction.VALLEY),
       NoiseShaper.Point(-0.20, NoiseShaper.ShapingFunction.FLAT),
@@ -369,63 +344,42 @@ class AbyssStart(
 
         val valleys01 = (valleysN + 1.0) * 0.5
 
-        /*val ridge01 = (1.0 - abs(ridgesN)).coerceIn(0.0, 1.0)
-
-        val t = ((ridge01 - peakStart01) / (peakEnd01 - peakStart01)).coerceIn(0.0, 1.0)
-        val peakMask = smoothstep01(t).pow(peakPower)*/
-
         val ridge01 = (1.0 - abs(ridgesN)).coerceIn(0.0, 1.0)
 
         val t = ((ridge01 - peakStart01) / (peakEnd01 - peakStart01)).coerceIn(0.0, 1.0)
         val peakMask = smoothstep01(t).pow(peakPower)
 
-        //
-        // Highlands gate (prevents crazy spikes in lowlands)
         val highland01 = smoothstep01(((cont01 - 0.56) / (0.90 - 0.56)).coerceIn(0.0, 1.0))
 
-        // Broad range mask: where hills noise is high AND we're in highlands
         val range01 = smoothstep01(((hills01 - 0.55) / (0.85 - 0.55)).coerceIn(0.0, 1.0)) * highland01
 
-// Tame factor: 1 in plains, ~0.35 in mountain ranges
-        val tame = 1.0 - 0.85 * range01 //1.0 - 0.65 * range01
+        val tame = 1.0 - 0.85 * range01
 
-// Dedicated spike driver (rare by construction: we use the top tail)
         val spikeRaw = ctx.noise.get(Noise.Spike2D).noise2D(xw + 2000.0, zw - 2000.0) // [-1..1]
         val spike01 = ((spikeRaw + 1.0) * 0.5).coerceIn(0.0, 1.0)
 
-// Make spikes rare: only trigger near the extreme high end
-        val spikeStart = 0.40   // 0.88..0.94 (higher = rarer)
-        val spikeEnd   = 0.985  // 0.97..0.995
+        val spikeStart = 0.40
+        val spikeEnd   = 0.985
         val tt = ((spike01 - spikeStart) / (spikeEnd - spikeStart)).coerceIn(0.0, 1.0)
 
-// Sharpness: 4..7 is a good range
         val spikeMask = smoothstep01(tt).pow(3.0) * highland01
         val valleyMask = (1.0 - spikeMask).coerceIn(0.0, 1.0)
         val valleyDepth = smoothstep01(valleys01).pow(valleyPower) * valleyMask
-        //
-
-
-        /*val valleyMask = (1.0 - peakMask).coerceIn(0.0, 1.0)
-        val valleyDepth = smoothstep01(valleys01).pow(valleyPower) * valleyMask*/
 
         var offset = 0.0
 
         offset += (cont01 - 0.5) * 2.0 * continentAmp * (0.85 + 0.15 * range01)
-        //offset += (cont01 - 0.5) * 2.0 * continentAmp
 
         offset += (hills01 - 0.5) * 2.0 * hillsAmp * tame
-        //offset += (hills01 - 0.5) * 2.0 * hillsAmp
 
         val peakBase = peakMask * highland01 * range01
-        offset += peakBase * (peakAmp * 0.25)   // 0.15..0.35
-        //offset += peakMask * peakAmp
+        offset += peakBase * (peakAmp * 0.25)
 
         offset += spikeMask * peakAmp
         offset -= valleyDepth * valleyAmp
 
 
         offset += detailN * detailAmp * (0.55 + 0.45 * range01)
-        //offset += detailN * detailAmp
 
         if (terraceStep > 0.0) {
           val q = floor(offset / terraceStep) * terraceStep
