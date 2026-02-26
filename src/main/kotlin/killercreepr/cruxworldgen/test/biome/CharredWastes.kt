@@ -26,6 +26,7 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
 import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.test.decor.FallenTreeDecor
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.pow
@@ -36,7 +37,11 @@ class CharredWastes(
       addAll(gCaves.caveTypes)
     }
   ),
-  override val decorations: List<Decoration> = listOf(),
+  override val decorations: List<Decoration> = listOf(
+    FallenTreeDecor(
+      chancePerPoint = 0.6
+    )
+  ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): BlockData {
       if (!context.isSolid) return BlockData.NONE
@@ -277,26 +282,6 @@ class CharredWastes(
           ((ridge - threshold).coerceAtLeast(0.0)) *
           strength
 
-        /*val yNormalized = ctx.normalizedY(y)
-        val overhangGate = smoothstep(0.45, 0.85, yNormalized)
-        val overhang3D = shaper.shape(ctx.noise.get(Noise.Overhang3D).noise3D(worldX, y, worldZ))
-        var ridge = 1.0 - abs(overhang3D)
-        //ridge = ridge.pow(3.0)
-        val threshold = 0.2
-        val strength = 500.0//500.0
-        val overhang = overhangGate * (ridge - threshold) * strength*/
-
-        /*val yNormalized = ctx.normalizedY(y)
-        val overhangGate = smoothstep(0.45, 0.85, yNormalized)
-
-        val overhang3D = shaper.shape(ctx.noise.get(Noise.Overhang3D).noise3D(worldX, y, worldZ))
-        var ridge = 1.0 - abs(overhang3D)
-        ridge = ridge.pow(3.0)   // try 2.0..5.0
-        val threshold = 0.2
-        val strength = 500.0
-        val attach = nearSurfaceAirMask(baseDensity, attachRange = 10.0) // try 6..16
-        val overhang = overhangGate * attach * ((ridge - threshold).coerceAtLeast(0.0)) * strength*/
-
         return DensityStack.densityStack(
           base = baseDensity,
           add = overhang,
@@ -307,14 +292,6 @@ class CharredWastes(
     listOf(
     )
   )
-
-  fun nearSurfaceAirMask(baseDensity: Double, attachRange: Double): Double {
-    // 1 when baseDensity in [-attachRange .. 0], 0 when far above surface (< -attachRange)
-    val near = smoothstep(-attachRange, 0.0, baseDensity)
-    // 1 in air, 0 in solid
-    val airOnly = smoothstep(0.0, attachRange, -baseDensity)
-    return near * airOnly
-  }
 
   fun fissureMask01(ctx: GenerateContext, wx: Int, y: Int, wz: Int, surfaceY: Double): Double {
     val x = wx.toDouble()

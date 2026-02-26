@@ -1,27 +1,34 @@
 package killercreepr.cruxworldgen.test.zone
 
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeRegistry
 import killercreepr.cruxworldgen.api.zone.Zone
+import killercreepr.cruxworldgen.core.biome.SimpleBiomeRegistry
 import killercreepr.cruxworldgen.test.biome.*
 
 class TestZone : Zone{
-  override val biomes: BiomeRegistry = BiomeRegistry.biomeRegistry(listOf(
-    EldritchWastes(),
-    AbyssStart(),
-    CharredWastes(),
-    ToxicFogBasins(),
-    AmplifiedHighlands(
-      baseYAboveSea = 0.0
+  override val biomes: BiomeRegistry = SimpleBiomeRegistry(
+    biomes = listOf(
+      EldritchWastes(),
+      AbyssStart(),
+      CharredWastes(),
+      BasaltSpires(),
+      ToxicFogBasins(),
+      /*AmplifiedHighlands(
+        baseYAboveSea = 0.0
+      ),
+      CharredWastes(),
+      ToxicFogBasins()*/
     ),
-    Plains(),
-    Mountains(),
-    Plateaus(),
-    SpiralHills(),
-    FjordIce()
-    /*AmplifiedHighlands(
-      baseYAboveSea = 0.0
-    ),
-    CharredWastes(),
-    ToxicFogBasins()*/
-  ), 256, 32.0)
+    biomeCellSizeBlocks = 256,
+    blendRadiusBlocks = 32.0,
+    rules = object : SimpleBiomeRegistry.BiomeRuleProvider{
+      override fun ruleFor(biome: Biome): SimpleBiomeRegistry.BiomeRule? {
+        if(biome is BasaltSpires){
+          return SimpleBiomeRegistry.BiomeRule.AnyNeighbour{biome -> biome is CharredWastes}
+        }
+        return null
+      }
+    }
+  )
 }

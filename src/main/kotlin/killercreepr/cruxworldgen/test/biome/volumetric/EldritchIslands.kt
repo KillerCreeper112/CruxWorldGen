@@ -8,6 +8,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.material.MaterialProvider
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.signal.SignalWriter
@@ -15,6 +16,7 @@ import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.HeightFilter
+import killercreepr.cruxworldgen.test.biome.EldritchWastes
 import org.bukkit.block.Biome
 import kotlin.math.pow
 
@@ -52,6 +54,9 @@ class EldritchIslands(
       }
     }
   }
+
+  override fun allowedIn(surface: BiomeBlendSample): Boolean = surface.primaryBiome() is EldritchWastes
+
   override val noiseModule = DefaultNoise
 
   override val materialProvider = object : MaterialProvider {

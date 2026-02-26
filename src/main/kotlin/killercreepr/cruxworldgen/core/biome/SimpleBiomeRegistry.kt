@@ -218,6 +218,18 @@ class SimpleBiomeRegistry(
    */
   fun interface BiomeRule {
     fun isValid(ctx: RuleContext, biome: Biome): Boolean
+
+    class AnyNeighbour(val filter : (Biome) -> Boolean) : BiomeRule{
+      override fun isValid(
+        ctx: RuleContext,
+        biome: Biome
+      ): Boolean {
+        for (biome in ctx.neighborsCardinal4()) {
+          if(filter.invoke(biome)) return true
+        }
+        return false
+      }
+    }
   }
 
   /**
@@ -236,9 +248,9 @@ class SimpleBiomeRegistry(
    * Enforces predicates by validating the chosen biome; if invalid, uses a fallback strategy.
    */
   class PredicateConstraints(
-    private val provider: BiomeRuleProvider,
-    private val fallback: Fallback = Fallback.MAJORITY_NEIGHBOR,
-    private val maxRerolls: Int = 6
+    val provider: BiomeRuleProvider,
+    val fallback: Fallback = Fallback.MAJORITY_NEIGHBOR,
+    val maxRerolls: Int = 6
   ) : CellConstraintPolicy {
 
     enum class Fallback {
@@ -330,7 +342,7 @@ class SimpleBiomeRegistry(
   private val constraintsPolicy: CellConstraintPolicy =
     when (rules) {
       is NoRules -> NoConstraints()
-      else -> PredicateConstraints(rules) // default fallback; customize if you want
+      else -> PredicateConstraints(rules)
     }
 
   private val cellCache = CellLruCache<Long, Biome>(capacity = cacheCells)
