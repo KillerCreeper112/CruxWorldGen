@@ -23,6 +23,7 @@ import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.test.biome.volumetric.EldritchIslands
 import killercreepr.cruxworldgen.test.biome.volumetric.GlacialCaverns
 import killercreepr.cruxworldgen.test.biome.volumetric.SkyIslands
+import killercreepr.cruxworldgen.test.biome.volumetric.SmoothSkyIslandsV2
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
@@ -52,7 +53,10 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     listOf(TestZone())
                   )
                   val volBiomes = VolumetricBiomeRegistry(listOf(
-                    EldritchIslands(yRange = RelativeHeightFilter(0.65f, 0.9f)),
+                    SmoothSkyIslandsV2(
+                      yRange = RelativeHeightFilter(0.4f, 0.9f)
+                    ),
+                    //EldritchIslands(yRange = RelativeHeightFilter(0.65f, 0.9f)),
                     GlacialCaverns(yRange = RelativeHeightFilter(0.1f, 0.4f))
                   ))
                   val structureRegistry = SimpleStructureRegistry(listOf())
