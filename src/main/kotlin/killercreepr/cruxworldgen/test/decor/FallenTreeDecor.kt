@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.test.decor
 
-import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -12,11 +11,7 @@ import killercreepr.cruxworldgen.api.util.HashUtil
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
-import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
-import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
 import org.bukkit.Axis
-import org.bukkit.Bukkit
-import org.bukkit.block.BlockType
 
 class FallenTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
@@ -34,14 +29,7 @@ class FallenTreeDecor(
   val maxStepUpDown: Int = 1,        // allow trunk to follow terrain +/- 1 block
   val requireSupport: Boolean = true,
   val maxUnsupportedSegments: Int = 1, // allow tiny gaps (roots/rocks), but not floating logs
-  val logPicker : (Axis) -> BlockData = run {
-    val cache = arrayOfNulls<BlockData>(Axis.entries.size)
-    return@run{ axis: Axis ->
-      cache[axis.ordinal] ?: BukkitDataBlockData(
-        BlockType.OAK_LOG.createBlockData { d -> d.axis = axis }
-      ).also { cache[axis.ordinal] = it }
-    }
-  }
+  val logPicker : (Axis) -> BlockData
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {

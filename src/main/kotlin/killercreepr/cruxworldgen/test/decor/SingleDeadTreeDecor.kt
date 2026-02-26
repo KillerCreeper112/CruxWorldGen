@@ -1,5 +1,7 @@
 package killercreepr.cruxworldgen.test.decor
 
+import killercreepr.crux.api.data.Holder
+import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
@@ -9,8 +11,6 @@ import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
-import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import org.bukkit.Material
 
 class SingleDeadTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
@@ -20,7 +20,8 @@ class SingleDeadTreeDecor(
   val maxSlope01: Double = 100.0,
 
   val minHeight: Int = 4,
-  val maxHeight: Int = 9
+  val maxHeight: Int = 9,
+  val log : Holder<BlockData>
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
@@ -70,7 +71,7 @@ class SingleDeadTreeDecor(
       val y = p.baseY + dy
       if (y < bounds.minY || y > bounds.maxY) break
       if (queries.isReplaceable(p.worldX, y, p.worldZ)) {
-        region.setBlock(p.worldX, y, p.worldZ, BukkitBlockResolver.INSTANCE.resolve(Material.OAK_LOG))
+        region.setBlock(p.worldX, y, p.worldZ, log.value())
       }
     }
   }

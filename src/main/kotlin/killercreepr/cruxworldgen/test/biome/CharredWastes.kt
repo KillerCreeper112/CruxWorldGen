@@ -38,9 +38,6 @@ class CharredWastes(
     }
   ),
   override val decorations: List<Decoration> = listOf(
-    FallenTreeDecor(
-      chancePerPoint = 0.6
-    )
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): BlockData {
