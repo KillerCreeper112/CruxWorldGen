@@ -162,7 +162,8 @@ class FallenTreeDecor(
     var dx = p.dx
     var dz = p.dz
 
-    val logY = logPicker.invoke(Axis.Y)
+    val trunkAxis = if (kotlin.math.abs(dx) >= kotlin.math.abs(dz)) Axis.X else Axis.Z
+    val logTrunk = logPicker.invoke(trunkAxis)
     // stump/root at start (vertical 1-2 logs)
     run {
       val stumpH = chooseInt(p.seed xor 0xBEEFL, 1, 2)
@@ -170,7 +171,7 @@ class FallenTreeDecor(
         val y = p.startY + i
         if (y < bounds.minY || y > bounds.maxY) break
         if (queries.isReplaceable(x, y, z)) {
-          region.setBlock(x, y, z, logY)
+          region.setBlock(x, y, z, logTrunk)
         }
       }
     }
@@ -181,7 +182,7 @@ class FallenTreeDecor(
       if (y < bounds.minY || y > bounds.maxY) break
 
       if (queries.isReplaceable(x, y, z)) {
-        region.setBlock(x, y, z, logY)
+        region.setBlock(x, y, z, logTrunk)
       }
 
       // occasional “chunk” to make it feel more organic (1 extra log beside)
