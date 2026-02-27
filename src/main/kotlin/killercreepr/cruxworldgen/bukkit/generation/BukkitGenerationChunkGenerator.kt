@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.bukkit.generation
 
+import killercreepr.crux.core.Crux
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
@@ -603,7 +604,11 @@ class BukkitGenerationChunkGenerator(
         chunkZ: Int,
         limitedRegion: LimitedRegion
       ) {
-        val cache = cache.remove(chunkKey(chunkX, chunkZ)) ?: throw IllegalStateException("No cache for ${chunkX}x${chunkZ}")
+        val cache = cache.remove(chunkKey(chunkX, chunkZ))
+        if(cache == null){
+          Crux.logError("No cache for ${chunkX}x${chunkZ} TODO fix this!")//todo fix this
+          return
+        }
 
         val region = BukkitLimitedRegion(
           cache.ctx, limitedRegion,

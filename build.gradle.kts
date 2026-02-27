@@ -24,11 +24,11 @@ dependencies {
         "E:\\Plugins\\YO\\CruxCore\\build\\libs\\CruxCore-1.0-all.jar",
     ))
 
-    implementation(platform(kotlin("bom")))
-    implementation(kotlin("stdlib"))
+    compileOnly(platform(kotlin("bom")))
+    compileOnly(kotlin("stdlib"))
     //implementation(kotlin("reflect"))
     //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    testImplementation(kotlin("test"))
+    testCompileOnly(kotlin("test"))
 
     compileOnly(fileTree("libs"){
         include("*.jar")

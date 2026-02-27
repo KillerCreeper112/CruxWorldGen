@@ -13,9 +13,8 @@ open class BukkitBlockResolver : BlockDataResolver {
   companion object{
     val INSTANCE = BukkitBlockResolver()
   }
-
-  fun resolve(id : String) = resolve(StringDataNode(id))
-  fun resolve(id : Material) = resolve(id.key().asString())
+  fun resolve(id : Material) = BukkitMaterialBlockData(id)
+  fun resolve(id : org.bukkit.block.data.BlockData) = BukkitDataBlockData(id)
 
   override fun resolve(node: DataNode): BlockData {
     if(!node.isString) throw IllegalArgumentException("node $node is not a string")

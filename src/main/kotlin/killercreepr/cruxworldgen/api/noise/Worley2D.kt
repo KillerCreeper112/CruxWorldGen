@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.core
+package killercreepr.cruxworldgen.api.noise
 
 import kotlin.math.floor
 import kotlin.math.sqrt

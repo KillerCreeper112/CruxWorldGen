@@ -1,3 +1,4 @@
+/*
 package killercreepr.cruxworldgen.test6.noise
 
 import killercreepr.cruxgeneration.util.CruxNoise
@@ -488,4 +489,4 @@ class NoiseBank(
     value = (value xor (value ushr 27)) * HASH_MIX_2
     return value xor (value ushr 31)
   }
-}
+}*/
