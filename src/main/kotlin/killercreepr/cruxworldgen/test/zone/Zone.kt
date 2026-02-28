@@ -11,9 +11,9 @@ class TestZone : Zone{
     biomes = listOf(
       EldritchWastes(),
       AbyssStart(),
-      CharredWastes(),
-      BasaltSpires(),
-      ToxicFogBasins(),
+      //CharredWastes(),
+      //BasaltSpires(),
+      //ToxicFogBasins(),
       /*AmplifiedHighlands(
         baseYAboveSea = 0.0
       ),

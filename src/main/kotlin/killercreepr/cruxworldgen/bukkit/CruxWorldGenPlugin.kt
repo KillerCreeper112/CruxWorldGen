@@ -16,6 +16,7 @@ import killercreepr.cruxworldgen.core.decor.SimplePropPointGrid
 import killercreepr.cruxworldgen.core.feature.RelativeHeightFilter
 import killercreepr.cruxworldgen.core.feature.SimpleFeaturePipeline
 import killercreepr.cruxworldgen.core.generation.SimpleGenerationPipeline
+import killercreepr.cruxworldgen.core.generation.chunk.SimpleChunkSampler
 import killercreepr.cruxworldgen.core.noise.BaseNoiseModule
 import killercreepr.cruxworldgen.core.noise.SimpleNoiseBank
 import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
@@ -98,7 +99,10 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     structures,
                     noise,
                     worldDetails,
-                    features
+                    features,
+                    chunkSampler = SimpleChunkSampler(
+                      generation, noise, worldDetails, volumetricBiomeCellSize = 8
+                    )
                   )
                   val world = WorldCreator(name).generator(
                     generator
