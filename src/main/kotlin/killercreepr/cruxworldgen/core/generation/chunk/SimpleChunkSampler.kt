@@ -145,7 +145,88 @@ data class SimpleChunkSampler(
     return (localY * chunkDepth + localZ) * chunkWidth + localX
   }
 
-  fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
+  fun findSurfaceY(
+    ctx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    worldZ: Int
+  ): Int {
+    val minY = ctx.chunkContext.minHeight
+    val maxY = ctx.chunkContext.maxHeight - 1
+    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
+
+    fun isSolid(y: Int): Boolean {
+      val terrainMacro =
+        generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
+
+      val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
+      val terrainFinal = terrainMacro + detail
+      if (terrainFinal > 0.0) return true
+
+      val terrainDensity =
+        generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY)
+
+      return terrainDensity > 0.0
+    }
+
+    val step = 4
+    var y = maxY
+
+    while (y >= minY) {
+      if (isSolid(y)) {
+        val refineTop = minOf(maxY, y + step - 1)
+        for (yy in refineTop downTo (y + 1)) {
+          if (isSolid(yy)) return yy
+        }
+        return y
+      }
+      y -= step
+    }
+
+    return minY
+  }
+
+//  fun findSurfaceY(
+//    ctx: GenerateContext,
+//    biomeBlend: BiomeBlendSample,
+//    worldX: Int,
+//    worldZ: Int
+//  ): Int {
+//    val minY = ctx.chunkContext.minHeight
+//    val maxY = ctx.chunkContext.maxHeight - 1
+//    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
+//
+//    fun isSolid(y: Int): Boolean {
+//      val terrainMacro =
+//        generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
+//
+//      val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
+//      val terrainFinal = terrainMacro + detail
+//      if (terrainFinal > 0.0) return true
+//
+//      val terrainDensity =
+//        generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY)
+//
+//      return terrainDensity > 0.0
+//    }
+//
+//    val step = 2
+//    var y = maxY
+//
+//    while (y >= minY) {
+//      if (isSolid(y)) {
+//        val refineTop = minOf(maxY, y + step - 1)
+//        for (yy in refineTop downTo (y + 1)) {
+//          if (isSolid(yy)) return yy
+//        }
+//        return y
+//      }
+//      y -= step
+//    }
+//
+//    return minY
+//  }
+  /*fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
     val minY = ctx.chunkContext.minHeight
     val maxY = ctx.chunkContext.maxHeight - 1
 
@@ -161,7 +242,7 @@ data class SimpleChunkSampler(
       if (terrainDensity > 0.0) return y
     }
     return minY
-  }
+  }*/
 
   fun sampleSurfaceColumns(
     generateCtx: GenerateContext,
