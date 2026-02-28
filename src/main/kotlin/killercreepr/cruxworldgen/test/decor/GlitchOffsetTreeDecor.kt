@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.test.decor
 
+import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -33,7 +34,7 @@ class GlitchOffsetTreeDecor(
   val maxTotalOffset: Int = 3,   // keeps it from drifting too far
   val topHaloChance: Double = 0.65,
   val logPicker : (Axis) -> BlockData,
-  val leafPicker : () -> BlockData,
+  val leafPicker : Holder<BlockData>,
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
@@ -153,7 +154,7 @@ class GlitchOffsetTreeDecor(
         if (!region.isInRegion(tx, ty, tz)) continue
         if (!q.isReplaceable(tx, ty, tz)) continue
         val s = mixSeed(region.ctx.worldContext.seed, tx, ty, tz, salt = p.seed xor 0x515151L)
-        if (chance(s, 0.25)) region.setBlock(tx, ty, tz, leafPicker.invoke())
+        if (chance(s, 0.25)) region.setBlock(tx, ty, tz, leafPicker.value())
       }
     }
   }

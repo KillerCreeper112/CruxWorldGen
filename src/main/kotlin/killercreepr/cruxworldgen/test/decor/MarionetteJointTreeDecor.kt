@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.test.decor
 
+import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -37,7 +38,7 @@ class MarionetteJointTreeDecor(
   val minBranchLen: Int = 2,
   val maxBranchLen: Int = 5,
   val logPicker : (Axis) -> BlockData,
-  val leafPicker : () -> BlockData,
+  val leafPicker : Holder<BlockData>,
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
@@ -219,7 +220,7 @@ class MarionetteJointTreeDecor(
           // tiny leaf at tip (very sparse)
           if (region.isInRegion(bx, by, bz) && q.isReplaceable(bx, by + 1, bz)) {
             val tip = mixSeed(region.ctx.worldContext.seed, bx, by, bz, salt = p.seed xor 0x7129)
-            if (chance(tip, 0.35)) region.setBlock(bx, by + 1, bz, leafPicker.invoke())
+            if (chance(tip, 0.35)) region.setBlock(bx, by + 1, bz, leafPicker.value())
           }
         }
 

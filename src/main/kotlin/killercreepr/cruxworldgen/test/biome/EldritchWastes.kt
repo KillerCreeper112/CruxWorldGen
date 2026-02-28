@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.test.biome
 
+import killercreepr.crux.api.data.Holder
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
@@ -20,7 +21,11 @@ import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockDataResolver
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.bukkit.util.TreeUtil
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
@@ -29,7 +34,11 @@ import killercreepr.cruxworldgen.test.cave.eldritch.OffsetTunnels
 import killercreepr.cruxworldgen.test.cave.eldritch.VerticalTears
 import killercreepr.cruxworldgen.test.cave.eldritch.VoidPockets
 import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
+import killercreepr.cruxworldgen.test.decor.GlitchOffsetTreeDecor
+import killercreepr.cruxworldgen.test.decor.MarionetteJointTreeDecor
+import killercreepr.cruxworldgen.test.decor.SplitHeartTreeDecor
 import org.bukkit.Material
+import org.bukkit.block.BlockType
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow
@@ -70,8 +79,17 @@ class EldritchWastes(
   ),
 
   override val decorations: List<Decoration> = listOf(
-    // Replace/add your eldritch decorations later
-    AbyssTreeDecor()
+    /*GlitchOffsetTreeDecor(
+      chancePerPoint = 0.2,
+      logPicker = TreeUtil.cachedOrientablePicker(BlockType.WARPED_STEM),
+      leafPicker = Holder.direct(BukkitBlockAdapter.resolver().resolve(Material.OAK_LEAVES))
+    )*/
+    SplitHeartTreeDecor(
+      chancePerPoint = 0.2,
+      logPicker = TreeUtil.cachedOrientablePicker(BlockType.WARPED_STEM),
+      leafPicker = Holder.direct(BukkitBlockAdapter.resolver().resolve(Material.OAK_LEAVES)),
+      rotFill = Holder.direct(BukkitBlockAdapter.resolver().resolve(Material.SLIME_BLOCK))
+    )
   ),
 
   override val features: List<PlacedFeature<*>> = listOf(

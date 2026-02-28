@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.test.decor
 
+import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -10,7 +11,6 @@ import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
-import net.minecraft.core.Holder
 import org.bukkit.Axis
 import kotlin.math.abs
 
@@ -40,7 +40,7 @@ class SplitHeartTreeDecor(
   val capRadiusMax: Int = 3,
 
   val logPicker: (Axis) -> BlockData,
-  val leafBlock: Holder<BlockData>,
+  val leafPicker: Holder<BlockData>,
   val rotFill: Holder<BlockData>
 ) : Decoration {
 
@@ -152,7 +152,7 @@ class SplitHeartTreeDecor(
         if (!region.isInRegion(x, y, z)) continue
         if (!q.isReplaceable(x, y, z)) continue
         val s = mixSeed(region.ctx.worldContext.seed, x, y, z, salt = p.seed xor 0xC432)
-        if (chance(s, 0.45)) region.setBlock(x, y, z, leafBlock.value())
+        if (chance(s, 0.45)) region.setBlock(x, y, z, leafPicker.value())
       }
     }
   }
