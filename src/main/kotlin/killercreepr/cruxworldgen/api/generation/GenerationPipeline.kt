@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.api.generation
 
 import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
@@ -22,6 +23,16 @@ interface GenerationPipeline{
     // optional: pass a cached blend if you already sampled it
     cachedVolBlend: VolBiomeBlendSample? = null
   ): Biome
+  fun blendedBiomeDensityCaves(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter : SignalWriter,
+    caveCtx : CaveContext
+  ): DensityStack
+
   fun resolveMainBiome3D(
     ctx: GenerateContext,
     signalWriter: SignalWriter,

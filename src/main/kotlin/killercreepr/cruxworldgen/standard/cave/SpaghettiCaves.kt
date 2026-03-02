@@ -4,6 +4,103 @@ import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.noise.*
+import kotlin.math.abs
+import kotlin.math.max
+
+class SpaghettiCaves(
+  val noodleRadius: Double = 1.0,
+  val strength: Double = 1.15,
+  val openMarginBlocks: Double = 6.0,
+  val warpBlocks: Double = 22.0,
+
+  val deepStart: Double = 4.0,
+  val deepFull: Double = 16.0,
+  val nearSurfaceDepth: Double = 10.0,
+  val breakThreshold: Double = 0.78,
+
+  override val surfaceFadeStart : Int = 4,
+  override val surfaceFadeRamp: Int = 12
+) : CaveType, Noised {
+
+  object Noise : NoiseModule {
+    object Warp3D : NoiseKey { override val id = "cave.spaghetti.warp3D" }
+    object Worm3D : NoiseKey { override val id = "cave.spaghetti.worm3D" }
+    object Entrance2D : NoiseKey { override val id = "cave.spaghetti.entrance2D" }
+
+    override fun install(bank: NoiseBank) {
+      bank.register(Warp3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.018)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+        }
+      }
+      bank.register(Worm3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.008)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+      bank.register(Entrance2D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0015)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+        }
+      }
+    }
+  }
+
+  override val noiseModule = Noise
+
+  override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
+    val solidDensity = max(0.0, cave.terrainDensity)
+    if (solidDensity <= 0.0) return 0.0
+    if (cave.depthBelowSurface < 0) return 0.0
+
+    // Warp in XZ only so the noodle field is stable vertically
+    val warp = ctx.noise.get(Noise.Warp3D).noise3D(cave.worldX, cave.y, cave.worldZ)
+    val wx = (cave.worldX + warp * warpBlocks).toInt()
+    val wz = (cave.worldZ + warp * warpBlocks).toInt()
+
+    // XZ noodle network
+    val wormY = (cave.y * 0.35).toInt()
+    val worm = ctx.noise.get(Noise.Worm3D).noise3D(wx, wormY, wz)
+    val axisDist = abs(worm)
+
+    val nT = ((noodleRadius - axisDist) / noodleRadius).coerceIn(0.0, 1.0)
+    val noodleMask = nT * nT * nT
+    if (noodleMask < 0.35) return 0.0
+
+    // General "below surface to minY, with rare surface openings"
+    val verticalMask = CaveMasks.depthWithBreakthrough(
+      ctx = ctx,
+      cave = cave,
+      noiseKey = Noise.Entrance2D,
+      deepStart = deepStart,
+      deepFull = deepFull,
+      nearSurfaceDepth = nearSurfaceDepth,
+      breakThreshold = breakThreshold
+    )
+
+    val mask = noodleMask * verticalMask
+    if (mask <= 0.001) return 0.0
+
+    return mask * (solidDensity * strength + openMarginBlocks)
+  }
+}
+/*
+package killercreepr.cruxworldgen.standard.cave
+
+import killercreepr.cruxgeneration.util.CruxNoise
+import killercreepr.cruxworldgen.api.cave.CaveType
+import killercreepr.cruxworldgen.api.context.CaveContext
+import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
@@ -75,7 +172,8 @@ class SpaghettiCaves(
     //if (cave.depthBelowSurface <= 0) return 0.0
 
     // ---------- Pick a center Y for the spaghetti layer ----------
-    /*val heightNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
+    */
+/*val heightNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
     val targetDepth = baseDepthBelowSurface + heightNoise * depthVariationBlocks
     val centerY = cave.surfaceY - targetDepth
 
@@ -83,7 +181,8 @@ class SpaghettiCaves(
     val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
     val vT = ((verticalRadiusBlocks - dy) / verticalRadiusBlocks).coerceIn(0.0, 1.0)
     val verticalMask = vT * vT * (3.0 - 2.0 * vT)
-    if (verticalMask <= 0.001) return 0.0*/
+    if (verticalMask <= 0.001) return 0.0*//*
+
 
     val entranceN = ctx.noise.get(Noise.Entrance2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
     val entrance01 = ((entranceN * 0.5) + 0.5) // [0..1]
@@ -131,4 +230,4 @@ class SpaghettiCaves(
     // Scalable carve: relative to local terrain density
     return mask * (solidDensity * strength + openMarginBlocks)
   }
-}
+}*/

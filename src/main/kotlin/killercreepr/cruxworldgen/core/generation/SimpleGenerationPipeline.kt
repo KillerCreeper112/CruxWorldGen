@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.core.generation
 
 import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
@@ -195,6 +196,34 @@ class SimpleGenerationPipeline(
     return weightedSum / maxWeight
   }*/
 
+  override fun blendedBiomeDensityCaves(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter : SignalWriter,
+    caveCtx : CaveContext
+  ): DensityStack {
+    var blendedAdd = 0.0
+    var blendedCarve = 0.0
+
+    for (weightedBiome in biomeBlend.weightedBiomes) {
+      val biome = weightedBiome.biome
+      val caves = biome.caves ?: continue
+      val weight = weightedBiome.weight
+
+      blendedAdd += weight * caves.add(generateCtx, caveCtx)
+      blendedCarve += weight * caves.carve(generateCtx, caveCtx)
+    }
+
+    return DensityStack.densityStack(
+      base = 0.0,
+      add = blendedAdd,
+      carve = blendedCarve,
+    )
+  }
+
   override fun blendedBiomeDensity(
     generateCtx: GenerateContext,
     biomeBlend: BiomeBlendSample,
@@ -221,7 +250,11 @@ class SimpleGenerationPipeline(
       blendedCarve += weight * stack.carve
     }
 
-    return DensityStack.densityStack(blendedBase, blendedAdd, blendedCarve)
+    return DensityStack.densityStack(
+      base = blendedBase,
+      add = blendedAdd,
+      carve = blendedCarve
+    )
   }
 
   override fun blendedVolumetricDensity(
@@ -242,7 +275,11 @@ class SimpleGenerationPipeline(
       carve += wb.weight * s.carve
     }
 
-    return DensityStack.densityStack(base, add, carve)
+    return DensityStack.densityStack(
+      base = 0.0,
+      add = add,
+      carve = carve
+    )
   }
 
   /*override fun blendedVolumetricCarve(

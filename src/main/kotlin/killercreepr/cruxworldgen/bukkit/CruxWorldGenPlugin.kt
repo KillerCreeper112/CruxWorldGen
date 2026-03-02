@@ -64,8 +64,8 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     /*SmoothSkyIslandsV2(
                       yRange = RelativeHeightFilter(0.4f, 0.9f)
                     ),*/
-                    EldritchIslands(yRange = RelativeHeightFilter(0.65f, 0.9f)),
-                    GlacialCaverns(yRange = RelativeHeightFilter(0.1f, 0.4f))
+                    //EldritchIslands(yRange = RelativeHeightFilter(0.65f, 0.9f)),
+                    //GlacialCaverns(yRange = RelativeHeightFilter(0.1f, 0.4f))
                   ))
                   val structureRegistry = SimpleStructureRegistry(listOf())
                   val generation = SimpleGenerationPipeline(

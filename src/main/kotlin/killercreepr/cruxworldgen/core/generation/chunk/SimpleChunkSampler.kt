@@ -15,9 +15,12 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
+import killercreepr.cruxworldgen.core.context.SimpleBiomeEdgeContext
+import killercreepr.cruxworldgen.core.context.SimpleCaveContext
 import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
 import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+import net.minecraft.core.SectionPos.y
 import org.bukkit.generator.WorldInfo
 import java.util.*
 
@@ -387,8 +390,18 @@ data class SimpleChunkSampler(
             .blendedBiomeDensity(generateCtx, surfaceBlend, worldX, blockY, worldZ, signalWriter)
             .finalDensity()
 
+          val caveCtx = SimpleCaveContext(
+            worldX, blockY, worldZ, surfaceY, surfaceY - blockY,
+            terrainMacro, surfaceBlend.edgeContext,
+            signalWriter
+          )
+
+          val caveMacro = generation.blendedBiomeDensityCaves(
+            generateCtx, surfaceBlend, worldX, blockY, worldZ, signalWriter, caveCtx
+          ).finalDensity()
+
           val detail = terrainDetailNoise.noise3D(worldX, blockY, worldZ) * 3.0
-          val terrainFinal = terrainMacro + detail
+          val terrainFinal = terrainMacro + detail + caveMacro
 
           val env = VolumeEnv(
             surfaceY = surfaceY,

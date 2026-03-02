@@ -4,12 +4,7 @@ import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.noise.NoiseBank
-import killercreepr.cruxworldgen.api.noise.NoiseField
-import killercreepr.cruxworldgen.api.noise.NoiseKey
-import killercreepr.cruxworldgen.api.noise.NoiseModule
-import killercreepr.cruxworldgen.api.noise.Noised
-import killercreepr.cruxworldgen.api.util.Curve
+import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
 import kotlin.math.abs
 import kotlin.math.max
@@ -20,6 +15,11 @@ class LavaTubes(
 
   val baseDepthBelowSurface: Double = 75.0,
   val depthVariationBlocks: Double = 10.0,
+
+  val deepStart: Double = 6.0,
+  val deepFull: Double = 20.0,
+  val nearSurfaceDepth: Double = 10.0,
+  val breakThreshold: Double = 0.78,
 
   val strength: Double = 1.12,
   val openMarginBlocks: Double = 10.0,
@@ -34,6 +34,7 @@ class LavaTubes(
     object Warp3D : NoiseKey { override val id = "cave.lava_tubes.warp3D" }
     object Worm3D : NoiseKey { override val id = "cave.lava_tubes.worm3D" }
     object Height2D : NoiseKey { override val id = "cave.lava_tubes.height2D" }
+    object SurfaceBreak2D : NoiseKey { override val id = "cave.lava_tubes.surface_break2D" }
 
     override fun install(bank: NoiseBank) {
       bank.register(Warp3D){ seed ->
@@ -60,6 +61,15 @@ class LavaTubes(
             .fractalOctaves(2)
         }
       }
+
+      bank.register(SurfaceBreak2D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.02)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
     }
   }
 
@@ -67,16 +77,27 @@ class LavaTubes(
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
     val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
-    //if (cave.depthBelowSurface <= 0) return 0.0
+    if (cave.depthBelowSurface < 0) return 0.0
 
     // centerline depth slowly varies across XZ
     //todo val hNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
     //todo val centerY = cave.surfaceY - (baseDepthBelowSurface + hNoise * depthVariationBlocks)
 
-    val dy = abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
-    val bandT = ((halfWidthBlocks - dy) / halfWidthBlocks).coerceIn(0.0, 1.0)
-    val verticalMask = Curve.smoothstep01(bandT)
-    if (verticalMask <= 0.001) return 0.0
+    //val dy = abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
+    //val bandT = ((halfWidthBlocks - dy) / halfWidthBlocks).coerceIn(0.0, 1.0)
+
+    val verticalMask = CaveMasks.depthWithBreakthrough(
+      ctx = ctx,
+      cave = cave,
+      noiseKey = Noise.SurfaceBreak2D,
+      deepStart = deepStart,
+      deepFull = deepFull,
+      nearSurfaceDepth = nearSurfaceDepth,
+      breakThreshold = breakThreshold
+    )
+
+    /*val verticalMask = Curve.smoothstep01(bandT)
+    if (verticalMask <= 0.001) return 0.0*/
 
     val warp = ctx.noise.get(Noise.Warp3D).noise3D(cave.worldX, 0, cave.worldZ)
     val wx = (cave.worldX + warp * warpBlocks).toInt()

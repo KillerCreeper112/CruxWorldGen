@@ -31,10 +31,6 @@ import kotlin.math.*
 
 val gCaves: CaveProfile = CaveProfile(
   listOf(
-    LavaTubes(),
-    RavineCarver(),
-    SpaghettiCaves(),
-    CavernRooms(),
     CheeseCaves()
     /*LavaTubes(
       noodleRadius = 5.0,

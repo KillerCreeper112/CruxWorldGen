@@ -25,6 +25,9 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
+import killercreepr.cruxworldgen.standard.cave.CheeseCaves
+import killercreepr.cruxworldgen.standard.cave.LavaTubes
+import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
 import org.bukkit.Material
 import kotlin.math.abs
@@ -38,7 +41,8 @@ import kotlin.math.pow
 class AbyssStart(
   override val caves: CaveShape = CaveProfile(
     listOf(
-
+      //CheeseCaves(threshold01 = 0.5),
+      SpaghettiCaves(),
     )
   ),
   override val decorations: List<Decoration> = listOf(
