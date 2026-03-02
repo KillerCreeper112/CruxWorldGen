@@ -1,11 +1,14 @@
-package killercreepr.cruxworldgen.test.cave.eldritch
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.pow
 
 class VerticalTears(
@@ -67,10 +70,10 @@ class VerticalTears(
   override val noiseModule = Noise
 
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
 
-    val dyCenter = kotlin.math.abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
+    val dyCenter = abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
     val bandT = ((halfWidthBlocks - dyCenter) / halfWidthBlocks).coerceIn(0.0, 1.0)
     val verticalBandMask = smoothstep01(bandT)
     if (verticalBandMask <= 0.001) return 0.0
@@ -86,7 +89,7 @@ class VerticalTears(
     val wobble = ctx.noise.get(Noise.TearWobble3D).noise3D(wx, cave.y * wobbleYScale, wz) * 0.20
 
     val axis = axisBase + wobble
-    val axisDist = kotlin.math.abs(axis)
+    val axisDist = abs(axis)
 
     val slitT = ((slitRadius - axisDist) / slitRadius).coerceIn(0.0, 1.0)
     val slitMask = smoothstep01(slitT).pow(3.5)
@@ -100,10 +103,5 @@ class VerticalTears(
 
     val mask = slitMask * presence * verticalBandMask
     return mask * (solidDensity * slitStrength + openMarginBlocks)
-  }
-
-  private fun smoothstep01(t: Double): Double {
-    val c = t.coerceIn(0.0, 1.0)
-    return c * c * (3.0 - 2.0 * c)
   }
 }

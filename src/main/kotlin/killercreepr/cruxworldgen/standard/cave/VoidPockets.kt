@@ -1,11 +1,14 @@
-package killercreepr.cruxworldgen.test.cave.eldritch
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.pow
 
 class VoidPockets(
@@ -58,10 +61,10 @@ class VoidPockets(
   override val noiseModule = Noise
 
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
 
-    val dy = kotlin.math.abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
+    val dy = abs(cave.y.toDouble() - centerYBlocks.sampleY(ctx))
     val bandT = ((halfWidthBlocks - dy) / halfWidthBlocks).coerceIn(0.0, 1.0)
     val verticalMask = smoothstep01(bandT)
     if (verticalMask <= 0.001) return 0.0
@@ -88,10 +91,5 @@ class VoidPockets(
 
     val mask = pocketMask * verticalMask * (0.35 + 0.65 * clusterMask)
     return mask * (solidDensity * pocketStrength + openMarginBlocks)
-  }
-
-  private fun smoothstep01(t: Double): Double {
-    val c = t.coerceIn(0.0, 1.0)
-    return c * c * (3.0 - 2.0 * c)
   }
 }

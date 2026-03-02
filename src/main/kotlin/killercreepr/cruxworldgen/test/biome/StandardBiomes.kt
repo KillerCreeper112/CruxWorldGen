@@ -19,6 +19,11 @@ import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+import killercreepr.cruxworldgen.standard.cave.CavernRooms
+import killercreepr.cruxworldgen.standard.cave.CheeseCaves
+import killercreepr.cruxworldgen.standard.cave.LavaTubes
+import killercreepr.cruxworldgen.standard.cave.RavineCarver
+import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.test.cave.*
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material

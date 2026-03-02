@@ -23,6 +23,11 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
+import killercreepr.cruxworldgen.standard.cave.CavernRooms
+import killercreepr.cruxworldgen.standard.cave.CheeseCaves
+import killercreepr.cruxworldgen.standard.cave.LavaTubes
+import killercreepr.cruxworldgen.standard.cave.RavineCarver
+import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.test.cave.*
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
@@ -139,7 +144,7 @@ class AmplifiedHighlands(
       val y = ctx.y
       val z = ctx.worldZ
 
-      if(ctx.signalView.getOrDefault(x,y+1,z,RavineCarver.Signal.RavineFloor, 0.0) > 0.0){
+      if(ctx.signalView.getOrDefault(x,y+1,z, RavineCarver.Signal.RavineFloor, 0.0) > 0.0){
         return BukkitBlockResolver.INSTANCE.resolve(Material.MAGMA_BLOCK)
       }
 

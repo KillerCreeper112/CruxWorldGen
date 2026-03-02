@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.test.cave
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
@@ -6,6 +6,7 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.pow
 
 class AmplifiedRavines(
@@ -58,7 +59,7 @@ class AmplifiedRavines(
   override val noiseModule = Noise
 
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
     if (cave.depthBelowSurface <= 0) return 0.0
 
@@ -87,16 +88,16 @@ class AmplifiedRavines(
     val targetDepth = baseDepthBelowSurface + heightNoise * depthVariation
     val centerY = cave.surfaceY - targetDepth
 
-    val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
+    val dy = abs(cave.y.toDouble() - centerY)
     val vT = ((ravineHeightBlocks - dy) / ravineHeightBlocks).coerceIn(0.0, 1.0)
     val verticalMask = vT * vT * (3.0 - 2.0 * vT)
 
     // Near-surface mouth allowance
-    val mouthT = ((allowOpenToSurfaceDepth - cave.depthBelowSurface).toDouble() / allowOpenToSurfaceDepth)
+    /*val mouthT = ((allowOpenToSurfaceDepth - cave.depthBelowSurface).toDouble() / allowOpenToSurfaceDepth)
       .coerceIn(0.0, 1.0)
-    val mouthMask = mouthT * mouthT * (3.0 - 2.0 * mouthT)
+    val mouthMask = mouthT * mouthT * (3.0 - 2.0 * mouthT)*/
 
-    val v = kotlin.math.max(verticalMask, mouthMask * 0.75)
+    val v = verticalMask//max(verticalMask, mouthMask * 0.75)
     if (v <= 0.001) return 0.0
 
     val mask = corridorMask * v

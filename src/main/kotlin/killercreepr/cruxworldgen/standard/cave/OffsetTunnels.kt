@@ -1,10 +1,13 @@
-package killercreepr.cruxworldgen.test.cave.eldritch
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.pow
 
 class OffsetTunnels(
@@ -78,19 +81,19 @@ class OffsetTunnels(
   override val noiseModule = Noise
 
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
 
     // Depth centerline varies in XZ
     val hNoise = ctx.noise.get(Noise.Height2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
     val centerY = cave.surfaceY - (baseDepthBelowSurface + hNoise * depthVariationBlocks)
 
-    val dy = kotlin.math.abs(cave.y.toDouble() - centerY)
+    val dy = abs(cave.y.toDouble() - centerY)
     val verticalT = ((verticalRadiusBlocks - dy) / verticalRadiusBlocks).coerceIn(0.0, 1.0)
     val tunnelHeightMask = smoothstep01(verticalT)
     if (tunnelHeightMask <= 0.001) return 0.0
 
-    val bandT = ((halfWidthBlocks - kotlin.math.abs(cave.y.toDouble() - centerY)) / halfWidthBlocks).coerceIn(0.0, 1.0)
+    val bandT = ((halfWidthBlocks - abs(cave.y.toDouble() - centerY)) / halfWidthBlocks).coerceIn(0.0, 1.0)
     val verticalBandMask = smoothstep01(bandT)
     if (verticalBandMask <= 0.001) return 0.0
 
@@ -106,7 +109,7 @@ class OffsetTunnels(
 
     // Mix two tunnel fields to create broken / offset continuity
     val combined = 0.6 * wormA + 0.4 * wormB
-    val axisDist = kotlin.math.abs(combined)
+    val axisDist = abs(combined)
 
     val t = ((noodleRadius - axisDist) / noodleRadius).coerceIn(0.0, 1.0)
     val noodleMask = smoothstep01(t).pow(2.8)
@@ -120,10 +123,5 @@ class OffsetTunnels(
 
     val mask = noodleMask * tunnelHeightMask * verticalBandMask * presence
     return mask * (solidDensity * strength + openMarginBlocks)
-  }
-
-  private fun smoothstep01(t: Double): Double {
-    val c = t.coerceIn(0.0, 1.0)
-    return c * c * (3.0 - 2.0 * c)
   }
 }

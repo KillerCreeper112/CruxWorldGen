@@ -1,17 +1,17 @@
-package killercreepr.cruxworldgen.test.cave
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import kotlin.math.max
 
 class CavernRooms(
   val threshold01: Double = 0.65,     // 0.90..0.95
   val strength: Double = 1.15,
   val openMarginBlocks: Double = 18.0,
 
-  val minDepthBlocks: Int = 25,        // don't open near surface
   override val surfaceFadeStart : Int = 6,
   override val surfaceFadeRamp: Int = 16
 ) : CaveType, Noised {
@@ -34,9 +34,8 @@ class CavernRooms(
   override val noiseModule = Noise
 
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
-    if (cave.depthBelowSurface < minDepthBlocks) return 0.0
 
     val n01 = (ctx.noise.get(Noise.Cavern3D).noise3D(cave.worldX, cave.y, cave.worldZ) + 1.0) * 0.5
     val t = ((n01 - threshold01) / (1.0 - threshold01)).coerceIn(0.0, 1.0)

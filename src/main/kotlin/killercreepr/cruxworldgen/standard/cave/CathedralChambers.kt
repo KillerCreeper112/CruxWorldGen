@@ -1,11 +1,14 @@
-package killercreepr.cruxworldgen.test.cave.eldritch
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.pow
 
 class CathedralChambers(
@@ -69,13 +72,13 @@ class CathedralChambers(
   override val noiseModule = Noise
 
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
-    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
 
     val hBias = ctx.noise.get(Noise.HeightBias2D).noise2D(cave.worldX, cave.worldZ) // [-1..1]
     val centerY = centerYBlocks.sampleY(ctx) + hBias * 18.0
 
-    val dyCenter = kotlin.math.abs(cave.y.toDouble() - centerY)
+    val dyCenter = abs(cave.y.toDouble() - centerY)
     val bandT = ((halfWidthBlocks - dyCenter) / halfWidthBlocks).coerceIn(0.0, 1.0)
     val verticalBandMask = smoothstep01(bandT)
     if (verticalBandMask <= 0.001) return 0.0
@@ -103,10 +106,5 @@ class CathedralChambers(
 
     val mask = chamberMask * presence * verticalBandMask
     return mask * (solidDensity * strength + openMarginBlocks)
-  }
-
-  private fun smoothstep01(t: Double): Double {
-    val c = t.coerceIn(0.0, 1.0)
-    return c * c * (3.0 - 2.0 * c)
   }
 }

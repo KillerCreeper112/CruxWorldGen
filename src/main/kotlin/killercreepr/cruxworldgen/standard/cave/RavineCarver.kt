@@ -1,13 +1,18 @@
-package killercreepr.cruxworldgen.test.cave
+package killercreepr.cruxworldgen.standard.cave
 
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.noise.*
+import killercreepr.cruxworldgen.api.noise.NoiseBank
+import killercreepr.cruxworldgen.api.noise.NoiseField
+import killercreepr.cruxworldgen.api.noise.NoiseKey
+import killercreepr.cruxworldgen.api.noise.NoiseModule
+import killercreepr.cruxworldgen.api.noise.Noised
 import killercreepr.cruxworldgen.api.signal.SignalKey
-import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
+import killercreepr.cruxworldgen.api.util.Curve
 import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.pow
 
@@ -32,15 +37,15 @@ class RavineCarver(
     object RavineMask : SignalKey.Companion.DoubleSignalKey()
   }
 
-  object Noise : NoiseModule{
-    object Warp2D : NoiseKey{ override val id = "cave.ravine.warp2D" }
-    object Mask2D : NoiseKey{ override val id = "cave.ravine.mask2D" }
-    object Bridge2D : NoiseKey{ override val id = "cave.ravine.bridge2D" }
-    object Var2D : NoiseKey{ override val id = "cave.ravine.var2D" }
+  object Noise : NoiseModule {
+    object Warp2D : NoiseKey { override val id = "cave.ravine.warp2D" }
+    object Mask2D : NoiseKey { override val id = "cave.ravine.mask2D" }
+    object Bridge2D : NoiseKey { override val id = "cave.ravine.bridge2D" }
+    object Var2D : NoiseKey { override val id = "cave.ravine.var2D" }
 
     override fun install(bank: NoiseBank) {
       bank.register(Warp2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.008)  // higher = wigglier
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -48,7 +53,7 @@ class RavineCarver(
         }
       }
       bank.register(Mask2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0018) // lower = longer ravines
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -56,7 +61,7 @@ class RavineCarver(
         }
       }
       bank.register(Bridge2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0016) // controls width/depth patches
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -64,7 +69,7 @@ class RavineCarver(
         }
       }
       bank.register(Var2D){ seed ->
-        NoiseField.noiseField(seed){
+        NoiseField.Companion.noiseField(seed){
           frequency(0.0035) // controls width/depth patches
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
@@ -105,7 +110,7 @@ class RavineCarver(
     // Convert ridge strength -> distance-ish factor.
     // ridge01 is 1 at centerline, 0 away.
     // We want width falloff: center strong, edge fades.
-    val widthMask = smoothstep01(t) // already pretty good "center mask"
+    val widthMask = Curve.smoothstep01(t) // already pretty good "center mask"
 
     // --- 4) Vertical profile: carve from near surface down to (surfaceY - depth) ---
     val y = c.y.toDouble()
@@ -134,8 +139,8 @@ class RavineCarver(
       val bridgeY = c.surfaceY - depth * (0.25 + 0.35 * t01)  // 25%..60% down
 
       // gaussian-ish vertical band
-      val dy = kotlin.math.abs(y - bridgeY) / bridgeThickness
-      val band = kotlin.math.exp(-(dy * dy)) // 1 at center, fades out
+      val dy = abs(y - bridgeY) / bridgeThickness
+      val band = exp(-(dy * dy)) // 1 at center, fades out
 
       val suppress = (t01 * band * bridgeStrength).coerceIn(0.0, 1.0)
 
