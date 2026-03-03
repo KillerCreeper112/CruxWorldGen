@@ -17,10 +17,15 @@ import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.HashUtil.hash2D
+import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
+import killercreepr.cruxworldgen.standard.cave.CavernRooms
 import killercreepr.cruxworldgen.standard.cave.CheeseCaves
-import killercreepr.cruxworldgen.standard.cave.NoodleCaves
+import killercreepr.cruxworldgen.standard.cave.CoolLayeredCaves
+import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
+import killercreepr.cruxworldgen.standard.cave.SurfaceEntrances
+import killercreepr.cruxworldgen.standard.cave.VerticalRifts
 import killercreepr.cruxworldgen.standard.cave.WormNoodleCaves
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
@@ -73,7 +78,28 @@ class Plains : Biome.Noised{
   override val noiseModule = Noise
 
   override val caves: CaveShape = CaveProfile(listOf(
-    WormNoodleCaves(),
+    CoolLayeredCaves(
+      NoiseShaper(
+        listOf(
+          NoiseShaper.Point(-1.0, NoiseShaper.ShapingFunction.VALLEY),
+          NoiseShaper.Point(-0.3, NoiseShaper.ShapingFunction.FLAT),
+          NoiseShaper.Point(0.0, NoiseShaper.ShapingFunction.FLAT),
+          NoiseShaper.Point(0.7, NoiseShaper.ShapingFunction.FLAT),
+          NoiseShaper.Point(0.8, NoiseShaper.ShapingFunction.HILLS),
+          NoiseShaper.Point(1.0, NoiseShaper.ShapingFunction.MOUNTAIN)
+        )
+      ),
+      AbyssStart.Noise.Overhang3D,
+      AbyssStart.Noise.OverhangWarp2D,
+      AbyssStart.Noise.OverhangX3D,
+      AbyssStart.Noise.OverhangY3D,
+      AbyssStart.Noise.OverhangZ3D,
+      AbyssStart.Noise.OverhangCarve3D,
+      AbyssStart.Noise.Overhang3D,
+      AbyssStart.Noise.Warp2D,
+      AbyssStart.Noise.OverhangWarp2D,
+      AbyssStart.Noise.OverhangX3D
+    )
   ))
   override val decorations = listOf(
     SimpleTreeDecoration(chancePerPoint = 0.75)

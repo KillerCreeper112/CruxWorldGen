@@ -7,8 +7,12 @@ import killercreepr.cruxworldgen.api.density.DensityBank
 import killercreepr.cruxworldgen.api.density.DensityStack
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.signal.SignalWriter
+import killercreepr.cruxworldgen.api.util.Curve.band01
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep
 import killercreepr.cruxworldgen.api.util.NoiseShaper
+import killercreepr.cruxworldgen.api.util.NoiseUtil.densityBand01
+import killercreepr.cruxworldgen.api.util.NoiseUtil.fract
+import killercreepr.cruxworldgen.api.util.NoiseUtil.ridgedFbm3
 import kotlin.math.abs
 
 class AbyssStartOverhang(
@@ -18,8 +22,15 @@ class AbyssStartOverhang(
   val warpX3D: NoiseKey,
   val warpY3D: NoiseKey,
   val warpZ3D: NoiseKey,
-  val carve3D: NoiseKey
+  val carve3D: NoiseKey,
+  val layers: List<Layer> = listOf(
+    Layer(center = -18.0, half = 22.0, weight = 0.85),
+    Layer(center =  18.0, half = 20.0, weight = 1.00),
+    Layer(center =  55.0, half = 26.0, weight = 0.95),
+    Layer(center =  95.0, half = 30.0, weight = 0.75)
+  )
 ) : BiomeShapeType {
+  data class Layer(val center: Double, val half: Double, val weight: Double)
   override fun density(
     ctx: GenerateContext,
     worldX: Int,
@@ -55,13 +66,6 @@ class AbyssStartOverhang(
     val shelfBias = 0.40 + 0.60 * shelves
 
     // Define 3–4 strata relative to the surface
-    data class Layer(val center: Double, val half: Double, val weight: Double)
-    val layers = listOf(
-      Layer(center = -18.0, half = 22.0, weight = 0.85),
-      Layer(center =  18.0, half = 20.0, weight = 1.00),
-      Layer(center =  55.0, half = 26.0, weight = 0.95),
-      Layer(center =  95.0, half = 30.0, weight = 0.75)
-    )
 
     var stacked = 0.0
     for ((i, L) in layers.withIndex()) {
@@ -101,47 +105,6 @@ class AbyssStartOverhang(
 
     val halfWidth01 = (halfWidth / spacing).coerceIn(0.01, 0.49)
     return band01(center01 = 0.5, halfWidth01 = halfWidth01, t01 = phase)
-  }
-
-  fun densityBand01(baseDensity: Double, center: Double, halfWidth: Double): Double {
-    // 1 at baseDensity=center, 0 outside [center-halfWidth .. center+halfWidth]
-    val d = abs(baseDensity - center) / halfWidth
-    val c = d.coerceIn(0.0, 1.0)
-    val s = c * c * (3.0 - 2.0 * c)
-    return 1.0 - s
-  }
-
-  fun ridgedFbm3(
-    ctx: GenerateContext,
-    key: NoiseKey,
-    shaper: NoiseShaper,
-    x: Double, y: Double, z: Double,
-    octaves: Int,
-    lacunarity: Double = 2.0,
-    gain: Double = 0.5
-  ): Double {
-    var amp = 1.0
-    var freq = 1.0
-    var sum = 0.0
-    var norm = 0.0
-    repeat(octaves) {
-      val n = ctx.noise.get(key).noise3D(x * freq, y * freq, z * freq)
-      val r = 1.0 - abs(shaper.shape(n))
-      sum += r * amp
-      norm += amp
-      amp *= gain
-      freq *= lacunarity
-    }
-    return if (norm <= 0.0) 0.0 else (sum / norm).coerceIn(0.0, 1.0)
-  }
-
-  fun fract(x: Double) = x - kotlin.math.floor(x)
-
-  fun band01(center01: Double, halfWidth01: Double, t01: Double): Double {
-    val d = kotlin.math.abs(t01 - center01) / halfWidth01
-    val c = d.coerceIn(0.0, 1.0)
-    val s = c * c * (3.0 - 2.0 * c)     // smoothstep
-    return 1.0 - s                       // 1 at center, 0 outside
   }
 }
 

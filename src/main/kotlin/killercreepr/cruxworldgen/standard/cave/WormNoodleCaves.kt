@@ -39,7 +39,7 @@ class WormNoodleCaves(
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
     val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
-    if (cave.depthBelowSurface < 0) return 0.0
+    //if (cave.depthBelowSurface < 0) return 0.0
 
     val worldX = cave.worldX.toDouble()
     val worldY = cave.y.toDouble()

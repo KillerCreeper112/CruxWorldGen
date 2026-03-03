@@ -11,6 +11,13 @@ object Curve {
     return t * t * (3.0 - 2.0 * t)
   }
 
+  fun band01(center01: Double, halfWidth01: Double, t01: Double): Double {
+    val d = kotlin.math.abs(t01 - center01) / halfWidth01
+    val c = d.coerceIn(0.0, 1.0)
+    val s = c * c * (3.0 - 2.0 * c)     // smoothstep
+    return 1.0 - s                       // 1 at center, 0 outside
+  }
+
   fun smootherstep01(t: Double): Double {
     val x = t.coerceIn(0.0, 1.0)
     return x * x * x * (x * (x * 6 - 15) + 10)

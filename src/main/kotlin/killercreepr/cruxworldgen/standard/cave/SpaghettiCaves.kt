@@ -10,7 +10,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class NoodleCaves(
+class SpaghettiCaves(
   // Thickness / shape
   val verticalRadiusBlocks: Double = 7.8,
 
@@ -110,7 +110,7 @@ class NoodleCaves(
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
     val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
-    if (cave.depthBelowSurface < 0) return 0.0
+    //if (cave.depthBelowSurface < 0) return 0.0
 
     val warpX = ctx.noise.get(Noise.WarpX2D).noise2D(cave.worldX, cave.worldZ) * warpBlocks
     val warpZ = ctx.noise.get(Noise.WarpZ2D).noise2D(cave.worldX, cave.worldZ) * warpBlocks
@@ -123,7 +123,7 @@ class NoodleCaves(
     val b = abs(ctx.noise.get(Noise.PathB2D).noise2D(wx, wz))
 
     // Use whichever field is closer to zero so we get more connected winding lines.
-    val pathDistance01 = min(a, b)
+    val pathDistance01 = min(a, b)//a * 0.95 + b * 0.65//min(a, b)
 
     // 1 at noodle centerline in XZ, falls off outward.
     val horizontalMask = 1.0 - smoothstep01((pathDistance01 / ridgeWidth01).coerceIn(0.0, 1.0))

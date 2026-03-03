@@ -28,14 +28,14 @@ class SimpleFeaturePipeline(
       applyFeatures(region, rng, chunkX, chunkZ, biome.features, positions)
     }
 
-    if (volumetricBiomeSampler != null && false) {
+    /*if (volumetricBiomeSampler != null) {
       val candidateBiomes = collectCandidateBiomesForChunk3D(region, chunkX, chunkZ, volumetricBiomeSampler)
 
       for (biome in candidateBiomes) {
         val volumetricFeatures = biome.features
         applyFeatures3D(region, rng, chunkX, chunkZ, volumetricFeatures, positions, volumetricBiomeSampler, biome)
       }
-    }
+    }*/
   }
 
   fun collectCandidateBiomesForChunk3D(

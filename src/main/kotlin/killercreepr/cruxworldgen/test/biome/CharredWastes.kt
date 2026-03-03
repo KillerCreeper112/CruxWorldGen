@@ -26,7 +26,10 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper.Point
 import killercreepr.cruxworldgen.api.util.NoiseShaper.ShapingFunction
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
+import killercreepr.cruxworldgen.standard.cave.CavernRooms
 import killercreepr.cruxworldgen.standard.cave.CheeseCaves
+import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
+import killercreepr.cruxworldgen.standard.cave.WormNoodleCaves
 import killercreepr.cruxworldgen.test.decor.FallenTreeDecor
 import org.bukkit.Material
 import kotlin.math.abs
@@ -35,7 +38,6 @@ import kotlin.math.pow
 class CharredWastes(
   override val caves: CaveShape = CaveProfile(
     listOf(
-      CheeseCaves()
     )
   ),
   override val decorations: List<Decoration> = listOf(

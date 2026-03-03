@@ -55,7 +55,7 @@ class CheeseCaves(
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
     val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
-    if (cave.depthBelowSurface < 0) return 0.0
+    //if (cave.depthBelowSurface < 0) return 0.0
 
     val n01 = (ctx.noise.get(Noise.Cheese3D).noise3D(cave.worldX, cave.y, cave.worldZ) + 1.0) * 0.5
     val t = ((n01 - threshold01) / (1.0 - threshold01)).coerceIn(0.0, 1.0)
