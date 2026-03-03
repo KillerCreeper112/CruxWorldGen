@@ -9,15 +9,19 @@ import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
+import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
 
-class GrassDecor(
+class TallGrassTriDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
   val chancePerPoint: Double = 0.18,
-  val minAirAbove: Int = 7,
   val maxSlope01: Double = 1.0,
-  val block : Holder<BlockData>,
+  val minHeight: Int = 2,
+  val maxHeight: Int = 3,
+  val top : Holder<BlockData>,
+  val middle : Holder<BlockData>,
+  val bottom : Holder<BlockData>,
   val chanceSalt: Long
 ) : Decoration {
 
@@ -31,6 +35,7 @@ class GrassDecor(
   }
 
   override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val seed = point.seed
     val worldX = point.worldX
     val worldZ = point.worldZ
 
@@ -46,25 +51,38 @@ class GrassDecor(
 
     if (maxSlope01 < 1.0 && queries.slope01(worldX, worldZ) > maxSlope01) return null
 
-    val airAbove = queries.airBlocksAbove(worldX, surfaceY, worldZ, maxCount = minAirAbove)
-    if (airAbove < minAirAbove) return null
+    val height = chooseInt(seed xor 3929L, minHeight, maxHeight)
+
+    val airAbove = queries.airBlocksAbove(worldX, surfaceY, worldZ, maxCount = height)
+    if (airAbove < height) return null
 
     return Placed(
       worldX = worldX,
       worldZ = worldZ,
       baseY = baseY,
       seed = point.seed,
+      height = height,
     )
   }
 
   override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
     val p = placement as Placed
-    region.setBlock(p.worldX, p.baseY, p.worldZ, block.value())
+    val height = p.height
+
+    for(i in 0..height) {
+      val block = when (i) {
+        0 -> bottom.value()
+        height -> top.value()
+        else -> middle.value()
+      }
+      region.setBlock(p.worldX, p.baseY+i, p.worldZ, block)
+    }
   }
   data class Placed(
     val worldX: Int,
     val worldZ: Int,
     val baseY: Int,
-    val seed: Long
+    val seed: Long,
+    val height: Int
   ) : Placement
 }

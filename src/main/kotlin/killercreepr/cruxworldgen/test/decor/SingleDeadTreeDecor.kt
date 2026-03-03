@@ -21,14 +21,15 @@ class SingleDeadTreeDecor(
 
   val minHeight: Int = 4,
   val maxHeight: Int = 9,
-  val log : Holder<BlockData>
+  val log : Holder<BlockData>,
+  val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     val s = mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
-      salt = 1L
+      salt = chanceSalt
     )
     return chance(s, chancePerPoint)
   }

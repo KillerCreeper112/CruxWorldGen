@@ -79,12 +79,6 @@ class EldritchWastes(
       logPicker = TreeUtil.cachedOrientablePicker(BlockType.WARPED_STEM),
       leafPicker = Holder.direct(BukkitBlockAdapter.resolver().resolve(Material.OAK_LEAVES))
     )*/
-    SplitHeartTreeDecor(
-      chancePerPoint = 0.2,
-      logPicker = TreeUtil.cachedOrientablePicker(BlockType.WARPED_STEM),
-      leafPicker = Holder.direct(BukkitBlockAdapter.resolver().resolve(Material.OAK_LEAVES)),
-      rotFill = Holder.direct(BukkitBlockAdapter.resolver().resolve(Material.SLIME_BLOCK))
-    )
   ),
 
   override val features: List<PlacedFeature<*>> = listOf(

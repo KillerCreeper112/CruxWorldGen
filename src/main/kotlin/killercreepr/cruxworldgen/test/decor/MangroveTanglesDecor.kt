@@ -47,10 +47,11 @@ class MangroveTanglesDecor(
 
   val logPicker: (Axis) -> BlockData,
   val leafBlock: Holder<BlockData>,
+  val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
-    val s = mixSeed(region.ctx.worldContext.seed, point.worldX, 0, point.worldZ, salt = 0x4D4E_4752 /*"MNGR"*/)
+    val s = mixSeed(region.ctx.worldContext.seed, point.worldX, 0, point.worldZ, salt = chanceSalt)
     return chance(s, chancePerPoint)
   }
 

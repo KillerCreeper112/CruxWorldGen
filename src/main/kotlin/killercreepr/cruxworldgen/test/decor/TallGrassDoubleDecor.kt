@@ -12,24 +12,23 @@ import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
 
-class TallGrassDecor(
+class TallGrassDoubleDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
   val chancePerPoint: Double = 0.18,
   val maxSlope01: Double = 1.0,
-  val minHeight: Int = 2,
-  val maxHeight: Int = 3,
+  val minHeight: Int = 1,
+  val maxHeight: Int = 2,
   val top : Holder<BlockData>,
-  val middle : Holder<BlockData>,
   val bottom : Holder<BlockData>,
-  val salt: Long
+  val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     val s = mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
-      salt = 10329L
+      salt = chanceSalt
     )
     return chance(s, chancePerPoint)
   }
@@ -71,9 +70,8 @@ class TallGrassDecor(
 
     for(i in 0..height) {
       val block = when (i) {
-        0 -> bottom.value()
         height -> top.value()
-        else -> middle.value()
+        else -> bottom.value()
       }
       region.setBlock(p.worldX, p.baseY+i, p.worldZ, block)
     }

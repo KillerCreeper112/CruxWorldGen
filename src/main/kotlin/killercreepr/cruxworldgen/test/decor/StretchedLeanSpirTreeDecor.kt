@@ -35,10 +35,11 @@ class StretchedLeanSpireTreeDecor(
   val tuftFillChance: Double = 0.45, // lower = sparser tuft
   val logPicker : (Axis) -> BlockData,
   val leafPicker : () -> BlockData,
+  val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
-    val s = mixSeed(region.ctx.worldContext.seed, point.worldX, 0, point.worldZ, salt = 0x51_59392)
+    val s = mixSeed(region.ctx.worldContext.seed, point.worldX, 0, point.worldZ, salt = chanceSalt)
     return chance(s, chancePerPoint)
   }
 

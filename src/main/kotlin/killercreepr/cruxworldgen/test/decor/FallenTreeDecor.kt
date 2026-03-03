@@ -29,14 +29,15 @@ class FallenTreeDecor(
   val maxStepUpDown: Int = 1,        // allow trunk to follow terrain +/- 1 block
   val requireSupport: Boolean = true,
   val maxUnsupportedSegments: Int = 1, // allow tiny gaps (roots/rocks), but not floating logs
-  val logPicker : (Axis) -> BlockData
+  val logPicker : (Axis) -> BlockData,
+  val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     val s = mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
-      salt = 0x1210
+      salt = chanceSalt
     )
     return chance(s, chancePerPoint)
   }
