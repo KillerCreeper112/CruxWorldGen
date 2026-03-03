@@ -96,6 +96,7 @@ class LavaTubes(
       breakThreshold = breakThreshold
     )
 
+
     /*val verticalMask = Curve.smoothstep01(bandT)
     if (verticalMask <= 0.001) return 0.0*/
 

@@ -27,7 +27,7 @@ import killercreepr.cruxworldgen.standard.cave.CavernRooms
 import killercreepr.cruxworldgen.standard.cave.CheeseCaves
 import killercreepr.cruxworldgen.standard.cave.LavaTubes
 import killercreepr.cruxworldgen.standard.cave.RavineCarver
-import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
+import killercreepr.cruxworldgen.standard.cave.VerticalSpaghettiCaves
 import killercreepr.cruxworldgen.test.cave.*
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
@@ -61,8 +61,7 @@ class AmplifiedHighlands(
       verticalRadiusBlocks = 10.0,
       depthVariationBlocks = 15.0
     ),
-    SpaghettiCaves(
-      noodleRadius = 3.5,
+    VerticalSpaghettiCaves(
       surfaceFadeStart = 0,
       surfaceFadeRamp = 8,
       openMarginBlocks = 30.0,

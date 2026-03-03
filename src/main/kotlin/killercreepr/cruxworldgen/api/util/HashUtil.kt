@@ -3,6 +3,7 @@ package killercreepr.cruxworldgen.api.util
 object HashUtil {
   const val HASH_SALT: Long = -7046029254386353131L //0x9E3779B97F4A7C15L
   const val HASH_MUL_X: Long = 7145483588892929177L
+  const val HASH_MUL_Y: Long = 8329402038393918132L
   const val HASH_MIX_1: Long = -4658895280553007687L
   const val HASH_MIX_2: Long = -7723592293110705685L
 
@@ -97,6 +98,16 @@ object HashUtil {
   fun hash2D(seed: Long, x: Int, z: Int): Long {
     var value = seed
     value = value xor (x.toLong() * HASH_MUL_X)
+    value = value xor (z.toLong() * HASH_SALT)
+    value = (value xor (value ushr 30)) * HASH_MIX_1
+    value = (value xor (value ushr 27)) * HASH_MIX_2
+    return value xor (value ushr 31)
+  }
+
+  fun hash3D(seed: Long, x: Int, y: Int, z: Int): Long {
+    var value = seed
+    value = value xor (x.toLong() * HASH_MUL_X)
+    value = value xor (y.toLong() * HASH_MUL_Y)
     value = value xor (z.toLong() * HASH_SALT)
     value = (value xor (value ushr 30)) * HASH_MIX_1
     value = (value xor (value ushr 27)) * HASH_MIX_2
