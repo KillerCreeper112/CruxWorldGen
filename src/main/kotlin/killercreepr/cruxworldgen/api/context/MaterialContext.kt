@@ -14,6 +14,7 @@ interface MaterialContext{
   val depthBelowSurface: Int     // 0 at surface, increases downward
   val airBlocksAbove: Int        // how open the sky is
   val caveAirBlocksBelow: Int    // how much empty space is under ground
+  val caveAirBlocksAbove: Int
   val isUnderwater: Boolean
   val depthFromSeaFloor : Int
   val signalView : SignalView

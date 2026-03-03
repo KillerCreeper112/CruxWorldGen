@@ -11,17 +11,20 @@ import killercreepr.cruxworldgen.api.generation.chunk.SampledChunk
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.signal.SignalWriter
+import killercreepr.cruxworldgen.api.util.MathUtil.blockIndex
+import killercreepr.cruxworldgen.api.util.MathUtil.cellIndex
+import killercreepr.cruxworldgen.api.util.MathUtil.cellYFromWorld
+import killercreepr.cruxworldgen.api.util.MathUtil.columnIndex
+import killercreepr.cruxworldgen.api.util.MathUtil.cornerIndex
 import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
-import killercreepr.cruxworldgen.core.context.SimpleBiomeEdgeContext
 import killercreepr.cruxworldgen.core.context.SimpleCaveContext
 import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
+import killercreepr.cruxworldgen.core.context.SimpleTerrain3D
 import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
-import killercreepr.cruxworldgen.test.aquifier.VoronoiAquiferSystem
-import net.minecraft.core.SectionPos.y
 import org.bukkit.generator.WorldInfo
 import java.util.*
 
@@ -76,6 +79,7 @@ data class SimpleChunkSampler(
       (biomeCellCountX + 1) * (biomeCellCountZ + 1) * (biomeCellCountY + 1)
     )
 
+    val caveAirByBlock = BooleanArray(chunkBlockWidth * chunkBlockDepth * chunkBlockHeight)
     val terrainField2D = SimpleTerrain2D(
       generation,
       generateCtx,
@@ -83,6 +87,16 @@ data class SimpleChunkSampler(
       chunkZ * chunkBlockDepth - 32,
       chunkBlockWidth + 64,
       chunkBlockDepth + 64
+    )
+
+    val terrainField3D = SimpleTerrain3D(
+      generateCtx,
+      caveAirByBlock
+    )
+
+    val terrainSnapshot = SimpleTerrainSnapshot(
+      terrainField2D,
+      terrainField3D
     )
 
     sampleSurfaceColumns(
@@ -120,6 +134,7 @@ data class SimpleChunkSampler(
       materialBiomeByBlock,
       densityByBlock,
       terrainField2D,
+      terrainField3D,
       biomeCellCountX,
       biomeCellCountZ,
       biomeCellCountY,
@@ -134,19 +149,9 @@ data class SimpleChunkSampler(
       surfaceY = surfaceYByColumn,
       surfaceBlend = surfaceBiomeBlendByColumn,
       dominantBiomeByBlock = materialBiomeByBlock,
-      terrainSnapshot = SimpleTerrainSnapshot(terrainField2D),
+      terrainSnapshot = terrainSnapshot,
       volBiomeCorners = volumetricBlendByCorner
     )
-  }
-
-  fun cornerIndex(cx: Int, cz: Int, cy: Int, cellsX: Int, cellsZ: Int): Int =
-    (cy * (cellsZ + 1) + cz) * (cellsX + 1) + cx
-
-  fun columnIndex(localX: Int, localZ: Int, chunkWidth: Int): Int = localZ * chunkWidth + localX
-
-  fun blockIndex(localX: Int, localZ: Int, blockY: Int, minBlockY: Int, chunkWidth: Int, chunkDepth: Int): Int {
-    val localY = blockY - minBlockY
-    return (localY * chunkDepth + localZ) * chunkWidth + localX
   }
 
   fun findSurfaceY(
@@ -189,64 +194,6 @@ data class SimpleChunkSampler(
 
     return minY
   }
-
-//  fun findSurfaceY(
-//    ctx: GenerateContext,
-//    biomeBlend: BiomeBlendSample,
-//    worldX: Int,
-//    worldZ: Int
-//  ): Int {
-//    val minY = ctx.chunkContext.minHeight
-//    val maxY = ctx.chunkContext.maxHeight - 1
-//    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
-//
-//    fun isSolid(y: Int): Boolean {
-//      val terrainMacro =
-//        generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
-//
-//      val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
-//      val terrainFinal = terrainMacro + detail
-//      if (terrainFinal > 0.0) return true
-//
-//      val terrainDensity =
-//        generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY)
-//
-//      return terrainDensity > 0.0
-//    }
-//
-//    val step = 2
-//    var y = maxY
-//
-//    while (y >= minY) {
-//      if (isSolid(y)) {
-//        val refineTop = minOf(maxY, y + step - 1)
-//        for (yy in refineTop downTo (y + 1)) {
-//          if (isSolid(yy)) return yy
-//        }
-//        return y
-//      }
-//      y -= step
-//    }
-//
-//    return minY
-//  }
-  /*fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
-    val minY = ctx.chunkContext.minHeight
-    val maxY = ctx.chunkContext.maxHeight - 1
-
-    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
-    for (y in maxY downTo minY) {
-      val terrainMacro =
-        generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
-
-      val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
-      val terrainFinal = terrainMacro + detail
-      if (terrainFinal > 0.0) return y
-      val terrainDensity = generation.terrainDensityNoCaves(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY)
-      if (terrainDensity > 0.0) return y
-    }
-    return minY
-  }*/
 
   fun sampleSurfaceColumns(
     generateCtx: GenerateContext,
@@ -333,11 +280,6 @@ data class SimpleChunkSampler(
     }
   }
 
-  fun cellIndex(cellX: Int, cellZ: Int, cellY: Int, biomeCellCountX: Int, biomeCellCountZ: Int): Int {
-    return (cellY * biomeCellCountZ + cellZ) * biomeCellCountX + cellX
-  }
-
-  fun cellYFromWorld(worldY : Int, cellSize : Int, minY : Int) = Math.floorDiv(worldY - minY, cellSize)
   fun sampleBlockData(
     generateCtx: GenerateContext,
     chunkX: Int,
@@ -349,6 +291,7 @@ data class SimpleChunkSampler(
     materialBiomeByBlock: Array<Biome?>,
     densityByBlock: DoubleArray,
     terrainField2D: SimpleTerrain2D,
+    terrainField3D: SimpleTerrain3D,
     biomeCellCountX: Int,
     biomeCellCountZ: Int,
     biomeCellCountY: Int,
@@ -402,7 +345,8 @@ data class SimpleChunkSampler(
           ).finalDensity()
 
           val detail = terrainDetailNoise.noise3D(worldX, blockY, worldZ) * 3.0
-          val terrainFinal = terrainMacro + detail + caveMacro
+          val densityBeforeCaves = terrainMacro + detail
+          val terrainFinal = densityBeforeCaves + caveMacro
 
           val env = VolumeEnv(
             surfaceY = surfaceY,
@@ -435,6 +379,10 @@ data class SimpleChunkSampler(
           )
 
           val finalDensity = terrainFinal + volStack.add + volStack.base - volStack.carve
+
+          if(densityBeforeCaves > 0.0 && finalDensity <= 0.0){
+            terrainField3D.caveAirByBlock[blockIndex(localX, localZ, blockY, minBlockY, chunkWidth, chunkDepth)] = true
+          }
 
           val blockIdx = blockIndex(localX, localZ, blockY, minBlockY, chunkWidth, chunkDepth)
           densityByBlock[blockIdx] = finalDensity

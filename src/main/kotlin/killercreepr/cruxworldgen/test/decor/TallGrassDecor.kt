@@ -21,14 +21,15 @@ class TallGrassDecor(
   val maxHeight: Int = 3,
   val top : Holder<BlockData>,
   val middle : Holder<BlockData>,
-  val bottom : Holder<BlockData>
+  val bottom : Holder<BlockData>,
+  val salt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     val s = mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
-      salt = 1L
+      salt = 10329L
     )
     return chance(s, chancePerPoint)
   }

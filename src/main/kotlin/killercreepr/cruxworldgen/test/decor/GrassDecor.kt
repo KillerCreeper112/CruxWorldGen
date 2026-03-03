@@ -17,14 +17,15 @@ class GrassDecor(
   val chancePerPoint: Double = 0.18,
   val minAirAbove: Int = 7,
   val maxSlope01: Double = 1.0,
-  val block : Holder<BlockData>
+  val block : Holder<BlockData>,
+  val salt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
     val s = mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
-      salt = 1L
+      salt = salt
     )
     return chance(s, chancePerPoint)
   }

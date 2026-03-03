@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.terrain.Terrain3D
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
@@ -163,7 +164,8 @@ class BukkitGenerationChunkGenerator(
     writeSampledTerrainToChunk(
       chunkData,
       chunkX, chunkZ,
-      sampledChunk, signalWriter
+      sampledChunk, signalWriter,
+      sampledChunk.terrainSnapshot.terrain3D
     )
     fillSampledFluids(
       worldInfo,
@@ -355,7 +357,10 @@ class BukkitGenerationChunkGenerator(
     chunkWidth: Int,
     chunkDepth: Int,
     airAbove: IntArray,
-    airBelow: IntArray
+    airBelow: IntArray,
+    caveAirAbove: IntArray,
+    caveAirBelow: IntArray,
+    terrain3D: Terrain3D
   ) {
     var run = 0
     for (blockY in maxBlockY downTo minBlockY) {
@@ -366,6 +371,7 @@ class BukkitGenerationChunkGenerator(
         run++
       } else {
         airAbove[iy] = run
+        if(terrain3D.localIsCaveAir(localX, blockY, localZ)) caveAirAbove[iy] = run
         run = 0
       }
     }
@@ -379,6 +385,7 @@ class BukkitGenerationChunkGenerator(
         run++
       } else {
         airBelow[iy] = run
+        if(terrain3D.localIsCaveAir(localX, blockY, localZ)) caveAirBelow[iy] = run
         run = 0
       }
     }
@@ -389,7 +396,8 @@ class BukkitGenerationChunkGenerator(
     chunkX: Int,
     chunkZ: Int,
     sampledChunk: SampledChunk,
-    signalWriter: SignalView
+    signalWriter: SignalView,
+    terrain3D: Terrain3D
   ) {
     val ctx = sampledChunk.ctx
     val chunkWidth = worldDetails.chunkWidth
@@ -406,7 +414,11 @@ class BukkitGenerationChunkGenerator(
         val airAbove = IntArray(height)
         val airBelow = IntArray(height)
 
-        computeAirRuns(sampledChunk.density, localX, localZ, minY, maxY, chunkWidth, chunkDepth, airAbove, airBelow)
+        val caveAirAbove = IntArray(height)
+        val caveAirBelow = IntArray(height)
+
+        computeAirRuns(sampledChunk.density, localX, localZ, minY, maxY, chunkWidth, chunkDepth, airAbove, airBelow,
+          caveAirAbove, caveAirBelow, terrain3D)
 
         val seaLevel = ctx.chunkContext.seaLevel
         val columnUnderwater = surfaceY < seaLevel
@@ -440,7 +452,8 @@ class BukkitGenerationChunkGenerator(
             caveAirBlocksBelow = airBelow[iy],
             isUnderwater = isUnderwater,
             depthFromSeaFloor = depthFromSeaFloor,
-            signalView = signalWriter
+            signalView = signalWriter,
+            caveAirBlocksAbove = caveAirAbove[iy]
           )
 
           val block = biome.materialProvider.chooseMaterial(materialContext)
@@ -561,10 +574,22 @@ class BukkitGenerationChunkGenerator(
 
         structures.runForChunk(region, chunkX, chunkZ)
 
-        decorations.runAllPasses(region, chunkX, chunkZ) { wx, wz ->
-          val zone = generation.zones.sampleZone(region.ctx, wx, wz)
-          zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
-        }
+        decorations.runAllPasses(region, chunkX, chunkZ,
+          { wx, wz ->
+            val zone = generation.zones.sampleZone(region.ctx, wx, wz)
+            zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
+          },
+          {x,y,z ->
+            sampledChunk.dominantBiomeByBlock[blockIndex(
+              localXFromWorld(x, chunkWidth),
+              localZFromWorld(z, chunkDepth),
+              y, sampledChunk.ctx.chunkContext.minHeight, chunkWidth, chunkDepth
+            )]!!
+          },
+          {x, z ->
+            1//todo maybe not needed
+          }
+          )
       }
     })
   }

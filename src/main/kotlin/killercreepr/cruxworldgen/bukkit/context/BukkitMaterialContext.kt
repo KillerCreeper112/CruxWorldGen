@@ -18,6 +18,7 @@ class BukkitMaterialContext(
   override val isUnderwater: Boolean,
   override val depthFromSeaFloor: Int,
   override val signalView: SignalView,
+  override val caveAirBlocksAbove: Int,
 ) : MaterialContext {
   override fun densityAt(
     x: Int,
