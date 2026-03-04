@@ -3,6 +3,7 @@ package killercreepr.cruxworldgen.test.decor
 import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
+import killercreepr.cruxworldgen.api.decor.DecorHolder
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -21,7 +22,7 @@ class SingleDeadTreeDecor(
 
   val minHeight: Int = 4,
   val maxHeight: Int = 9,
-  val log : Holder<BlockData>,
+  val log : DecorHolder<BlockData>,
   val chanceSalt: Long
 ) : Decoration {
 
@@ -72,7 +73,7 @@ class SingleDeadTreeDecor(
       val y = p.baseY + dy
       if (y < bounds.minY || y > bounds.maxY) break
       if (queries.isReplaceable(p.worldX, y, p.worldZ)) {
-        region.setBlock(p.worldX, y, p.worldZ, log.value())
+        region.setBlock(p.worldX, y, p.worldZ, log.value(region, placement.seed))
       }
     }
   }

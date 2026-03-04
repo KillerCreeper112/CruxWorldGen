@@ -124,7 +124,7 @@ class BukkitGenerationChunkGenerator(
 
   data class CachedChunk(
     val chunk : SampledChunk,
-    val signalWriter : SignalHandler
+    var signalWriter : SignalHandler
   )
 
   fun chunkXFromWorld(worldX: Int, chunkWidth: Int = worldDetails.chunkWidth): Int =
@@ -160,6 +160,7 @@ class BukkitGenerationChunkGenerator(
     val cachedChunk = getOrCreateCache(worldInfo, random, chunkX, chunkZ)
     val sampledChunk = cachedChunk.chunk
     val signalWriter = cachedChunk.signalWriter
+    cachedChunk.signalWriter = SignalHandler.DUMMY
 
     writeSampledTerrainToChunk(
       chunkData,

@@ -72,7 +72,7 @@ class TallGrassTriVolDecor(
     val p = placement as Placed
     val height = p.height
 
-    for(i in 0..height) {
+    for(i in 0..<height) {
       val block = when (i) {
         0 -> bottom.value()
         height -> top.value()

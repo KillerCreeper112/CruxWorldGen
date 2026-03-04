@@ -71,7 +71,7 @@ class TallGrassDoubleVolDecor(
     val p = placement as Placed
     val height = p.height
 
-    for(i in 0..height) {
+    for(i in 0..<height) {
       val block = when (i) {
         height -> top.value()
         else -> bottom.value()
