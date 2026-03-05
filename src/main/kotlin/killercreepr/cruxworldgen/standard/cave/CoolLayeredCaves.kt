@@ -1,9 +1,10 @@
 package killercreepr.cruxworldgen.standard.cave
 
+import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.noise.NoiseKey
+import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.Curve.band01
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
@@ -12,26 +13,25 @@ import killercreepr.cruxworldgen.api.util.NoiseUtil.fract
 import killercreepr.cruxworldgen.api.util.NoiseUtil.ridgedFbm3
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
 
 class CoolLayeredCaves(
-  val shaper: NoiseShaper,
+  val shaper: NoiseShaper = NoiseShaper.dummy(),
 
   // Main shelf / mass shape
-  val shelfRidged3D: NoiseKey,
-  val carve3D: NoiseKey,
+  val shelfRidged3D: NoiseKey = Noise.ShelfRidged3D,
+  val carve3D: NoiseKey = Noise.Carve3D,
 
   // Extra variation
-  val chamber3D: NoiseKey,
-  val occupancy3D: NoiseKey,
-  val pathA2D: NoiseKey,
-  val pathB2D: NoiseKey,
+  val chamber3D: NoiseKey = Noise.Chamber3D,
+  val occupancy3D: NoiseKey = Noise.Occupancy3D,
+  val pathA2D: NoiseKey = Noise.PathA2D,
+  val pathB2D: NoiseKey = Noise.PathB2D,
 
   // Warps
-  val shelfWarp2D: NoiseKey,
-  val warpX3D: NoiseKey,
-  val warpY3D: NoiseKey,
-  val warpZ3D: NoiseKey,
+  val shelfWarp2D: NoiseKey = Noise.ShelfWarp2D,
+  val warpX3D: NoiseKey = Noise.WarpX3D,
+  val warpY3D: NoiseKey = Noise.WarpY3D,
+  val warpZ3D: NoiseKey = Noise.WarpZ3D,
 
   // Use DEPTH BELOW SURFACE here, not world Y
   val layers: List<Layer> = listOf(
@@ -40,8 +40,135 @@ class CoolLayeredCaves(
     Layer(depth = 60.0, half = 18.0, weight = 1.10),
     Layer(depth = 120.0, half = 22.0, weight = 1.5),
   ),
-  val strength: Double = 5.0
-) : CaveType {
+  val strength: Double = 5.0,
+  override val surfaceFadeRamp: Int = 0,
+  override val surfaceFadeStart: Int = 0,
+) : CaveType, Noised {
+
+  object Noise : NoiseModule{
+    object ShelfRidged3D : NoiseKey{ override val id = "cave.cool_layered.shelf_ridge3D" }
+    object Carve3D : NoiseKey{ override val id = "cave.cool_layered.carve3D" }
+    object Chamber3D : NoiseKey{ override val id = "cave.cool_layered.chamber3D" }
+    object Occupancy3D : NoiseKey{ override val id = "cave.cool_layered.occupancy3D" }
+    object PathA2D : NoiseKey{ override val id = "cave.cool_layered.path_a2D" }
+    object PathB2D : NoiseKey{ override val id = "cave.cool_layered.path_b2D" }
+    object ShelfWarp2D : NoiseKey{ override val id = "cave.cool_layered.shelf_warp2D" }
+    object WarpX3D : NoiseKey{ override val id = "cave.cool_layered.warp_x3D" }
+    object WarpY3D : NoiseKey{ override val id = "cave.cool_layered.warp_y3D" }
+    object WarpZ3D : NoiseKey{ override val id = "cave.cool_layered.warp_z3D" }
+
+
+    override fun install(bank: NoiseBank) {
+      // --- Main shelf / mass shape ---
+      bank.register(ShelfRidged3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0012)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(3)
+            .fractalGain(0.5)
+            .fractalLacunarity(2.0)
+        }
+      }
+
+      // --- Carve driver (higher frequency than shelf mass) ---
+      bank.register(Carve3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0045)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+            .fractalGain(0.5)
+            .fractalLacunarity(2.0)
+        }
+      }
+
+      // --- Chambers: bigger blobs / roominess ---
+      bank.register(Chamber3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0022)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+            .fractalGain(0.55)
+            .fractalLacunarity(2.0)
+        }
+      }
+
+      // --- Occupancy: where caves are allowed at all (slow, smooth mask) ---
+      bank.register(Occupancy3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0010)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+
+      // --- 2D path masks: long streaky influence fields (use in XY-dependent logic) ---
+      bank.register(PathA2D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0016)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+            .fractalGain(0.5)
+            .fractalLacunarity(2.0)
+        }
+      }
+
+      bank.register(PathB2D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0011)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+            .fractalGain(0.5)
+            .fractalLacunarity(2.0)
+        }
+      }
+
+      // --- Warps ---
+      bank.register(ShelfWarp2D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0010)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+
+      // Domain warp components (keep these smooth/low-frequency; amplitude comes from your code)
+      bank.register(WarpX3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0020)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+
+      bank.register(WarpY3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0020)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+
+      bank.register(WarpZ3D) { seed ->
+        NoiseField.noiseField(seed) {
+          frequency(0.0020)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(1)
+        }
+      }
+    }
+  }
+
+  override val noiseModule = Noise
 
   data class Layer(
     val depth: Double,
