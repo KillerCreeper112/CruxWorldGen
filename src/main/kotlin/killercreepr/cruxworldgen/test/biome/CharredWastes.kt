@@ -28,14 +28,8 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.extension.remap01
-import net.minecraft.core.SectionPos.y
 import org.bukkit.Material
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.round
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class CharredWastes(
   override val caves: CaveShape = CaveProfile(

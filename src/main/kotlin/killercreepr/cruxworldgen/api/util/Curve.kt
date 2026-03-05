@@ -1,11 +1,18 @@
 package killercreepr.cruxworldgen.api.util
 
+import kotlin.math.abs
+
 object Curve {
   fun smoothstep01(t: Double): Double {
     val x = t.coerceIn(0.0, 1.0)
     return x * x * (3.0 - 2.0 * x)
   }
 
+  //a = the start of the transition
+  //
+  //b = the end of the transition
+  //
+  //x = the input value you’re testing
   fun smoothstep(a: Double, b: Double, x: Double): Double {
     val t = ((x - a) / (b - a)).coerceIn(0.0, 1.0)
     return t * t * (3.0 - 2.0 * t)
@@ -16,6 +23,18 @@ object Curve {
     val c = d.coerceIn(0.0, 1.0)
     val s = c * c * (3.0 - 2.0 * c)     // smoothstep
     return 1.0 - s                       // 1 at center, 0 outside
+  }
+
+  fun bandMask(y: Double, center: Double, half: Double): Double {
+    if (half <= 0.0) return 0.0
+    val t = ((half - abs(y - center)) / half).coerceIn(0.0, 1.0)
+    return smoothstep01(t)
+  }
+
+  fun bellMask(x: Double, center: Double, half: Double): Double {
+    if (half <= 0.0) return 0.0
+    val t = ((half - abs(x - center)) / half).coerceIn(0.0, 1.0)
+    return smoothstep01(t)
   }
 
   fun smootherstep01(t: Double): Double {

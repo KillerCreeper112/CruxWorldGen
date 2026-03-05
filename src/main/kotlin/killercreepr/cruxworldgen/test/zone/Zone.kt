@@ -9,7 +9,7 @@ import killercreepr.cruxworldgen.test.biome.*
 class TestZone : Zone{
   override val biomes: BiomeRegistry = SimpleBiomeRegistry(
     biomes = listOf(
-      CharredWastes()
+      AmplifiedBridgeTerrain()
       //CharredWastes(),
       //BasaltSpires(),
       //ToxicFogBasins(),
