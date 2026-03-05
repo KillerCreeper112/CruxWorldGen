@@ -18,6 +18,11 @@ object Curve {
     return t * t * (3.0 - 2.0 * t)
   }
 
+  fun peelMask(n: Double, thickness: Double, feather: Double): Double {
+    val d = abs(n) // distance from the noise==0 surface
+    return 1.0 - smoothstep(thickness, thickness + feather, d)
+  }
+
   fun band01(center01: Double, halfWidth01: Double, t01: Double): Double {
     val d = kotlin.math.abs(t01 - center01) / halfWidth01
     val c = d.coerceIn(0.0, 1.0)
