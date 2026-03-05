@@ -18,6 +18,9 @@ interface MaterialContext{
   val isUnderwater: Boolean
   val depthFromSeaFloor : Int
   val signalView : SignalView
+  val solidWithoutCaves: Boolean
+  val surfaceDepth: Int
+  val airRun: Int
 
   fun densityAt(x: Int, y: Int, z: Int): DensityStack
 }

@@ -6,6 +6,8 @@ import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
 import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
 import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.cave.CaveProfile
+import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.MaterialContext
@@ -22,6 +24,8 @@ import killercreepr.cruxworldgen.api.util.Curve.bandMask
 import killercreepr.cruxworldgen.api.util.Curve.bellMask
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
+import killercreepr.cruxworldgen.standard.cave.CheeseCaves
+import net.minecraft.world.level.levelgen.Heightmap
 import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.floor
@@ -33,7 +37,7 @@ class AmplifiedBridgeTerrain(
   val rollAmp: Double = 14.0,
   val ridgeAmp: Double = 20.0,
 
-  val terraceStep: Double = 6.0,
+  val terraceStep: Double = 4.0,
   val terraceStrength: Double = 0.34,
 
   // Broad basin shaping
@@ -67,6 +71,10 @@ class AmplifiedBridgeTerrain(
   // Basin warp
   val basinWarpAmp: Double = 90.0
 ) : Biome.Noised {
+
+  override val caves: CaveShape = CaveProfile(listOf(
+    CheeseCaves()
+  ))
 
   object Noise : NoiseModule {
     val Base2D = object : NoiseKey { override val id = "terrain.lakeshore_bridge.base2D" }
@@ -241,10 +249,12 @@ class AmplifiedBridgeTerrain(
     override fun chooseMaterial(context: MaterialContext): BlockData {
       if(!context.isSolid) return BlockData.NONE
 
-      if(context.depthBelowSurface == 0)
+      if(context.airRun > 7){
         return BukkitBlockAdapter.resolver().resolve(Material.GRASS_BLOCK)
-      if(context.depthBelowSurface < 5)
+      }
+      if(context.surfaceDepth < 5){
         return BukkitBlockAdapter.resolver().resolve(Material.DIRT)
+      }
 
       return BukkitBlockAdapter.resolver().resolve(Material.STONE)
     }
@@ -327,7 +337,7 @@ class AmplifiedBridgeTerrain(
 
         // Prefer shelves around the rim and on dramatic terrain
         val shelfAnchor =
-          (macroAnchor * 0.65 + lakeRimMask * 0.55 + spanMask * 0.30)
+          (macroAnchor * 0.65 /*+ lakeRimMask * 0.55 + spanMask * 0.70*/)
             .coerceIn(0.0, 1.0)
 
         // Suppress shelf formation over calm lake center,
@@ -347,7 +357,7 @@ class AmplifiedBridgeTerrain(
         val shelfSolid = Curve.smoothstep(shelfThreshold, 0.86, shelfNoise01)
         val elevatedShelf =
           shelfBand *
-            shelfAnchor *
+            //shelfAnchor *
             //shelfRegionMask *
             shelfSolid *
             shelfStrength

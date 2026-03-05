@@ -63,6 +63,7 @@ data class SimpleChunkSampler(
     val maxBlockY = generateCtx.chunkContext.maxHeight - 1
     val chunkBlockHeight = maxBlockY - minBlockY + 1
 
+    val solidNoCavesByBlock = BitSet(chunkBlockWidth * chunkBlockDepth * chunkBlockHeight)
     val densityByBlock = DoubleArray(chunkBlockWidth * chunkBlockDepth * chunkBlockHeight)
     val materialBiomeByBlock = arrayOfNulls<Biome>(chunkBlockWidth * chunkBlockDepth * chunkBlockHeight)
 
@@ -141,7 +142,8 @@ data class SimpleChunkSampler(
       biomeCellSize,
       minBlockY,
       maxBlockY,
-      signalWriter
+      signalWriter,
+      solidNoCavesByBlock
     )
     return SimpleSampledChunk(
       ctx = generateCtx,
@@ -150,7 +152,8 @@ data class SimpleChunkSampler(
       surfaceBlend = surfaceBiomeBlendByColumn,
       dominantBiomeByBlock = materialBiomeByBlock,
       terrainSnapshot = terrainSnapshot,
-      volBiomeCorners = volumetricBlendByCorner
+      volBiomeCorners = volumetricBlendByCorner,
+      solidNoCavesByBlock = solidNoCavesByBlock
     )
   }
 
@@ -213,7 +216,10 @@ data class SimpleChunkSampler(
 
         val zone = generation.zones.sampleZone(generateCtx, worldX, worldZ)
         val surfaceBlend = zone.biomes.sampleBiomeBlend(generateCtx, worldX, worldZ)
-        val surfaceY = findSurfaceY(generateCtx, surfaceBlend, worldX, worldZ)
+        val surfaceY = findSurfaceY(
+          generateCtx, surfaceBlend,
+          worldX, worldZ
+        )
 
         val columnIndex = columnIndex(localX, localZ, chunkWidth)
         surfaceBiomeBlendByColumn[columnIndex] = surfaceBlend
@@ -298,7 +304,8 @@ data class SimpleChunkSampler(
     biomeCellSize: Int,
     minBlockY: Int,
     maxBlockY: Int,
-    signalWriter: SignalWriter
+    signalWriter: SignalWriter,
+    solidNoCavesByBlock : BitSet
   ) {
     val chunkWidth = worldDetails.chunkWidth
     val chunkDepth = worldDetails.chunkDepth
@@ -346,6 +353,9 @@ data class SimpleChunkSampler(
 
           val detail = terrainDetailNoise.noise3D(worldX, blockY, worldZ) * 3.0
           val densityBeforeCaves = terrainMacro + detail
+
+          if(densityBeforeCaves > 0) solidNoCavesByBlock[blockIndex(localX, localZ, blockY, minBlockY, chunkWidth, chunkDepth)] = true
+
           val terrainFinal = densityBeforeCaves + caveMacro
 
           val env = VolumeEnv(

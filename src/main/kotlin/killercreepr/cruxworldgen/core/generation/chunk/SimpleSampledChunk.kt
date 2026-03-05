@@ -6,6 +6,7 @@ import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.chunk.SampledChunk
+import java.util.BitSet
 
 data class SimpleSampledChunk(
   override val ctx: GenerateContext,
@@ -14,5 +15,6 @@ data class SimpleSampledChunk(
   override val surfaceBlend: Array<BiomeBlendSample?>,
   override val dominantBiomeByBlock: Array<Biome?>,
   override val volBiomeCorners: Array<VolBiomeBlendSample?>,
-  override val terrainSnapshot: TerrainSnapshot
+  override val terrainSnapshot: TerrainSnapshot,
+  override val solidNoCavesByBlock: BitSet
 ) : SampledChunk

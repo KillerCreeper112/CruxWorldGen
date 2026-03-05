@@ -424,13 +424,29 @@ class BukkitGenerationChunkGenerator(
         val seaLevel = ctx.chunkContext.seaLevel
         val columnUnderwater = surfaceY < seaLevel
 
+        var surfaceDepth = 0
+        var airRun = 0
         for (blockY in maxY downTo minY) {
           val blockIndex = blockIndex(localX, localZ, blockY, minY, chunkWidth, chunkDepth)
           val density = sampledChunk.density[blockIndex]
+          val isSolid = density > 0.0
+
+          val airAboveHere = airRun
+
+          val solidWithoutCaves = sampledChunk.solidNoCavesByBlock[blockIndex]
+          if (solidWithoutCaves) {
+            surfaceDepth++
+            airRun = 0
+          } else {
+            airRun++
+            surfaceDepth = -1
+          }
+
+          if(!isSolid) continue //todo this is good for performance but may need to change to provide more control for biomes- guess we see
+
           val biome = sampledChunk.dominantBiomeByBlock[blockIndex] ?: continue
 
           val iy = blockY - minY
-          val isSolid = density > 0.0
           val depthBelowSurface = surfaceY - blockY
 
           val isUnderwater =
@@ -454,7 +470,10 @@ class BukkitGenerationChunkGenerator(
             isUnderwater = isUnderwater,
             depthFromSeaFloor = depthFromSeaFloor,
             signalView = signalWriter,
-            caveAirBlocksAbove = caveAirAbove[iy]
+            caveAirBlocksAbove = caveAirAbove[iy],
+            solidWithoutCaves = sampledChunk.solidNoCavesByBlock[blockIndex],
+            surfaceDepth = surfaceDepth,
+            airRun = airAboveHere,
           )
 
           val block = biome.materialProvider.chooseMaterial(materialContext)
