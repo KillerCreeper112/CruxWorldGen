@@ -1,5 +1,9 @@
 package killercreepr.cruxworldgen.api.util
 
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+
 object MathUtil {
   fun blockIndex(localX: Int, localZ: Int, blockY: Int, minBlockY: Int, chunkWidth: Int, chunkDepth: Int): Int {
     val localY = blockY - minBlockY
@@ -15,4 +19,14 @@ object MathUtil {
     return (cellY * biomeCellCountZ + cellZ) * biomeCellCountX + cellX
   }
   fun cellYFromWorld(worldY : Int, cellSize : Int, minY : Int) = Math.floorDiv(worldY - minY, cellSize)
+
+  /*fun rotateXZ(x: Double, z: Double, angleDegrees: Double): Pair<Double, Double> {
+    val radians = angleDegrees * PI / 180.0
+    val c = cos(radians)
+    val s = sin(radians)
+
+    val rx = x * c + z * s
+    val rz = -x * s + z * c
+    return rx to rz
+  }*/
 }

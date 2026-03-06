@@ -28,18 +28,21 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.extension.remap01
+import killercreepr.cruxworldgen.standard.cave.RavineCaves
 import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.standard.cave.Standard3DCaves
+import killercreepr.cruxworldgen.standard.cave.StandardLarge3DCaves
+import killercreepr.cruxworldgen.test.decor.RavineDecor
 import org.bukkit.Material
 import kotlin.math.*
 
 class CharredWastes(
   override val caves: CaveShape = CaveProfile(
     listOf(
-      SpaghettiCaves()
     )
   ),
   override val decorations: List<Decoration> = listOf(
+    RavineDecor()
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): BlockData {

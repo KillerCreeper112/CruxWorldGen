@@ -25,4 +25,15 @@ interface CaveType {
    * -> good for normal caves (surface stays mostly intact)
    */
   val surfaceFadeRamp: Int get() = 16
+
+  interface HasSurfaceOpenings : CaveType {
+    val surfaceOpenChance: Double
+      get() = 0.03
+    val surfaceOpenMaxAbove: Int
+      get() = 2
+    val surfaceOpenMaxBelow: Int
+      get() = 18
+    val surfaceOpenFeather: Double
+      get() = 6.0
+  }
 }

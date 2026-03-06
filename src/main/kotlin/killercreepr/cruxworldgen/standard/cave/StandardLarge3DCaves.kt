@@ -8,60 +8,57 @@ import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.extension.remap01
 import kotlin.math.max
-import kotlin.math.sqrt
 
-class SpaghettiCaves(
-  val strength: Double = 1.5,
+class StandardLarge3DCaves(
   val warpXZ: Double = 25.0,
   val warpY: Double = 15.0,
 
-  val radius: Double = 0.1,
-  val feather: Double = 0.07,
+  val threshold: Double = 0.68,
+  val ramp: Double = 0.15,
+  val platformStrength: Double = 1.5,
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
-  override val surfaceOpenChance: Double = 1.0,
 
   val noise : Noise = StandardNoise
-) : CaveType.HasSurfaceOpenings, Noised {
+) : CaveType, Noised {
 
-  interface Noise : NoiseModule{
-    val PathA3D : NoiseKey
-    val PathB3D : NoiseKey
+  interface Noise : NoiseModule {
+    val Carve3D : NoiseKey
+    val Platform3D : NoiseKey
     val WarpX3D : NoiseKey
     val WarpY3D : NoiseKey
     val WarpZ3D : NoiseKey
   }
 
   object StandardNoise : Noise {
-    override val PathA3D = object : NoiseKey { override val id = "cave.spaghetti.path_a3D" }
-    override val PathB3D = object : NoiseKey { override val id = "cave.spaghetti.path_b3D" }
-    override val WarpX3D = object : NoiseKey { override val id = "cave.spaghetti.warp_x3D" }
-    override val WarpY3D = object : NoiseKey { override val id = "cave.spaghetti.warp_y3D" }
-    override val WarpZ3D = object : NoiseKey { override val id = "cave.spaghetti.warp_z3D" }
-
+    override val Carve3D = object: NoiseKey { override val id = "cave.standard_large3D.carve3D" }
+    override val Platform3D = object: NoiseKey { override val id = "cave.standard_large3D.platform3D" }
+    override val WarpX3D = object: NoiseKey { override val id = "cave.standard_large3D.warp_x3D" }
+    override val WarpY3D = object: NoiseKey { override val id = "cave.standard_large3D.warp_y3D" }
+    override val WarpZ3D = object: NoiseKey { override val id = "cave.standard_large3D.warp_z3D" }
 
     override fun install(bank: NoiseBank) {
-      bank.register(PathA3D) { seed ->
+      bank.register(Carve3D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.005)
+          frequency(0.012)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
-            .fractalType(CruxNoise.FractalType.Ridged)
+            .fractalType(CruxNoise.FractalType.FBm)
             .fractalOctaves(2)
         }
       }
-      bank.register(PathB3D) { seed ->
+      bank.register(Platform3D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.01)
+          frequency(0.009)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
-            .fractalType(CruxNoise.FractalType.Ridged)
-            .fractalOctaves(1)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
         }
       }
 
       bank.register(WarpX3D) { seed ->
         NoiseField.noiseField(seed) {
-          frequency(0.012)
+          frequency(0.025)
             .noiseType(CruxNoise.NoiseType.OpenSimplex2)
             .fractalType(CruxNoise.FractalType.FBm)
             .fractalOctaves(2)
@@ -101,21 +98,10 @@ class SpaghettiCaves(
     val wx = x + ctx.noise.get(noise.WarpX3D).noise3D(x, y, z) * warpXZ
     val wy = y + ctx.noise.get(noise.WarpY3D).noise3D(x, y, z) * warpY
     val wz = z + ctx.noise.get(noise.WarpZ3D).noise3D(x, y, z) * warpXZ
+    val carveN = ctx.noise.get(noise.Carve3D).noise3D(wx * 0.5, wy, wz * 0.3).remap01()
 
-    val rx = wx * 0.866 + wz * 0.5
-    val rz = -wx * 0.5 + wz * 0.866
+    val carve = Curve.smoothstep(threshold, threshold + ramp, carveN)
 
-    val pathA = ctx.noise.get(noise.PathA3D).noise3D(wx,wy,wz).remap01()
-    val pathB = ctx.noise.get(noise.PathB3D).noise3D(rx, wy, rz).remap01()
-
-    val da = 1.0 - pathA
-    val db = 1.0 - pathB
-    val d = sqrt(da * da + db * db)
-
-    val tube = 1.0 - Curve.smoothstep(radius, radius + feather, d)
-
-    val tubeTight = tube * tube * tube
-
-    return solidDensity * tubeTight * strength
+    return solidDensity * carve// + platformN
   }
 }
