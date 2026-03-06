@@ -4,7 +4,6 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.HashUtil
-import killercreepr.cruxworldgen.standard.cave.CaveMasks.depthFade
 
 open class CaveProfile(
   val caveTypes: List<CaveType>

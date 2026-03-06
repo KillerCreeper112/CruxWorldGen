@@ -18,9 +18,10 @@ class Standard3DCaves(
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
+  override val surfaceOpenChance: Double = 0.5,
 
   val noise : Noise = StandardNoise
-) : CaveType, Noised {
+) : CaveType.HasSurfaceOpenings, Noised {
 
   interface Noise : NoiseModule {
     val Carve3D : NoiseKey

@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.test.biome
 
-import killercreepr.crux.api.data.Holder
 import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeShape
@@ -21,9 +20,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
-import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import killercreepr.cruxworldgen.bukkit.util.TreeUtil
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
@@ -31,9 +28,7 @@ import killercreepr.cruxworldgen.standard.cave.CathedralChambers
 import killercreepr.cruxworldgen.standard.cave.OffsetTunnels
 import killercreepr.cruxworldgen.standard.cave.VerticalTears
 import killercreepr.cruxworldgen.standard.cave.VoidPockets
-import killercreepr.cruxworldgen.test.decor.SplitHeartTreeDecor
 import org.bukkit.Material
-import org.bukkit.block.BlockType
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.pow

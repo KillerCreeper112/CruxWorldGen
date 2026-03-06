@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.standard.decor
 
-import killercreepr.crux.api.block.CruxBlockWrapper.material
 import killercreepr.cruxworldgen.api.block.BlockSection
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -13,7 +12,6 @@ import org.bukkit.Material
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 class LavaPondDecoration(

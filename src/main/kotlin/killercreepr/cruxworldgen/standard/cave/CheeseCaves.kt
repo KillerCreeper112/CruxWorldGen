@@ -6,9 +6,6 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
-import killercreepr.cruxworldgen.core.feature.GenerateHeightSampler
-import org.bukkit.Bukkit
-import kotlin.math.abs
 import kotlin.math.max
 
 class CheeseCaves(

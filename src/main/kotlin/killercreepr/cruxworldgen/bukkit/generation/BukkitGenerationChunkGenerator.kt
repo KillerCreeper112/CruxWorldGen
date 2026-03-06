@@ -3,7 +3,6 @@ package killercreepr.cruxworldgen.bukkit.generation
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.Terrain3D
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
@@ -11,14 +10,11 @@ import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.generation.chunk.ChunkSampler
 import killercreepr.cruxworldgen.api.generation.chunk.SampledChunk
-import killercreepr.cruxworldgen.api.noise.NoiseAutoInstaller
 import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.signal.SignalView
-import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.structure.StructurePipeline
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
-import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
@@ -26,23 +22,14 @@ import killercreepr.cruxworldgen.bukkit.context.BukkitGenerateContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.context.BukkitWorldContext
 import killercreepr.cruxworldgen.bukkit.region.BukkitLimitedRegion
-import killercreepr.cruxworldgen.core.context.SimpleBiomeEdgeContext
-import killercreepr.cruxworldgen.core.context.SimpleCaveContext
 import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
 import killercreepr.cruxworldgen.core.feature.FeaturePipeline
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
-import killercreepr.cruxworldgen.test.aquifier.FluidType
-import killercreepr.cruxworldgen.test.aquifier.VoronoiAquiferSystem
-import killercreepr.cruxworldgen.test.cave.UndergroundLavaPass
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Biome
-import org.bukkit.generator.BiomeProvider
-import org.bukkit.generator.BlockPopulator
-import org.bukkit.generator.ChunkGenerator
-import org.bukkit.generator.LimitedRegion
-import org.bukkit.generator.WorldInfo
+import org.bukkit.generator.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -138,7 +125,7 @@ class BukkitGenerationChunkGenerator(
     random: Random,
     chunkX: Int,
     chunkZ: Int,
-    signalWriter: () -> SignalHandler = { SimpleSignalWriter(mutableMapOf()) }
+    signalWriter: () -> SignalHandler = { SimpleSignalWriter(mutableMapOf(),mutableMapOf()) }
   ): CachedChunk {
     val key = chunkKey(chunkX, chunkZ)
     return cache.get(key) {
@@ -180,6 +167,9 @@ class BukkitGenerationChunkGenerator(
   fun surfaceYAt(worldInfo: WorldInfo, worldX: Int, worldZ: Int): Int {
     val queryChunkX = Math.floorDiv(worldX, worldDetails.chunkWidth)
     val queryChunkZ = Math.floorDiv(worldZ, worldDetails.chunkDepth)
+
+    val cache = cache.getIfPresent(chunkKey(queryChunkX, queryChunkZ))
+    if(cache != null) return cache.chunk.surfaceY[columnIndex(localXFromWorld(worldX, worldDetails.chunkWidth), localZFromWorld(worldZ, worldDetails.chunkDepth), worldDetails.chunkWidth)]
 
     val random = Random(worldInfo.seed)
     val ctx = BukkitGenerateContext(
@@ -502,8 +492,8 @@ class BukkitGenerationChunkGenerator(
          )
          val cache = cachedChunk.chunk
 
-         val localX = localXFromWorld(chunkX, worldDetails.chunkWidth)
-         val localZ = localZFromWorld(chunkZ, worldDetails.chunkDepth)
+         val localX = localXFromWorld(x, worldDetails.chunkWidth)
+         val localZ = localZFromWorld(z, worldDetails.chunkDepth)
          val biome = cache.dominantBiomeByBlock[blockIndex(localX, localZ, y, worldInfo.minHeight, worldDetails.chunkWidth, worldDetails.chunkDepth)]
            ?: return Biome.PLAINS
          if(biome is BukkitBiome) return biome.toBukkitBiome()

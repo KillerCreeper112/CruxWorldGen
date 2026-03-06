@@ -43,6 +43,28 @@ interface SignalKey<T> {
       }
     }
 
+    open class GenericSignalLayer<T>(val map : MutableMap<Long, T>) : SignalLayer<T> {
+
+      override fun get(idx: Long): T = map[idx]!!
+
+      override fun set(idx: Long, value: T) {
+        map[idx] = value
+      }
+
+      override fun getOrDefault(idx: Long, fallback: () -> T): T = map.getOrElse(idx, fallback)
+
+      override fun getOrNullable(idx: Long, fallback: () -> T?): T? = map.getOrElse(idx, fallback)
+
+      override fun getOrDefault(idx: Long, fallback: T): T = map.getOrDefault(idx, fallback)
+
+      override fun getOrNullable(idx: Long, fallback: T?): T? = map.getOrDefault(idx, fallback)
+
+      override fun getIfPresent(idx: Long): T? = map[idx]
+      override fun isPresent(idx: Long): Boolean = map.containsKey(idx)
+
+      override fun max(idx: Long, v: T) = set(idx, v)
+    }
+
   }
   fun max(oldValue : T, newValue : T) : T
   fun min(oldValue : T, newValue : T) : T

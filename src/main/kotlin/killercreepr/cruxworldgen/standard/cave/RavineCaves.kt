@@ -7,7 +7,6 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.extension.remap01
-import net.minecraft.world.level.levelgen.carver.CanyonWorldCarver
 import kotlin.math.max
 
 class RavineCaves(

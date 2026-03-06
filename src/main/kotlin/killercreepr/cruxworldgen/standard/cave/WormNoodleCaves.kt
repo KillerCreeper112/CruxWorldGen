@@ -3,7 +3,6 @@ package killercreepr.cruxworldgen.standard.cave
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.HashUtil
 import kotlin.math.*
 

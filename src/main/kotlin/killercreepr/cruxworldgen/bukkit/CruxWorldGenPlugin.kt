@@ -13,7 +13,6 @@ import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
 import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 import killercreepr.cruxworldgen.core.decor.SimpleDecorationPipeline
 import killercreepr.cruxworldgen.core.decor.SimplePropPointGrid
-import killercreepr.cruxworldgen.core.feature.RelativeHeightFilter
 import killercreepr.cruxworldgen.core.feature.SimpleFeaturePipeline
 import killercreepr.cruxworldgen.core.generation.SimpleGenerationPipeline
 import killercreepr.cruxworldgen.core.generation.chunk.SimpleChunkSampler
@@ -23,8 +22,6 @@ import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.crux.block.CruxBlockResolver
-import killercreepr.cruxworldgen.test.biome.volumetric.EldritchIslands
-import killercreepr.cruxworldgen.test.biome.volumetric.GlacialCaverns
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player

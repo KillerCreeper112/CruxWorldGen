@@ -18,13 +18,11 @@ import killercreepr.cruxworldgen.api.noise.NoiseField
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.noise.NoiseModule
 import killercreepr.cruxworldgen.api.signal.SignalWriter
-import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import org.bukkit.Material
-import kotlin.math.absoluteValue
 
 /**
  * Amplified-like terrain: extreme peaks + deep valleys, still a column-fill heightfield.

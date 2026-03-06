@@ -14,11 +14,9 @@ import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
 import killercreepr.cruxworldgen.api.util.SeededRng
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 
 class RavineDecor(

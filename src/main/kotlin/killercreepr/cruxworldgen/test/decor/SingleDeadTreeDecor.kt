@@ -1,13 +1,8 @@
 package killercreepr.cruxworldgen.test.decor
 
-import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
-import killercreepr.cruxworldgen.api.decor.DecorHolder
-import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.api.decor.DecorationPass
-import killercreepr.cruxworldgen.api.decor.Placement
-import killercreepr.cruxworldgen.api.decor.PropPoint
+import killercreepr.cruxworldgen.api.decor.*
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt

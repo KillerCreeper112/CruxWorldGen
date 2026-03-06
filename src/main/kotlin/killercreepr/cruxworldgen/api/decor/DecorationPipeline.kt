@@ -1,7 +1,6 @@
 package killercreepr.cruxworldgen.api.decor
 
 import killercreepr.cruxworldgen.api.biome.Biome
-import killercreepr.cruxworldgen.api.biome.volumetric.VolumetricBiome
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.prop.PropPointGrid

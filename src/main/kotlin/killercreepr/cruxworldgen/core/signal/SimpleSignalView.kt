@@ -5,7 +5,8 @@ import killercreepr.cruxworldgen.api.signal.SignalLayer
 import killercreepr.cruxworldgen.api.signal.SignalView
 
 open class SimpleSignalView(
-  open val data : Map<SignalKey<*>, SignalLayer<*>>
+  open val data : Map<SignalKey<*>, SignalLayer<*>>,
+  open val columData : Map<SignalKey<*>, SignalLayer<*>>
 ): SignalView {
   companion object{
     fun voxelKey(x: Int, y: Int, z: Int): Long {
@@ -15,7 +16,56 @@ open class SimpleSignalView(
       val ly = (y.toLong() and 0xFFF)          // 12 bits (-2048..2047 if biased separately)
       return (lx shl 38) or (lz shl 12) or ly
     }
+
+    fun columnKey(x: Int, z: Int): Long = (x.toLong() shl 32) xor (z.toLong() and 0xffffffffL)
   }
+
+  override fun <T> columnGetOrDefault(
+    x : Int, z : Int,
+    key: SignalKey<T>,
+    fallback: () -> T
+  ): T{
+    val layer = columData[key] as? SignalLayer<T> ?: return fallback()
+    val key = columnKey(x,z)
+    return layer.getOrDefault(key, fallback)
+  }
+
+  override fun <T> columnGetOrNullable(x : Int, z : Int, key: SignalKey<T>, fallback: () -> T?): T?{
+    val layer = columData[key] as? SignalLayer<T> ?: return fallback()
+    val key = columnKey(x,z)
+    return layer.getOrNullable(key, fallback)
+  }
+
+  override fun <T> columnGetOrDefault(x : Int,  z : Int, key: SignalKey<T>, fallback: T): T{
+    val layer = columData[key] as? SignalLayer<T> ?: return fallback
+    val key = columnKey(x,z)
+    return layer.getOrDefault(key, fallback)
+  }
+
+  override fun <T> columnGetOrNullable(x : Int,  z : Int, key: SignalKey<T>, fallback: T?): T?{
+    val layer = columData[key] as? SignalLayer<T> ?: return fallback
+    val key = columnKey(x,z)
+    return layer.getOrNullable(key, fallback)
+  }
+
+  override fun <T> columnGet(x : Int,  z : Int, key: SignalKey<T>): T{
+    val layer = columData[key] as SignalLayer<T>
+    val key = columnKey(x,z)
+    return layer.get(key)!!
+  }
+
+  override fun <T> columnGetIfPresent(x : Int, z : Int, key: SignalKey<T>): T?{
+    val layer = columData[key] as? SignalLayer<T> ?: return null
+    val key = columnKey(x,z)
+    return layer.getIfPresent(key)
+  }
+
+  override fun columnIsPresent(x : Int, z : Int, key: SignalKey<Any>): Boolean{
+    val layer = columData[key] ?: return false
+    val key = columnKey(x,z)
+    return layer.isPresent(key)
+  }
+
 
   override fun <T> getOrDefault(
     x : Int, y : Int, z : Int,

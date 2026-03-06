@@ -2,7 +2,6 @@ package killercreepr.cruxworldgen.bukkit.block
 
 import killercreepr.crux.api.codec.node.DataNode
 import killercreepr.crux.core.Crux
-import killercreepr.crux.core.codec.node.StringDataNode
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.block.BlockDataResolver
 import net.kyori.adventure.key.Key

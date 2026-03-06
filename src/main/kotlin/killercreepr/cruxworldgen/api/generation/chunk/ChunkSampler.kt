@@ -5,7 +5,7 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.bukkit.generation.WorldDetails
 import org.bukkit.generator.WorldInfo
-import java.util.Random
+import java.util.*
 
 interface ChunkSampler{
   val generation: GenerationPipeline

@@ -13,7 +13,6 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.api.util.NoiseUtil.densityBand01
 import killercreepr.cruxworldgen.api.util.NoiseUtil.fract
 import killercreepr.cruxworldgen.api.util.NoiseUtil.ridgedFbm3
-import kotlin.math.abs
 
 class AbyssStartOverhang(
   val shaper: NoiseShaper,

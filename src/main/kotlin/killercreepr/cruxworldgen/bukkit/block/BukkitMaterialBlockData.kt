@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.bukkit.block
 
-import io.papermc.paper.util.ItemComponentSanitizer.override
 import org.bukkit.Material
 import org.bukkit.generator.ChunkGenerator
 import org.bukkit.generator.LimitedRegion

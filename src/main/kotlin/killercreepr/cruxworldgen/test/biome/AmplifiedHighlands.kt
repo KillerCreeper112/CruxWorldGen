@@ -23,12 +23,8 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
-import killercreepr.cruxworldgen.standard.cave.CavernRooms
-import killercreepr.cruxworldgen.standard.cave.CheeseCaves
-import killercreepr.cruxworldgen.standard.cave.LavaTubes
-import killercreepr.cruxworldgen.standard.cave.RavineCarver
-import killercreepr.cruxworldgen.standard.cave.VerticalSpaghettiCaves
-import killercreepr.cruxworldgen.test.cave.*
+import killercreepr.cruxworldgen.standard.cave.*
+import killercreepr.cruxworldgen.test.cave.MountainCheeseOverhangs
 import killercreepr.cruxworldgen.test6.prop.test.SimpleTreeDecoration
 import org.bukkit.Material
 import kotlin.math.abs

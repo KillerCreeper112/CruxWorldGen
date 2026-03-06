@@ -20,7 +20,7 @@ class SpaghettiCaves(
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
-  override val surfaceOpenChance: Double = 1.0,
+  override val surfaceOpenChance: Double = 0.65,
 
   val noise : Noise = StandardNoise
 ) : CaveType.HasSurfaceOpenings, Noised {

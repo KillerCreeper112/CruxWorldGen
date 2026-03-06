@@ -1,9 +1,5 @@
 package killercreepr.cruxworldgen.api.util
 
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
-
 object MathUtil {
   fun blockIndex(localX: Int, localZ: Int, blockY: Int, minBlockY: Int, chunkWidth: Int, chunkDepth: Int): Int {
     val localY = blockY - minBlockY

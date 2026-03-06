@@ -5,7 +5,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
-import java.util.BitSet
+import java.util.*
 
 interface SampledChunk{
   val ctx: GenerateContext
