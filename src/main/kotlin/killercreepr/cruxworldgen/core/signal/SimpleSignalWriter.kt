@@ -6,8 +6,12 @@ import killercreepr.cruxworldgen.api.signal.SignalLayer
 
 class SimpleSignalWriter(
   override val data : MutableMap<SignalKey<*>, SignalLayer<*>>,
-  override val columData : MutableMap<SignalKey<*>, SignalLayer<*>>
+  override val columData : MutableMap<SignalKey<*>, SignalLayer<*>> = TODO_REMOVE
 ) : SimpleSignalView(data, columData), SignalHandler {
+  companion object{
+    val TODO_REMOVE = mutableMapOf<SignalKey<*>, SignalLayer<*>>()
+  }
+
   override fun <T> max(x : Int, y : Int, z : Int, key: SignalKey<T>, value: T) {
     val existing = getIfPresent(x,y,z, key)
     if(existing == null){

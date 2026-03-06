@@ -125,7 +125,7 @@ class BukkitGenerationChunkGenerator(
     random: Random,
     chunkX: Int,
     chunkZ: Int,
-    signalWriter: () -> SignalHandler = { SimpleSignalWriter(mutableMapOf(),mutableMapOf()) }
+    signalWriter: () -> SignalHandler = { SimpleSignalWriter(mutableMapOf()) }
   ): CachedChunk {
     val key = chunkKey(chunkX, chunkZ)
     return cache.get(key) {
