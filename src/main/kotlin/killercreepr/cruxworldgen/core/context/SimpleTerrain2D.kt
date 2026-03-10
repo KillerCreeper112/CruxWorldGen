@@ -5,6 +5,9 @@ import killercreepr.cruxworldgen.api.context.terrain.Terrain2D
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.signal.SignalHandler
+import killercreepr.cruxworldgen.api.util.MathUtil
+import killercreepr.cruxworldgen.api.util.MathUtil.localXFromWorld
+import killercreepr.cruxworldgen.api.util.MathUtil.localZFromWorld
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 
 class SimpleTerrain2D(
@@ -30,12 +33,13 @@ class SimpleTerrain2D(
     return findSurfaceY(ctx, biomeBlend, worldX, worldZ)
   }
 
+  @Deprecated("BAD, not accurate")
   fun findSurfaceY(ctx: GenerateContext, biomeBlend: BiomeBlendSample, worldX: Int, worldZ: Int): Int {
     val minY = ctx.chunkContext.minHeight
     val maxY = ctx.chunkContext.maxHeight - 1
 
     for (y in maxY downTo minY) {
-      val terrainMacro = generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
+      val terrainMacro = 0.0//todo generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
 
       val detail = ctx.noise.get(BaseNoiseKeys.TerrainDetail).noise3D(worldX,  y, worldZ) * 3.0
       val terrainFinal = terrainMacro + detail
@@ -66,7 +70,11 @@ class SimpleTerrain2D(
 
 
   override fun surfaceY(worldX: Int, worldZ: Int): Int = if (isInBounds(worldX, worldZ)) {
-    surfaceY[idxUnsafe(worldX, worldZ)]
+    surfaceY[MathUtil.columnIndex(
+      localXFromWorld(worldX, ctx.chunkContext.width),
+      localZFromWorld(worldZ, ctx.chunkContext.depth),
+      ctx.chunkContext.width
+    )]
   } else {
     calculateSurfaceY(worldX, worldZ)//todo cache outside calls
   }

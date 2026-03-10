@@ -11,7 +11,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 class SpaghettiCaves(
-  val strength: Double = 1.5,
+  val strength: Double = 1.7,
   val warpXZ: Double = 25.0,
   val warpY: Double = 15.0,
 

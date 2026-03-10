@@ -11,8 +11,8 @@ import killercreepr.cruxworldgen.test.biome.CharredWastes
 class TestZone : Zone{
   override val biomes: BiomeRegistry = SimpleBiomeRegistry(
     biomes = listOf(
-      AbyssStart()
-      //CharredWastes(),
+      AbyssStart(),
+      CharredWastes(),
       //BasaltSpires(),
       //ToxicFogBasins(),
       /*AmplifiedHighlands(

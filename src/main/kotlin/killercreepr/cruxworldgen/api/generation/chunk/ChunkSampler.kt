@@ -12,6 +12,8 @@ interface ChunkSampler{
   val noise: NoiseBank
   val worldDetails: WorldDetails
   val biomeCellSize: Int
+  val mediumCellSize: Int
+    get() = 2
   fun sample(worldInfo: WorldInfo, random: Random, chunkX: Int, chunkZ: Int,
              signalWriter: SignalWriter): SampledChunk
 }

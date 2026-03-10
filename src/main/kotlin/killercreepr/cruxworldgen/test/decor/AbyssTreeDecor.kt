@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.test.decor
 
+import killercreepr.crux.core.Crux
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -50,6 +51,7 @@ class AbyssTreeDecor(
 
     val queries = region.terrainQueries
     val surfaceY = terrain2D.surfaceY(worldX, worldZ)
+
     val baseY = surfaceY + 1
     if(!region.isInRegion(worldX, baseY, worldZ)) return null
     if(!queries.isSolid(worldX, surfaceY, worldZ)) return null

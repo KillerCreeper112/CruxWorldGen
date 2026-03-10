@@ -13,8 +13,8 @@ class Standard3DCaves(
   val warpXZ: Double = 25.0,
   val warpY: Double = 15.0,
 
-  val threshold: Double = 0.68,
-  val ramp: Double = 0.15,
+  val threshold: Double = 0.64,
+  val ramp: Double = 0.18,
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
@@ -90,9 +90,9 @@ class Standard3DCaves(
     val wz = z + ctx.noise.get(noise.WarpZ3D).noise3D(x, y, z) * warpXZ
     val carveN = ctx.noise.get(noise.Carve3D).noise3D(wx, wy, wz).remap01()
 
-
     val carve = Curve.smoothstep(threshold, threshold + ramp, carveN)
 
-    return solidDensity * carve
+    val flatCarve = 0.8
+    return solidDensity * carve + flatCarve * carve
   }
 }

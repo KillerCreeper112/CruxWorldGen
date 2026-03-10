@@ -6,6 +6,12 @@ object MathUtil {
     return (localY * chunkDepth + localZ) * chunkWidth + localX
   }
 
+  fun localXFromWorld(worldX: Int, chunkWidth: Int): Int =
+    Math.floorMod(worldX, chunkWidth)
+
+  fun localZFromWorld(worldZ: Int, chunkDepth: Int): Int =
+    Math.floorMod(worldZ, chunkDepth)
+
   fun columnIndex(localX: Int, localZ: Int, chunkWidth: Int): Int = localZ * chunkWidth + localX
 
   fun cellIndex(cellX: Int, cellZ: Int, cellY: Int, biomeCellCountX: Int, biomeCellCountZ: Int): Int {

@@ -6,6 +6,7 @@ import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import java.util.*
+import kotlin.arrayOfNulls
 
 interface SampledChunk{
   val ctx: GenerateContext
@@ -14,6 +15,11 @@ interface SampledChunk{
   val terrainSnapshot: TerrainSnapshot
   val surfaceBlendByCornerColumn: Array<BiomeBlendSample?>
   val volumetricBlendByCorner: Array<VolBiomeBlendSample?>
+
+  val densityByBlock: DoubleArray
+  val surfaceYByBlockColumn: IntArray
+  val primaryBiomeByBlock: Array<Biome?>
+  val solidNoCavesByBlock: BitSet
 
 
   /*val density: DoubleArray

@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.api.generation
 
-import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
@@ -12,17 +11,8 @@ import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
 
 interface GenerationPipeline{
   val zones : ZoneRegistry
-  fun resolveMainBiome(
-    ctx: GenerateContext,
-    signalWriter: SignalWriter,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    surfaceY: Int,
-    surfaceBlend: BiomeBlendSample,
-    // optional: pass a cached blend if you already sampled it
-    cachedVolBlend: VolBiomeBlendSample? = null
-  ): Biome
+  val volumetricBiomes: VolumetricBiomeRegistry
+
   fun blendedBiomeDensityCaves(
     generateCtx: GenerateContext,
     biomeBlend: BiomeBlendSample,
@@ -33,44 +23,6 @@ interface GenerationPipeline{
     caveCtx : CaveContext
   ): DensityStack
 
-  fun resolveMainBiome3D(
-    ctx: GenerateContext,
-    signalWriter: SignalWriter,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    surfaceY: Int,
-    surfaceBlend: BiomeBlendSample
-  ): Pair<Biome, VolBiomeBlendSample>
-  fun terrainDensityNoCaves(
-    ctx: GenerateContext,
-    biomeBlend: BiomeBlendSample,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    signalWriter : SignalWriter
-  ): Double
-  /*fun blendedBiomeCarve(
-    ctx: GenerateContext,
-    biomeBlend: BiomeBlendSample,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    surfaceY: Int,
-    terrainDensity: Double,
-    signalWriter : SignalWriter
-  ): Double
-  fun blendedBiomeAdd(
-    ctx: GenerateContext,
-    biomeBlend: BiomeBlendSample,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    surfaceY: Int,
-    terrainDensity: Double,
-    signalWriter : SignalWriter
-  ): Double*/
-
   fun blendedBiomeDensity(
     generateCtx: GenerateContext,
     biomeBlend: BiomeBlendSample,
@@ -80,7 +32,15 @@ interface GenerationPipeline{
     signalWriter : SignalWriter
   ): DensityStack
 
-  val volumetricBiomes: VolumetricBiomeRegistry
+  fun blendedFineBiomeDensity(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    env: VolumeEnv,
+    signalWriter : SignalWriter
+  ): DensityStack
 
   fun blendedVolumetricDensity(
     ctx: GenerateContext,
@@ -89,27 +49,4 @@ interface GenerationPipeline{
     env: VolumeEnv,
     signals: SignalWriter
   ): DensityStack
-
-  /*fun blendedVolumetricCarve(
-    ctx: GenerateContext,
-    volBlend: VolBiomeBlendSample,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    surfaceY: Int,
-    terrainDensity: Double,
-    env: VolumeEnv,
-    signalWriter : SignalWriter
-  ): Double
-  fun blendedVolumetricAdd(
-    ctx: GenerateContext,
-    volBlend: VolBiomeBlendSample,
-    worldX: Int,
-    y: Int,
-    worldZ: Int,
-    surfaceY: Int,
-    terrainDensity: Double,
-    env: VolumeEnv,
-    signalWriter : SignalWriter
-  ): Double*/
 }

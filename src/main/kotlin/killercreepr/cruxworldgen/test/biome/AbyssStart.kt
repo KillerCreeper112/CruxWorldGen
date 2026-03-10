@@ -59,18 +59,17 @@ class AbyssStart(
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(ctx: MaterialContext): BlockData {
-      /*if (ctx.depthFromSeaFloor >= 0) {
+      if (ctx.depthFromSeaFloor >= 0) {
         if (ctx.depthFromSeaFloor < 3) {
           return BukkitBlockResolver.INSTANCE.resolve(Material.RED_SAND)
         }
-      }*/
-      //if(ctx.isUnderwater) return BukkitBlockResolver.INSTANCE.resolve(Material.WATER)
+      }
       if (!ctx.isSolid) return BlockData.NONE
       val x = ctx.worldX
       val y = ctx.y
       val z = ctx.worldZ
 
-      val depth = ctx.depthBelowSurface
+      val depth = ctx.surfaceDepth
       if (depth == 0) {
         return BukkitBlockResolver.INSTANCE.resolve(Material.MYCELIUM)
       }

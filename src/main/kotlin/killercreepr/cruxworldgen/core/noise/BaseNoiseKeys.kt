@@ -15,6 +15,7 @@ object BaseNoiseKeys {
   object Biome3D : NoiseKey{ override val id = "biome3D" }
   object TerrainHeight : NoiseKey{ override val id = "terrain.height" }
   object TerrainDetail : NoiseKey{ override val id = "terrain.detail" }
+  object CaveDetail : NoiseKey{ override val id = "cave.detail" }
   object AquiferLevel2D : NoiseKey { override val id = "fluid.aquifer.level2D" }
   object AquiferFill3D  : NoiseKey { override val id = "fluid.aquifer.fill3D" }
   object AquiferLava3D  : NoiseKey { override val id = "fluid.aquifer.lava3D" }
@@ -91,6 +92,15 @@ object BaseNoiseModule : NoiseModule{
     bank.register(BaseNoiseKeys.TerrainDetail) { seed ->
       NoiseField.noiseField(seed){
         frequency(0.02)
+          .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+          .fractalType(CruxNoise.FractalType.FBm)
+          .fractalOctaves(3)
+      }
+    }
+
+    bank.register(BaseNoiseKeys.CaveDetail) { seed ->
+      NoiseField.noiseField(seed){
+        frequency(0.024)
           .noiseType(CruxNoise.NoiseType.OpenSimplex2)
           .fractalType(CruxNoise.FractalType.FBm)
           .fractalOctaves(3)
