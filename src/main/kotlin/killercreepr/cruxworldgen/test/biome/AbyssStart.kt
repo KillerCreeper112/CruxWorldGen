@@ -25,6 +25,8 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.core.feature.PlacedFeature
 import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
+import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
+import killercreepr.cruxworldgen.standard.cave.Standard3DCaves
 import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
 import org.bukkit.Material
 import kotlin.math.abs
@@ -38,6 +40,8 @@ import kotlin.math.pow
 class AbyssStart(
   override val caves: CaveShape = CaveProfile(
     listOf(
+      SpaghettiCaves(),
+      Standard3DCaves(),
       //CheeseCaves(threshold01 = 0.5),
 
       /*CheeseCaves(),
@@ -55,11 +59,11 @@ class AbyssStart(
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(ctx: MaterialContext): BlockData {
-      if (ctx.depthFromSeaFloor >= 0) {
+      /*if (ctx.depthFromSeaFloor >= 0) {
         if (ctx.depthFromSeaFloor < 3) {
           return BukkitBlockResolver.INSTANCE.resolve(Material.RED_SAND)
         }
-      }
+      }*/
       //if(ctx.isUnderwater) return BukkitBlockResolver.INSTANCE.resolve(Material.WATER)
       if (!ctx.isSolid) return BlockData.NONE
       val x = ctx.worldX
@@ -325,7 +329,6 @@ class AbyssStart(
         edge: BiomeEdgeContext,
         signalWriter: SignalWriter
       ): DensityStack {
-
         val sea = ctx.chunkContext.seaLevel.toDouble()
         val baseSurface = sea + baseYAboveSea
 

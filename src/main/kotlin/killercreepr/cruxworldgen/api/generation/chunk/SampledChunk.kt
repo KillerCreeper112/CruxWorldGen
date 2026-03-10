@@ -9,11 +9,20 @@ import java.util.*
 
 interface SampledChunk{
   val ctx: GenerateContext
-  val density: DoubleArray
+  val densityTerrainMacroByCorner: DoubleArray
+  val densityCavesMacroByCorner: DoubleArray
+  val terrainSnapshot: TerrainSnapshot
+  val surfaceBlendByCornerColumn: Array<BiomeBlendSample?>
+  val volumetricBlendByCorner: Array<VolBiomeBlendSample?>
+
+
+  /*val density: DoubleArray
   val surfaceY: IntArray
   val surfaceBlend: Array<BiomeBlendSample?>
   val dominantBiomeByBlock: Array<Biome?>
   val volBiomeCorners: Array<VolBiomeBlendSample?>
   val terrainSnapshot: TerrainSnapshot
   val solidNoCavesByBlock: BitSet
+  val terrainMacroByCell: DoubleArray
+  val caveMacroByCell: DoubleArray*/
 }

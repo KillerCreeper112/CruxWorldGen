@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.api.generation
 
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
+import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.core.generation.SimpleBiomeBlendSample
 
 interface BiomeBlendSample {

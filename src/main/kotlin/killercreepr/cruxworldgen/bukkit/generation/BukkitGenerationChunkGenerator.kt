@@ -5,6 +5,8 @@ import com.google.common.cache.CacheBuilder
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.Terrain3D
+import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
+import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
@@ -14,7 +16,14 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.signal.SignalView
 import killercreepr.cruxworldgen.api.structure.StructurePipeline
+import killercreepr.cruxworldgen.api.util.Curve
+import killercreepr.cruxworldgen.api.util.MathUtil
+import killercreepr.cruxworldgen.api.util.MathUtil.blockIndex
+import killercreepr.cruxworldgen.api.util.MathUtil.columnIndex
+import killercreepr.cruxworldgen.api.util.MathUtil.cornerColumnIndex
+import killercreepr.cruxworldgen.api.util.MathUtil.cornerIndex
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.bukkit.context.BukkitChunkContext
@@ -26,9 +35,13 @@ import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
 import killercreepr.cruxworldgen.core.feature.FeaturePipeline
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
+import net.minecraft.core.SectionPos.x
+import net.minecraft.core.SectionPos.y
+import net.minecraft.world.level.levelgen.placement.BiomeFilter.biome
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Biome
+import org.bukkit.craftbukkit.legacy.MaterialRerouting.setBlock
 import org.bukkit.generator.*
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -46,7 +59,6 @@ class BukkitGenerationChunkGenerator(
   val noise: NoiseBank,
   val worldDetails: WorldDetails,
   val features: FeaturePipeline,
-  val volumetricBiomeCellSize: Int = 8,
   val chunkSampler: ChunkSampler
 ) : ChunkGenerator() {
   val bukkitBiomes: List<org.bukkit.block.Biome>
@@ -63,6 +75,10 @@ class BukkitGenerationChunkGenerator(
     bukkitBiomes = buildingBiomes
   }
 
+  fun setBlock(chunkData: ChunkData, x: Int, y: Int, z: Int, block: BlockData) {
+    (block as? BukkitBlockData) ?: error("$block is not a BukkitBlockData")
+    block.setAt(chunkData, x, y, z)
+  }
   fun findSurfaceY(
     ctx: GenerateContext,
     biomeBlend: BiomeBlendSample,
@@ -149,7 +165,14 @@ class BukkitGenerationChunkGenerator(
     val signalWriter = cachedChunk.signalWriter
     cachedChunk.signalWriter = SignalHandler.DUMMY
 
-    writeSampledTerrainToChunk(
+    writeSampledTerrain(
+      chunkData,
+      chunkX, chunkZ,
+      sampledChunk, signalWriter,
+      sampledChunk.terrainSnapshot.terrain3D
+    )
+
+    /*writeSampledTerrainToChunk(
       chunkData,
       chunkX, chunkZ,
       sampledChunk, signalWriter,
@@ -161,7 +184,315 @@ class BukkitGenerationChunkGenerator(
       sampledChunk,
       chunkX,
       chunkZ
-    )
+    )*/
+  }
+
+  fun writeSampledTerrain(
+    chunkData: ChunkData,
+    chunkX: Int,
+    chunkZ: Int,
+    sampledChunk: SampledChunk,
+    signalWriter: SignalView,
+    terrain3D: Terrain3D
+  ){
+    val ctx = sampledChunk.ctx
+    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
+    val chunkWidth = worldDetails.chunkWidth
+    val chunkDepth = worldDetails.chunkDepth
+    val minY = ctx.chunkContext.minHeight
+    val maxY = ctx.chunkContext.maxHeight - 1
+    val height = maxY - minY + 1
+
+    val biomeCellSize = chunkSampler.biomeCellSize
+    val biomeCellCountX = chunkWidth / biomeCellSize
+    val biomeCellCountZ = chunkDepth / biomeCellSize
+    val biomeCellCountY = (height + biomeCellSize - 1) / biomeCellSize
+
+    val signalWriter = SimpleSignalWriter(mutableMapOf())
+
+    for (localX in 0 until chunkWidth) {
+      for (localZ in 0 until chunkDepth) {
+        val worldX = chunkX * chunkWidth + localX
+        val worldZ = chunkZ * chunkDepth + localZ
+
+        val columnIndex = columnIndex(localX, localZ, chunkWidth)
+        //val surfaceY = sampledChunk.surfaceY[columnIndex]
+
+        val airAbove = IntArray(height)
+        val airBelow = IntArray(height)
+
+        val caveAirAbove = IntArray(height)
+        val caveAirBelow = IntArray(height)
+
+        /*computeAirRuns(
+          sampledChunk.density, localX, localZ, minY, maxY, chunkWidth, chunkDepth, airAbove, airBelow,
+          caveAirAbove, caveAirBelow, terrain3D
+        )*/
+
+        val seaLevel = ctx.chunkContext.seaLevel
+        //val columnUnderwater = surfaceY < seaLevel
+
+        var surfaceDepth = 0
+        var airRun = 0
+
+        val cellX = (localX / biomeCellSize).coerceIn(0, biomeCellCountX - 1)
+        val cellZ = (localZ / biomeCellSize).coerceIn(0, biomeCellCountZ - 1)
+
+        val localCellOriginX = cellX * biomeCellSize
+        val localCellOriginZ = cellZ * biomeCellSize
+        for (blockY in maxY downTo minY) {
+          val cellY = ((blockY - minY) / biomeCellSize).coerceIn(0, biomeCellCountY - 1)
+
+          val blockIndex = blockIndex(localX, localZ, blockY, minY, chunkWidth, chunkDepth)
+          val cornerIndex = cornerIndex(cellX, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
+          val cornerColumnIndex = cornerColumnIndex(cellX, cellZ, biomeCellCountX)
+
+          val c000 = cornerIndex
+          val c100 = cornerIndex(cellX + 1, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
+          val c010 = cornerIndex(cellX, cellZ + 1, cellY, biomeCellCountX, biomeCellCountZ)
+          val c110 = cornerIndex(cellX + 1, cellZ + 1, cellY, biomeCellCountX, biomeCellCountZ)
+
+          val c001 = cornerIndex(cellX, cellZ, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val c101 = cornerIndex(cellX + 1, cellZ, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val c011 = cornerIndex(cellX, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val c111 = cornerIndex(cellX + 1, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val localCellOriginY = minY + cellY * biomeCellSize
+
+          val tx = (((localX - localCellOriginX).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+          val tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+          val ty = (((blockY - localCellOriginY).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+
+          val terrainMacro = Curve.trilerp(
+            sampledChunk.densityTerrainMacroByCorner[c000],
+            sampledChunk.densityTerrainMacroByCorner[c100],
+            sampledChunk.densityTerrainMacroByCorner[c010],
+            sampledChunk.densityTerrainMacroByCorner[c110],
+            sampledChunk.densityTerrainMacroByCorner[c001],
+            sampledChunk.densityTerrainMacroByCorner[c101],
+            sampledChunk.densityTerrainMacroByCorner[c011],
+            sampledChunk.densityTerrainMacroByCorner[c111],
+            tx, ty, tz
+          )
+
+          val cavesMacro = Curve.trilerp(
+            sampledChunk.densityCavesMacroByCorner[c000],
+            sampledChunk.densityCavesMacroByCorner[c100],
+            sampledChunk.densityCavesMacroByCorner[c010],
+            sampledChunk.densityCavesMacroByCorner[c110],
+            sampledChunk.densityCavesMacroByCorner[c001],
+            sampledChunk.densityCavesMacroByCorner[c101],
+            sampledChunk.densityCavesMacroByCorner[c011],
+            sampledChunk.densityCavesMacroByCorner[c111],
+            tx, ty, tz
+          )
+          val detail = terrainDetailNoise.noise3D(worldX, blockY, worldZ) * 3.0
+
+          val terrainFinal = terrainMacro + detail + cavesMacro
+
+          val volBlend = VolBiomeBlendSample.interpolateVolBlend(
+            sampledChunk.volumetricBlendByCorner[c000]!!,
+            sampledChunk.volumetricBlendByCorner[c100]!!,
+            sampledChunk.volumetricBlendByCorner[c010]!!,
+            sampledChunk.volumetricBlendByCorner[c110]!!,
+            sampledChunk.volumetricBlendByCorner[c001]!!,
+            sampledChunk.volumetricBlendByCorner[c101]!!,
+            sampledChunk.volumetricBlendByCorner[c011]!!,
+            sampledChunk.volumetricBlendByCorner[c111]!!,
+            tx, ty, tz
+          )
+          val volumeEnv = VolumeEnv(
+            0, 0, 0, 0.0, 0
+          )
+          val volStack = generation.blendedVolumetricDensity(
+            ctx, volBlend, worldX, blockY, worldZ, volumeEnv,
+            signalWriter
+          )
+          val volumetricContribution = volStack.finalDensity()
+          val density = terrainFinal + volumetricContribution
+
+          val materialBiome =
+            if (!volBlend.isEmpty() && volumetricContribution > 0.01) volBlend.dominant()
+            else sampledChunk.surfaceBlendByCornerColumn[cornerColumnIndex]!!.primaryBiome()
+
+
+          val isSolid = density > 0.0
+          val materialContext = BukkitMaterialContext(
+            ctx,
+            worldX = chunkX * chunkWidth + localX,
+            y = blockY,
+            worldZ = chunkZ * chunkDepth + localZ,
+            isSolid = isSolid,
+            surfaceY = 0,//surfaceY,
+            depthBelowSurface = 0,//depthBelowSurface,
+            airBlocksAbove = 0,//airAbove[iy],
+            caveAirBlocksBelow = 0,//airBelow[iy],
+            isUnderwater = false,//isUnderwater,
+            depthFromSeaFloor = 0,//depthFromSeaFloor,
+            signalView = signalWriter,
+            caveAirBlocksAbove = 0,//caveAirAbove[iy],
+            solidWithoutCaves = sampledChunk.densityTerrainMacroByCorner[cornerIndex] > 0.0,//sampledChunk.solidNoCavesByBlock[blockIndex],
+            surfaceDepth = surfaceDepth,
+            airRun = 0,//airAboveHere,
+          )
+
+          val block = materialBiome.materialProvider.chooseMaterial(materialContext)
+          if (block != BlockData.NONE) {
+            setBlock(chunkData, localX, blockY, localZ, block)
+          }
+        }
+      }
+    }
+  }
+
+  /*fun writeSampledTerrain(
+    chunkData: ChunkData,
+    chunkX: Int,
+    chunkZ: Int,
+    sampledChunk: SampledChunk,
+    signalWriter: SignalView,
+    terrain3D: Terrain3D
+  ) {
+    val ctx = sampledChunk.ctx
+    val chunkWidth = worldDetails.chunkWidth
+    val chunkDepth = worldDetails.chunkDepth
+    val minY = ctx.chunkContext.minHeight
+    val maxY = ctx.chunkContext.maxHeight - 1
+    val height = maxY - minY + 1
+
+    val biomeCellSize = chunkSampler.biomeCellSize
+    val biomeCellCountX = chunkWidth / biomeCellSize
+    val biomeCellCountZ = chunkDepth / biomeCellSize
+    val biomeCellCountY = (height + biomeCellSize - 1) / biomeCellSize
+
+    for (localX in 0 until chunkWidth) {
+      for (localZ in 0 until chunkDepth) {
+        val columnIndex = columnIndex(localX, localZ, chunkWidth)
+        val surfaceY = sampledChunk.surfaceY[columnIndex]
+
+        val airAbove = IntArray(height)
+        val airBelow = IntArray(height)
+
+        val caveAirAbove = IntArray(height)
+        val caveAirBelow = IntArray(height)
+
+        computeAirRuns(sampledChunk.density, localX, localZ, minY, maxY, chunkWidth, chunkDepth, airAbove, airBelow,
+          caveAirAbove, caveAirBelow, terrain3D)
+
+        val seaLevel = ctx.chunkContext.seaLevel
+        val columnUnderwater = surfaceY < seaLevel
+
+        var surfaceDepth = 0
+        var airRun = 0
+
+        val cellX = (localX / biomeCellSize).coerceIn(0, biomeCellCountX - 1)
+        val cellZ = (localZ / biomeCellSize).coerceIn(0, biomeCellCountZ - 1)
+        val localCellOriginX = cellX * biomeCellSize
+        val localCellOriginZ = cellZ * biomeCellSize
+        for (blockY in maxY downTo minY) {
+          val cellY = ((blockY - minY) / biomeCellSize).coerceIn(0, biomeCellCountY - 1)
+
+          val blockIndex = blockIndex(localX, localZ, blockY, minY, chunkWidth, chunkDepth)
+          val cornerIndex = cornerIndex(cellX, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
+
+          val c000 = cornerIndex(cellX,     cellZ,     cellY,     biomeCellCountX, biomeCellCountZ)
+          val c100 = cornerIndex(cellX + 1, cellZ,     cellY,     biomeCellCountX, biomeCellCountZ)
+          val c010 = cornerIndex(cellX,     cellZ + 1, cellY,     biomeCellCountX, biomeCellCountZ)
+          val c110 = cornerIndex(cellX + 1, cellZ + 1, cellY,     biomeCellCountX, biomeCellCountZ)
+
+          val c001 = cornerIndex(cellX,     cellZ,     cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val c101 = cornerIndex(cellX + 1, cellZ,     cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val c011 = cornerIndex(cellX,     cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val c111 = cornerIndex(cellX + 1, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          val localCellOriginY = minY + cellY * biomeCellSize
+
+          val tx = (((localX - localCellOriginX).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+          val tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+          val ty = (((blockY - localCellOriginY).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+
+          val density = Curve.trilerp(
+            sampledChunk.terrainMacroByCell[c000],
+            sampledChunk.terrainMacroByCell[c100],
+            sampledChunk.terrainMacroByCell[c010],
+            sampledChunk.terrainMacroByCell[c110],
+            sampledChunk.terrainMacroByCell[c001],
+            sampledChunk.terrainMacroByCell[c101],
+            sampledChunk.terrainMacroByCell[c011],
+            sampledChunk.terrainMacroByCell[c111],
+            tx, ty, tz
+          ) +
+            Curve.trilerp(
+              sampledChunk.caveMacroByCell[c000],
+              sampledChunk.caveMacroByCell[c100],
+              sampledChunk.caveMacroByCell[c010],
+              sampledChunk.caveMacroByCell[c110],
+              sampledChunk.caveMacroByCell[c001],
+              sampledChunk.caveMacroByCell[c101],
+              sampledChunk.caveMacroByCell[c011],
+              sampledChunk.caveMacroByCell[c111],
+              tx, ty, tz
+            )
+
+          //val density = sampledChunk.density[blockIndex]
+          val isSolid = density > 0.0
+
+          val airAboveHere = airRun
+
+          val solidWithoutCaves = sampledChunk.solidNoCavesByBlock[blockIndex]
+          if (solidWithoutCaves) {
+            surfaceDepth++
+            airRun = 0
+          } else {
+            airRun++
+            surfaceDepth = -1
+          }
+
+          if(!isSolid) continue //todo this is good for performance but may need to change to provide more control for biomes- guess we see
+
+          if(true){
+
+            setBlock(chunkData, localX, blockY, localZ, BukkitBlockAdapter.resolver().resolve(Material.STONE))
+            continue
+          }
+
+          val biome = sampledChunk.dominantBiomeByBlock[blockIndex] ?: continue
+
+          val iy = blockY - minY
+          val depthBelowSurface = surfaceY - blockY
+
+          val isUnderwater =
+            columnUnderwater &&
+              blockY <= seaLevel &&
+              airAbove[iy] >= 8
+
+          val depthFromSeaFloor =
+            if (columnUnderwater) surfaceY - blockY else -1
+
+          val materialContext = BukkitMaterialContext(
+            ctx,
+            worldX = chunkX * chunkWidth + localX,
+            y = blockY,
+            worldZ = chunkZ * chunkDepth + localZ,
+            isSolid = isSolid,
+            surfaceY = surfaceY,
+            depthBelowSurface = depthBelowSurface,
+            airBlocksAbove = airAbove[iy],
+            caveAirBlocksBelow = airBelow[iy],
+            isUnderwater = isUnderwater,
+            depthFromSeaFloor = depthFromSeaFloor,
+            signalView = signalWriter,
+            caveAirBlocksAbove = caveAirAbove[iy],
+            solidWithoutCaves = sampledChunk.solidNoCavesByBlock[blockIndex],
+            surfaceDepth = surfaceDepth,
+            airRun = airAboveHere,
+          )
+
+          val block = biome.materialProvider.chooseMaterial(materialContext)
+          if (block != BlockData.NONE) {
+            setBlock(chunkData, localX, blockY, localZ, block)
+          }
+        }
+      }
+    }
   }
 
   fun surfaceYAt(worldInfo: WorldInfo, worldX: Int, worldZ: Int): Int {
@@ -190,9 +521,9 @@ class BukkitGenerationChunkGenerator(
     val zone = generation.zones.sampleZone(ctx, worldX, worldZ)
     val blend = zone.biomes.sampleBiomeBlend(ctx, worldX, worldZ)
     return findSurfaceY(ctx, blend, worldX, worldZ)
-  }
+  }*/
 
-  fun fillSampledFluids(
+  /*fun fillSampledFluids(
     worldInfo: WorldInfo,
     chunkData: ChunkData,
     sampledChunk: SampledChunk,
@@ -473,9 +804,9 @@ class BukkitGenerationChunkGenerator(
         }
       }
     }
-  }
+  }*/
 
-   override fun getDefaultBiomeProvider(worldInfo: WorldInfo): BiomeProvider {
+   /*override fun getDefaultBiomeProvider(worldInfo: WorldInfo): BiomeProvider {
      return object : BiomeProvider() {
        override fun getBiome(
          worldInfo: WorldInfo,
@@ -483,6 +814,7 @@ class BukkitGenerationChunkGenerator(
          y: Int,
          z: Int
        ): org.bukkit.block.Biome {
+         if(true) return Biome.PLAINS//todo
          val chunkX = chunkXFromWorld(x)
          val chunkZ = chunkZFromWorld(z)
 
@@ -502,7 +834,7 @@ class BukkitGenerationChunkGenerator(
 
        override fun getBiomes(worldInfo: WorldInfo): List<org.bukkit.block.Biome?> = bukkitBiomes
      }
-   }
+   }*/
 
   fun blockIndex(localX: Int, localZ: Int, blockY: Int, minBlockY: Int, chunkWidth: Int, chunkDepth: Int): Int {
     val localY = blockY - minBlockY
@@ -540,7 +872,7 @@ class BukkitGenerationChunkGenerator(
       return findSurfaceY(ctx, biomeBlend, x, z)
     }*/
 
-  fun localXFromWorld(worldX: Int, chunkWidth: Int): Int =
+  /*fun localXFromWorld(worldX: Int, chunkWidth: Int): Int =
     Math.floorMod(worldX, chunkWidth)
 
   fun localZFromWorld(worldZ: Int, chunkDepth: Int): Int =
@@ -555,6 +887,7 @@ class BukkitGenerationChunkGenerator(
         chunkZ: Int,
         limitedRegion: LimitedRegion
       ) {
+        if(true) return//todo
         val chunkWidth = worldDetails.chunkWidth
         val chunkDepth = worldDetails.chunkDepth
         val cachedChunk = getOrCreateCache(worldInfo, random, chunkX, chunkZ)
@@ -840,5 +1173,5 @@ class BukkitGenerationChunkGenerator(
         }
       }
     }
-  }
+  }*/
 }

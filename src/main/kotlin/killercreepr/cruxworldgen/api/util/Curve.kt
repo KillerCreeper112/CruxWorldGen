@@ -46,7 +46,6 @@ object Curve {
     val x = t.coerceIn(0.0, 1.0)
     return x * x * x * (x * (x * 6 - 15) + 10)
   }
-  fun lerp(a: Double, b: Double, t: Double): Double = a + (b - a) * t
   fun invLerp(a: Double, b: Double, v: Double): Double =
     if (a == b) 0.0 else ((v - a) / (b - a)).coerceIn(0.0, 1.0)
 
@@ -61,8 +60,24 @@ object Curve {
     val s = clamped * clamped * (3.0 - 2.0 * clamped)
     return 1.0 - s
   }
-
+  fun lerp(a: Double, b: Double, t: Double): Double = a + (b - a) * t
   fun trilerp(
+    v000: Double, v100: Double, v010: Double, v110: Double,
+    v001: Double, v101: Double, v011: Double, v111: Double,
+    tx: Double, ty: Double, tz: Double
+  ): Double {
+    val x00 = lerp(v000, v100, tx) // y0 z0
+    val x10 = lerp(v010, v110, tx) // y0 z1
+    val x01 = lerp(v001, v101, tx) // y1 z0
+    val x11 = lerp(v011, v111, tx) // y1 z1
+
+    val z0 = lerp(x00, x10, tz) // y0
+    val z1 = lerp(x01, x11, tz) // y1
+
+    return lerp(z0, z1, ty)
+  }
+
+  /*fun trilerp(
     v000: Double, v100: Double, v010: Double, v110: Double,
     v001: Double, v101: Double, v011: Double, v111: Double,
     tx: Double, ty: Double, tz: Double
@@ -76,5 +91,5 @@ object Curve {
     val y1 = lerp(x01, x11, tz)
 
     return lerp(y0, y1, ty)
-  }
+  }*/
 }

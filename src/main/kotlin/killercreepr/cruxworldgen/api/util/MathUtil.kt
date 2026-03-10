@@ -6,14 +6,18 @@ object MathUtil {
     return (localY * chunkDepth + localZ) * chunkWidth + localX
   }
 
-  fun cornerIndex(cx: Int, cz: Int, cy: Int, cellsX: Int, cellsZ: Int): Int =
-    (cy * (cellsZ + 1) + cz) * (cellsX + 1) + cx
-
   fun columnIndex(localX: Int, localZ: Int, chunkWidth: Int): Int = localZ * chunkWidth + localX
 
   fun cellIndex(cellX: Int, cellZ: Int, cellY: Int, biomeCellCountX: Int, biomeCellCountZ: Int): Int {
     return (cellY * biomeCellCountZ + cellZ) * biomeCellCountX + cellX
   }
+
+  fun cornerColumnIndex(cornerX: Int, cornerZ: Int, cellCountX: Int): Int {
+    return cornerZ * (cellCountX + 1) + cornerX
+  }
+
+  fun cornerIndex(cx: Int, cz: Int, cy: Int, cellsX: Int, cellsZ: Int): Int =
+    (cy * (cellsZ + 1) + cz) * (cellsX + 1) + cx
   fun cellYFromWorld(worldY : Int, cellSize : Int, minY : Int) = Math.floorDiv(worldY - minY, cellSize)
 
   /*fun rotateXZ(x: Double, z: Double, angleDegrees: Double): Pair<Double, Double> {

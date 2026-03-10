@@ -4,13 +4,14 @@ import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.biome.BiomeRegistry
 import killercreepr.cruxworldgen.api.zone.Zone
 import killercreepr.cruxworldgen.core.biome.SimpleBiomeRegistry
+import killercreepr.cruxworldgen.test.biome.AbyssStart
 import killercreepr.cruxworldgen.test.biome.BasaltSpires
 import killercreepr.cruxworldgen.test.biome.CharredWastes
 
 class TestZone : Zone{
   override val biomes: BiomeRegistry = SimpleBiomeRegistry(
     biomes = listOf(
-      CharredWastes()
+      AbyssStart()
       //CharredWastes(),
       //BasaltSpires(),
       //ToxicFogBasins(),
