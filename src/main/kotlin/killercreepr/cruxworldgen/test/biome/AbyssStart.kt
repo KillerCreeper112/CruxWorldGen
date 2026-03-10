@@ -27,6 +27,7 @@ import killercreepr.cruxworldgen.core.feature.ironHigh
 import killercreepr.cruxworldgen.core.feature.ironLow
 import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.standard.cave.Standard3DCaves
+import killercreepr.cruxworldgen.standard.cave.WormCaves
 import killercreepr.cruxworldgen.test.decor.AbyssTreeDecor
 import org.bukkit.Material
 import kotlin.math.abs
@@ -40,8 +41,10 @@ import kotlin.math.pow
 class AbyssStart(
   override val caves: CaveShape = CaveProfile(
     listOf(
+      WormCaves(),
       SpaghettiCaves(),
       Standard3DCaves(),
+
       //CheeseCaves(threshold01 = 0.5),
 
       /*CheeseCaves(),
