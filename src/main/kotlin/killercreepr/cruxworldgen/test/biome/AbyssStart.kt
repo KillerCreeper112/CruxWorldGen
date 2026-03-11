@@ -39,11 +39,11 @@ import kotlin.math.pow
  * Add your cave/ravine carvers separately for true AMPLIFIED mega-arches.
  */
 class AbyssStart(
-  override val caves: CaveShape = CaveProfile(
+  override val caves: CaveShape<*, *> = CaveProfile(
     listOf(
       WormCaves(),
       SpaghettiCaves(),
-      Standard3DCaves(),
+      Standard3DCaves()
 
       //CheeseCaves(threshold01 = 0.5),
 

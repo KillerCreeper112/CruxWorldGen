@@ -13,7 +13,7 @@ interface Biome {
   val fineShape: FineBiomeShape?
     get() = null
   val materialProvider: MaterialProvider
-  val caves: CaveShape?
+  val caves: CaveShape<*, *>?
     get() = null
   val decorations: List<Decoration>
     get() = listOf()

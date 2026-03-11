@@ -1,16 +1,62 @@
 package killercreepr.cruxworldgen.api.cave
 
-import killercreepr.cruxworldgen.api.cache.CoarseCache
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
-import killercreepr.cruxworldgen.standard.cave.CellCorners3D
-import killercreepr.cruxworldgen.standard.cave.CornerField3D
 
-interface CaveType {
-  fun coarseCache(ctx: GenerateContext, worldX: Int, worldY: Int, worldZ: Int, terrainDensity: Double): CoarseCache?  = null
+interface CaveType<CornerCache: Any, BlockCache: Any> {
+  fun coarseCache(
+    ctx: GenerateContext,
+    worldX: Int,
+    worldY: Int,
+    worldZ: Int,
+    terrainDensity: Double
+  ): CornerCache? = null
+
+  fun interpolateCache(
+    c000: CornerCache,
+    c100: CornerCache,
+    c010: CornerCache,
+    c110: CornerCache,
+    c001: CornerCache,
+    c101: CornerCache,
+    c011: CornerCache,
+    c111: CornerCache,
+    tx: Double,
+    ty: Double,
+    tz: Double
+  ): BlockCache? = null
+
+  @Suppress("UNCHECKED_CAST")
+  fun interpolateCacheUntyped(
+    c000: Any?,
+    c100: Any?,
+    c010: Any?,
+    c110: Any?,
+    c001: Any?,
+    c101: Any?,
+    c011: Any?,
+    c111: Any?,
+    tx: Double,
+    ty: Double,
+    tz: Double
+  ): Any? {
+    return interpolateCache(
+      c000 as CornerCache,
+      c100 as CornerCache,
+      c010 as CornerCache,
+      c110 as CornerCache,
+      c001 as CornerCache,
+      c101 as CornerCache,
+      c011 as CornerCache,
+      c111 as CornerCache,
+      tx, ty, tz
+    )
+  }
 
   fun carveBlocks(ctx: GenerateContext, cave: CaveContext,
-                  cache: CellCorners3D): Double = 0.0
+                  cache: BlockCache?): Double = 0.0
+  fun carveBlocksUntyped(ctx: GenerateContext, cave: CaveContext,
+                  cache: Any?): Double = carveBlocks(ctx, cave, cache as? BlockCache)
 
   @Deprecated("")
   fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double = 0.0
@@ -36,7 +82,7 @@ interface CaveType {
    */
   val surfaceFadeRamp: Int get() = 16
 
-  interface HasSurfaceOpenings : CaveType {
+  interface HasSurfaceOpenings<CornerCache: Any, BlockCache: Any> : CaveType<CornerCache, BlockCache> {
     val surfaceOpenChance: Double
       get() = 0.03
     val surfaceOpenMaxAbove: Int

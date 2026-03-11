@@ -6,8 +6,66 @@ import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.HashUtil
 
 open class CaveProfile(
-  val caveTypes: List<CaveType>
-) : CaveShape {
+  val caveTypes: List<CaveType<*, *>>
+) : CaveShape<Array<Any?>, Array<Any?>> {
+  override fun coarseCache(
+    ctx: GenerateContext,
+    worldX: Int,
+    worldY: Int,
+    worldZ: Int,
+    terrainDensity: Double
+  ): Array<Any?>? {
+    val cache = arrayOfNulls<Any>(caveTypes.size)
+    caveTypes.forEachIndexed { index, type ->
+      cache[index] = type.coarseCache(
+        ctx, worldX, worldY, worldZ, terrainDensity
+      )
+    }
+    return cache
+  }
+
+  override fun interpolateCache(
+    c000: Array<Any?>,
+    c100: Array<Any?>,
+    c010: Array<Any?>,
+    c110: Array<Any?>,
+    c001: Array<Any?>,
+    c101: Array<Any?>,
+    c011: Array<Any?>,
+    c111: Array<Any?>,
+    tx: Double,
+    ty: Double,
+    tz: Double
+  ): Array<Any?> {
+    val cache = arrayOfNulls<Any>(caveTypes.size)
+    caveTypes.forEachIndexed { index, type ->
+      cache[index] = type.interpolateCacheUntyped(
+        c000[index],
+        c100[index],
+        c010[index],
+        c110[index],
+        c001[index],
+        c101[index],
+        c011[index],
+        c111[index],
+        tx, ty, tz
+      )
+    }
+    return cache
+  }
+
+  override fun carve(
+    ctx: GenerateContext,
+    cave: CaveContext,
+    cache: Array<Any?>?
+  ): Double {
+    if(cache == null) return 0.0
+    var carve = 0.0
+    caveTypes.forEachIndexed { index, type ->
+      carve += type.carveBlocksUntyped(ctx, cave, cache[index])
+    }
+    return carve
+  }
 
   override fun carve(ctx: GenerateContext, cave: CaveContext): Double {
     // Above surface => never carve
@@ -29,7 +87,7 @@ open class CaveProfile(
     val maxAllowed = solidDensity + 2.0
     return carved.coerceAtMost(maxAllowed)
   }
-  fun surfaceOpeningMask(ctx: GenerateContext, cave: CaveContext, type: CaveType?): Double {
+  fun surfaceOpeningMask(ctx: GenerateContext, cave: CaveContext, type: CaveType<*, *>?): Double {
     if(type !is CaveType.HasSurfaceOpenings) return 0.0
     val chance = type.surfaceOpenChance ?: 0.0
     if (chance <= 0.0) return 0.0
@@ -61,7 +119,7 @@ open class CaveProfile(
    * depthBelowSurface = 0 means "at the surface"
   depthBelowSurface = 10 means "10 blocks under the surface"
    */
-  fun depthFade(depthBelowSurface: Int, type: CaveType?): Double {
+  fun depthFade(depthBelowSurface: Int, type: CaveType<*, *>?): Double {
 
     val start = type?.surfaceFadeStart ?: 6
     if ((type?.surfaceFadeRamp ?: 16) <= 0) return if (depthBelowSurface >= start) 1.0 else 0.0
@@ -72,9 +130,9 @@ open class CaveProfile(
     return Curve.smoothstep01(t)
   }
 
-  fun strongestCarveAndType(ctx: GenerateContext, cave: CaveContext): Pair<Double, CaveType?> {
+  fun strongestCarveAndType(ctx: GenerateContext, cave: CaveContext): Pair<Double, CaveType<*, *>?> {
     var best = 0.0
-    var bestType: CaveType? = null
+    var bestType: CaveType<*, *>? = null
     for (type in caveTypes) {
       val v = type.carveBlocks(ctx, cave)
       if (v > best) {
@@ -101,9 +159,9 @@ open class CaveProfile(
     return added//.coerceIn(0.0, maxAllowedAdd)
   }
 
-  fun strongestAddAndType(ctx: GenerateContext, cave: CaveContext, strongestCarve: Double): Pair<Double, CaveType?> {
+  fun strongestAddAndType(ctx: GenerateContext, cave: CaveContext, strongestCarve: Double): Pair<Double, CaveType<*, *>?> {
     var best = 0.0
-    var bestType: CaveType? = null
+    var bestType: CaveType<*, *>? = null
     for (type in caveTypes) {
       val v = type.addBlocks(ctx, cave, strongestCarve)
       if (v > best) {

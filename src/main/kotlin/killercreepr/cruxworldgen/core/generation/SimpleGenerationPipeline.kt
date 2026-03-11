@@ -15,6 +15,49 @@ class SimpleGenerationPipeline(
   override val zones : ZoneRegistry,
   override val volumetricBiomes: VolumetricBiomeRegistry
 ) : GenerationPipeline {
+  override fun blendedBiomeDensityCavesCache(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter : SignalWriter,
+    terrainDensity: Double
+  ): Any? {
+    return biomeBlend.primaryBiome().caves?.coarseCache(
+      generateCtx, worldX, y, worldZ, terrainDensity
+    )
+  }
+
+  override fun blendedBiomeDensityCavesWithCache(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter : SignalWriter,
+    caveCtx : CaveContext,
+    cache: Any?
+  ): DensityStack {
+    var blendedAdd = 0.0
+    var blendedCarve = 0.0
+
+    for (weightedBiome in biomeBlend.weightedBiomes) {
+      val biome = weightedBiome.biome
+      val caves = biome.caves ?: continue
+      val weight = weightedBiome.weight
+
+      blendedAdd += weight * caves.addUntyped(generateCtx, caveCtx, cache)
+      blendedCarve += weight * caves.carveUntyped(generateCtx, caveCtx, cache)
+    }
+
+    return DensityStack.densityStack(
+      base = 0.0,
+      add = blendedAdd,
+      carve = blendedCarve,
+    )
+  }
+
   override fun blendedBiomeDensityCaves(
     generateCtx: GenerateContext,
     biomeBlend: BiomeBlendSample,

@@ -13,6 +13,27 @@ interface GenerationPipeline{
   val zones : ZoneRegistry
   val volumetricBiomes: VolumetricBiomeRegistry
 
+  fun blendedBiomeDensityCavesCache(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter : SignalWriter,
+    terrainDensity: Double
+  ): Any?
+
+  fun blendedBiomeDensityCavesWithCache(
+    generateCtx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter : SignalWriter,
+    caveCtx : CaveContext,
+    cache: Any?
+  ): DensityStack
+
   fun blendedBiomeDensityCaves(
     generateCtx: GenerateContext,
     biomeBlend: BiomeBlendSample,

@@ -32,14 +32,16 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.extension.remap01
 import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
 import killercreepr.cruxworldgen.standard.cave.Standard3DCaves
+import killercreepr.cruxworldgen.standard.cave.WormCaves
 import net.minecraft.core.SectionPos.x
 import net.minecraft.core.SectionPos.z
 import org.bukkit.Material
 import kotlin.math.*
 
 class CharredWastes(
-  override val caves: CaveShape = CaveProfile(
+  override val caves: CaveShape<*, *> = CaveProfile(
     listOf(
+      WormCaves(),
       SpaghettiCaves(),
       Standard3DCaves(),
     )
