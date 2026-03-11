@@ -1,16 +1,12 @@
 package killercreepr.cruxworldgen.standard.cave
 
-import killercreepr.crux.core.Crux
 import killercreepr.cruxgeneration.util.CruxNoise
-import killercreepr.cruxworldgen.api.cache.CoarseCache
 import killercreepr.cruxworldgen.api.cave.CaveType
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve
-import killercreepr.cruxworldgen.api.util.MathUtil.cornerIndex
 import killercreepr.cruxworldgen.extension.remap01
-import net.minecraft.world.level.levelgen.NoiseChunk
 import kotlin.math.max
 
 class SpaghettiCaves(
@@ -23,7 +19,7 @@ class SpaghettiCaves(
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
-  override val surfaceOpenChance: Double = 0.65,
+  override val surfaceOpenChance: Double = 0.1,
 
   val noise : Noise = StandardNoise
 ) : CaveType.HasSurfaceOpenings<SpaghettiCaves.CornerCache, SpaghettiCaves.BlockCache>, Noised {

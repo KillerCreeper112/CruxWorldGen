@@ -17,7 +17,7 @@ class Standard3DCaves(
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
-  override val surfaceOpenChance: Double = 0.5,
+  override val surfaceOpenChance: Double = 0.05,
 
   val noise : Noise = StandardNoise
 ) : CaveType.HasSurfaceOpenings<Standard3DCaves.CornerCache, Standard3DCaves.BlockCache>, Noised {

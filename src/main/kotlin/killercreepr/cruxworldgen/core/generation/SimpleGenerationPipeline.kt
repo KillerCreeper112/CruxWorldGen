@@ -41,15 +41,18 @@ class SimpleGenerationPipeline(
   ): DensityStack {
     var blendedAdd = 0.0
     var blendedCarve = 0.0
+    val caves = biomeBlend.primaryBiome().caves ?: return DensityStack.emptyStack()
+    blendedAdd += caves.addUntyped(generateCtx, caveCtx, cache)
+    blendedCarve += caves.carveUntyped(generateCtx, caveCtx, cache)
 
-    for (weightedBiome in biomeBlend.weightedBiomes) {
+    /*for (weightedBiome in biomeBlend.weightedBiomes) {
       val biome = weightedBiome.biome
       val caves = biome.caves ?: continue
       val weight = weightedBiome.weight
 
       blendedAdd += weight * caves.addUntyped(generateCtx, caveCtx, cache)
       blendedCarve += weight * caves.carveUntyped(generateCtx, caveCtx, cache)
-    }
+    }*/
 
     return DensityStack.densityStack(
       base = 0.0,

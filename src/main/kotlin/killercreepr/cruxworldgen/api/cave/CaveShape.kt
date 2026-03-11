@@ -41,22 +41,25 @@ interface CaveShape<CornerCache : Any, BlockCache : Any> {
     ty: Double,
     tz: Double
   ): Any? {
-    return interpolateCache(
-      c000 as CornerCache,
-      c100 as CornerCache,
-      c010 as CornerCache,
-      c110 as CornerCache,
-      c001 as CornerCache,
-      c101 as CornerCache,
-      c011 as CornerCache,
-      c111 as CornerCache,
-      tx, ty, tz
-    )
+    //todo bad bandaid fix
+    return runCatching {
+      interpolateCache(
+        c000 as CornerCache,
+        c100 as CornerCache,
+        c010 as CornerCache,
+        c110 as CornerCache,
+        c001 as CornerCache,
+        c101 as CornerCache,
+        c011 as CornerCache,
+        c111 as CornerCache,
+        tx, ty, tz
+      )
+    }.getOrNull()
   }
   @Suppress("UNCHECKED_CAST")
-  fun carveUntyped(ctx: GenerateContext, cave: CaveContext, cache: Any?) = carve(ctx, cave, cache as? BlockCache)
+  fun carveUntyped(ctx: GenerateContext, cave: CaveContext, cache: Any?) = runCatching { carve(ctx, cave, cache as? BlockCache) }.getOrElse{0.0}
   @Suppress("UNCHECKED_CAST")
-  fun addUntyped(ctx: GenerateContext, cave: CaveContext, cache: Any?) = add(ctx, cave, cache as? BlockCache)
+  fun addUntyped(ctx: GenerateContext, cave: CaveContext, cache: Any?) = runCatching { add(ctx, cave, cache as? BlockCache) }.getOrElse{0.0}
 
   fun carve(ctx: GenerateContext, cave: CaveContext, cache: BlockCache?): Double = 0.0
   fun add(ctx: GenerateContext, c: CaveContext, cache: BlockCache?): Double = 0.0

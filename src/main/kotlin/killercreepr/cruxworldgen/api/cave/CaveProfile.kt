@@ -54,17 +54,44 @@ open class CaveProfile(
     return cache
   }
 
+  fun strongestCarveAndType(ctx: GenerateContext, cave: CaveContext,
+                            cache: Array<Any?>): Pair<Double, CaveType<*, *>?> {
+    var best = 0.0
+    var bestType: CaveType<*, *>? = null
+    caveTypes.forEachIndexed { index, type ->
+      val v = type.carveBlocksUntyped(ctx, cave, cache[index])
+      if (v > best) {
+        best = v
+        bestType = type
+      }
+    }
+    return best to bestType
+  }
+
   override fun carve(
     ctx: GenerateContext,
     cave: CaveContext,
     cache: Array<Any?>?
   ): Double {
     if(cache == null) return 0.0
-    var carve = 0.0
-    caveTypes.forEachIndexed { index, type ->
-      carve += type.carveBlocksUntyped(ctx, cave, cache[index])
-    }
-    return carve
+    // Above surface => never carve
+    //if (cave.depthBelowSurface < 0) return 0.0
+    val (strongestCarve, strongestType) = strongestCarveAndType(ctx, cave, cache)
+    if (strongestCarve <= 0.0001) return 0.0
+
+    val allowSurface = surfaceOpeningMask(ctx, cave, strongestType)
+    if (cave.depthBelowSurface < 0 && allowSurface <= 0.0) return 0.0
+
+    val fade = depthFade(cave.depthBelowSurface, strongestType)
+    val effectiveFade = kotlin.math.max(fade, allowSurface) // or allowSurface * 0.6
+    //val edgeFade = Curve.smoothstep01((1.0 - cave.edge.edgeBlendFactor()).coerceIn(0.0, 1.0))
+
+    val carved = strongestCarve * effectiveFade// * edgeFade
+
+    // Safety cap: never carve more than local solid density + margin
+    val solidDensity = kotlin.math.max(0.0, cave.terrainDensity)
+    val maxAllowed = solidDensity + 2.0
+    return carved.coerceAtMost(maxAllowed)
   }
 
   override fun carve(ctx: GenerateContext, cave: CaveContext): Double {

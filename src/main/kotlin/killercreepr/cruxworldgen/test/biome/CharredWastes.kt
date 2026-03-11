@@ -41,8 +41,8 @@ import kotlin.math.*
 class CharredWastes(
   override val caves: CaveShape<*, *> = CaveProfile(
     listOf(
-      WormCaves(),
       SpaghettiCaves(),
+      WormCaves(),
       Standard3DCaves(),
     )
   ),

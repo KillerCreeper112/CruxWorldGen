@@ -8,7 +8,13 @@ interface DensityStack{
       base: Double = 0.0,
       carve: Double = 0.0,
       add: Double = 0.0
-    ) : DensityStack = SimpleDensityStack(base, add, carve)
+    ) : DensityStack{
+      if(base == 0.0 && carve == 0.0 && add == 0.0) return empty
+      return SimpleDensityStack(base, add, carve)
+    }
+    fun emptyStack(): DensityStack = empty
+
+    private val empty = SimpleDensityStack(0.0, 0.0, 0.0)
   }
 
   val base: Double

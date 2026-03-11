@@ -98,7 +98,7 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     worldDetails,
                     features,
                     chunkSampler = SimpleChunkSampler(
-                      generation, noise, worldDetails, biomeCellSize = 4, mediumCellSize = 2
+                      generation, noise, worldDetails, biomeCellSize = 4, mediumCellSize = 4
                     )
                   )
                   val world = WorldCreator(name).generator(

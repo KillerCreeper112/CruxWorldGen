@@ -20,7 +20,7 @@ class WormCaves(
 
   override val surfaceFadeStart: Int = 3,
   override val surfaceFadeRamp: Int = 16,
-  override val surfaceOpenChance: Double = 0.65,
+  override val surfaceOpenChance: Double = 0.1,
 
   val noise : Noise = StandardNoise
 ) : CaveType.HasSurfaceOpenings<WormCaves.CornerCache, WormCaves.BlockCache>, Noised {
@@ -34,11 +34,11 @@ class WormCaves(
   }
 
   object StandardNoise : Noise {
-    override val PathA3D = object : NoiseKey { override val id = "cave.spaghetti.path_a3D" }
-    override val PathB3D = object : NoiseKey { override val id = "cave.spaghetti.path_b3D" }
-    override val WarpX3D = object : NoiseKey { override val id = "cave.spaghetti.warp_x3D" }
-    override val WarpY3D = object : NoiseKey { override val id = "cave.spaghetti.warp_y3D" }
-    override val WarpZ3D = object : NoiseKey { override val id = "cave.spaghetti.warp_z3D" }
+    override val PathA3D = object : NoiseKey { override val id = "cave.worm.path_a3D" }
+    override val PathB3D = object : NoiseKey { override val id = "cave.worm.path_b3D" }
+    override val WarpX3D = object : NoiseKey { override val id = "cave.worm.warp_x3D" }
+    override val WarpY3D = object : NoiseKey { override val id = "cave.worm.warp_y3D" }
+    override val WarpZ3D = object : NoiseKey { override val id = "cave.worm.warp_z3D" }
 
 
     override fun install(bank: NoiseBank) {
