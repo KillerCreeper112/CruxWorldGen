@@ -1,10 +1,20 @@
 package killercreepr.cruxworldgen.api.cave
 
+import killercreepr.cruxworldgen.api.cache.CoarseCache
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.standard.cave.CellCorners3D
+import killercreepr.cruxworldgen.standard.cave.CornerField3D
 
 interface CaveType {
-  fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double
+  fun coarseCache(ctx: GenerateContext, worldX: Int, worldY: Int, worldZ: Int, terrainDensity: Double): CoarseCache?  = null
+
+  fun carveBlocks(ctx: GenerateContext, cave: CaveContext,
+                  cache: CellCorners3D): Double = 0.0
+
+  @Deprecated("")
+  fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double = 0.0
+
   fun addBlocks(ctx: GenerateContext, cave: CaveContext, add : Double): Double = 0.0
 
   /**

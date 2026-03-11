@@ -7,6 +7,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.noise.*
 import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.extension.remap01
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -15,7 +16,7 @@ class WormCaves(
   val warpXZ: Double = 25.0,
   val warpY: Double = 15.0,
 
-  val radius: Double = 0.07,
+  val radius: Double = 0.12,
   val feather: Double = 0.07,
 
   override val surfaceFadeStart: Int = 3,
@@ -94,6 +95,12 @@ class WormCaves(
 
   override val noiseModule = noise
 
+  private val outerRadius = radius + feather
+  private val radiusSq = radius * radius
+  private val outerRadiusSq = outerRadius * outerRadius
+
+  private val rotCos = 0.8660254037844386
+  private val rotSin = 0.5
   override fun carveBlocks(ctx: GenerateContext, cave: CaveContext): Double {
     val solidDensity = max(0.0, cave.terrainDensity)
     if (solidDensity <= 0.0) return 0.0
@@ -102,18 +109,34 @@ class WormCaves(
     val y = cave.y
     val z = cave.worldZ
 
-    val wx = x + ctx.noise.get(noise.WarpX3D).noise3D(x, y, z) * warpXZ
-    val wy = y + ctx.noise.get(noise.WarpY3D).noise3D(x, y, z) * warpY
-    val wz = z + ctx.noise.get(noise.WarpZ3D).noise3D(x, y, z) * warpXZ
+    val warpXNoise = ctx.noise.get(noise.WarpX3D)
+    val warpYNoise = ctx.noise.get(noise.WarpY3D)
+    val warpZNoise = ctx.noise.get(noise.WarpZ3D)
+    val pathANoise = ctx.noise.get(noise.PathA3D)
+    val pathBNoise = ctx.noise.get(noise.PathB3D)
 
-    val rx = wx * 0.866 + wz * 0.5
-    val rz = -wx * 0.5 + wz * 0.866
+    val wx = x + warpXNoise.noise3D(x, y, z) * warpXZ
+    val wy = y + warpYNoise.noise3D(x, y, z) * warpY
+    val wz = z + warpZNoise.noise3D(x, y, z) * warpXZ
 
-    val a = kotlin.math.abs(ctx.noise.get(noise.PathA3D).noise3D(wx, wy, wz))
-    val b = kotlin.math.abs(ctx.noise.get(noise.PathB3D).noise3D(rx, wy, rz))
-    val d = sqrt(a * a + b * b)
-    val tube = 1.0 - Curve.smoothstep(radius, radius + feather, d)
+    val rx = wx * rotCos + wz * rotSin
+    val rz = -wx * rotSin + wz * rotCos
 
+    val a = abs(pathANoise.noise3D(wx, wy, wz))
+    if (a >= outerRadius) return 0.0
+
+    val b = abs(pathBNoise.noise3D(rx, wy, rz))
+    if (b >= outerRadius) return 0.0
+
+    val d2 = a * a + b * b
+    if (d2 >= outerRadiusSq) return 0.0
+
+    if (d2 <= radiusSq) {
+      return solidDensity * strength
+    }
+
+    val d = sqrt(d2)
+    val tube = 1.0 - Curve.smoothstep(radius, outerRadius, d)
     val tubeTight = tube * tube * tube
 
     return solidDensity * tubeTight * strength

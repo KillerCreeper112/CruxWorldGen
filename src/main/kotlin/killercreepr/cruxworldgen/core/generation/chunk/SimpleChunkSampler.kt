@@ -201,6 +201,7 @@ data class SimpleChunkSampler(
     cellCountZ: Int,
     cellCountY: Int,
     densityByCorner: DoubleArray,
+    smooth: Boolean = false,
   ): Double {
     val cellX = (localX / cellSize).coerceIn(0, cellCountX - 1)
     val cellZ = (localZ / cellSize).coerceIn(0, cellCountZ - 1)
@@ -210,9 +211,15 @@ data class SimpleChunkSampler(
     val localCellOriginZ = cellZ * cellSize
     val localCellOriginY = minBlockY + cellY * cellSize
 
-    val tx = (((localX - localCellOriginX).toDouble() + 0.5) / cellSize.toDouble()).coerceIn(0.0, 1.0)
-    val tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / cellSize.toDouble()).coerceIn(0.0, 1.0)
-    val ty = (((blockY - localCellOriginY).toDouble() + 0.5) / cellSize.toDouble()).coerceIn(0.0, 1.0)
+    var tx = (((localX - localCellOriginX).toDouble() + 0.5) / cellSize.toDouble()).coerceIn(0.0, 1.0)
+    var tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / cellSize.toDouble()).coerceIn(0.0, 1.0)
+    var ty = (((blockY - localCellOriginY).toDouble() + 0.5) / cellSize.toDouble()).coerceIn(0.0, 1.0)
+
+    if(smooth){
+      tx = Curve.smoothstep01(tx)
+      tz = Curve.smoothstep01(tz)
+      ty = Curve.smoothstep01(ty)
+    }
 
     val c000 = cornerIndex(cellX,     cellZ,     cellY,     cellCountX, cellCountZ)
     val c100 = cornerIndex(cellX + 1, cellZ,     cellY,     cellCountX, cellCountZ)
@@ -294,7 +301,7 @@ data class SimpleChunkSampler(
     signalWriter: SignalWriter,
   ){
     val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
-    //val caveDetailNoise = ctx.noise.get(BaseNoiseKeys.CaveDetail)
+    val caveDetailNoise = ctx.noise.get(BaseNoiseKeys.CaveDetail)
     val chunkWidth = worldDetails.chunkWidth
     val chunkDepth = worldDetails.chunkDepth
     val height = maxY - minY + 1
@@ -393,14 +400,15 @@ data class SimpleChunkSampler(
 
           val terrainMacro = baseTerrainDensityColumn[iy]
 
-          /*val cavesMacro = interpolatedCornerDensityAt(
+          val cavesMacro = interpolatedCornerDensityAt(
             localX, blockY, localZ,
             minY,
             mediumCellSize,
             mediumCellCountX, mediumCellCountZ,
             mediumCellCountY,
-            densityCavesMacroByCorner
-          ) + caveDetailNoise.noise3D(worldX, blockY, worldZ) * 3.0*/
+            densityCavesMacroByCorner,
+            false
+          )// + caveDetailNoise.noise3D(worldX, blockY, worldZ) * 0.12
 
           //val caves = Curve.smoothstep(threshold, threshold + ramp, cavesMacro)
 
@@ -424,7 +432,7 @@ data class SimpleChunkSampler(
             }
           }
 
-          val caveCtx = SimpleCaveContext(
+          /*val caveCtx = SimpleCaveContext(
             worldX, blockY, worldZ,
             baseSurfaceY, baseSurfaceY - blockY,
             terrain, surfaceBlend.edgeContext,
@@ -433,7 +441,7 @@ data class SimpleChunkSampler(
           val cavesMacro = generation.blendedBiomeDensityCaves(
             ctx, surfaceBlend, worldX, blockY, worldZ,
             signalWriter,caveCtx
-          ).finalDensity()
+          ).finalDensity()*/
 
           val terrainFinal = terrain + cavesMacro
 
@@ -532,7 +540,7 @@ data class SimpleChunkSampler(
       volumetricBlendByCorner
     )
 
-    /*sampleMediumCellCorners(
+    sampleMediumCellCorners(
       generateCtx,
       chunkX, chunkZ,
       surfaceBlendByCornerColumn,
@@ -541,7 +549,7 @@ data class SimpleChunkSampler(
       densityTerrainMacroByCorner,
       densityCavesMacroByCorner,
       chunkBlockHeight
-    )*/
+    )
 
     val blockArraySize = chunkWidth * chunkDepth * chunkBlockHeight
     val blockColumnSize = chunkWidth * chunkDepth
