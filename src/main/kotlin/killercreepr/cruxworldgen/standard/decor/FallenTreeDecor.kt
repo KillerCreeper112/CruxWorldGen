@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.test.decor
+package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
@@ -8,10 +8,9 @@ import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil
-import killercreepr.cruxworldgen.api.util.HashUtil.chance
-import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
-import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
+import killercreepr.cruxworldgen.bukkit.block.picker.AxisBlockPicker
 import org.bukkit.Axis
+import kotlin.math.abs
 
 class FallenTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
@@ -29,17 +28,17 @@ class FallenTreeDecor(
   val maxStepUpDown: Int = 1,        // allow trunk to follow terrain +/- 1 block
   val requireSupport: Boolean = true,
   val maxUnsupportedSegments: Int = 1, // allow tiny gaps (roots/rocks), but not floating logs
-  val logPicker : (Axis) -> BlockData,
+  val logPicker : AxisBlockPicker,
   val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
-    val s = mixSeed(
+    val s = HashUtil.mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
       salt = chanceSalt
     )
-    return chance(s, chancePerPoint)
+    return HashUtil.chance(s, chancePerPoint)
   }
 
   override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
@@ -60,7 +59,7 @@ class FallenTreeDecor(
     val airAbove = queries.airBlocksAbove(worldX, surfaceY, worldZ, maxCount = minAirAbove)
     if (airAbove < minAirAbove) return null
 
-    val len = chooseInt(point.seed xor HashUtil.HASH_SALT, minLength, maxLength)
+    val len = HashUtil.chooseInt(point.seed xor HashUtil.HASH_SALT, minLength, maxLength)
 
     // Pick a direction (N/E/S/W) deterministically
     val dirIdx = ((point.seed ushr 32) and 3L).toInt()
@@ -92,7 +91,7 @@ class FallenTreeDecor(
       val segBaseY = segSurfaceY + 1
 
       val dy = segBaseY - y
-      if (kotlin.math.abs(dy) > maxStepUpDown) return null
+      if (abs(dy) > maxStepUpDown) return null
       y = segBaseY
 
       // space for the log
@@ -114,7 +113,7 @@ class FallenTreeDecor(
 
       // Step forward, maybe snake a little
       if (allowSnake && i > 1) {
-        val r = (mixSeed(region.ctx.worldContext.seed, x, 0, z, salt = (point.seed xor i.toLong())))
+        val r = (HashUtil.mixSeed(region.ctx.worldContext.seed, x, 0, z, salt = (point.seed xor i.toLong())))
         if ((r and 0xFFFF).toInt() < (snakeChance * 65535.0).toInt()) {
           // rotate 90° left or right
           val left = ((r ushr 16) and 1L) == 0L
@@ -151,15 +150,15 @@ class FallenTreeDecor(
     var dx = p.dx
     var dz = p.dz
 
-    val trunkAxis = if (kotlin.math.abs(dx) >= kotlin.math.abs(dz)) Axis.X else Axis.Z
-    val logTrunk = logPicker.invoke(trunkAxis)
+    val trunkAxis = if (abs(dx) >= abs(dz)) Axis.X else Axis.Z
     // stump/root at start (vertical 1-2 logs)
     run {
-      val stumpH = chooseInt(p.seed xor 0xBEEFL, 1, 2)
+      val stumpH = HashUtil.chooseInt(p.seed xor 0xBEEFL, 1, 2)
       for (i in 0 until stumpH) {
         val y = p.startY + i
         if (y < bounds.minY || y > bounds.maxY) break
         if (queries.isReplaceable(x, y, z)) {
+          val logTrunk = logPicker.pickBlock(region, x,y,z, trunkAxis) ?: continue
           region.setBlock(x, y, z, logTrunk)
         }
       }
@@ -171,27 +170,28 @@ class FallenTreeDecor(
       if (y < bounds.minY || y > bounds.maxY) break
 
       if (queries.isReplaceable(x, y, z)) {
+        val logTrunk = logPicker.pickBlock(region, x,y,z, trunkAxis) ?: continue
         region.setBlock(x, y, z, logTrunk)
       }
 
       // occasional “chunk” to make it feel more organic (1 extra log beside)
-      val chunk = chooseInt((p.seed xor (i.toLong() * 0x9E37)), 0, 9) == 0
+      val chunk = HashUtil.chooseInt((p.seed xor (i.toLong() * 0x9E37)), 0, 9) == 0
       if (chunk) {
         val sideLeft = ((p.seed ushr i) and 1L) == 0L
 
-        val trunkAxis = if (kotlin.math.abs(dx) >= kotlin.math.abs(dz)) Axis.X else Axis.Z
-        val logSide = logPicker.invoke(trunkAxis)
+        val trunkAxis = if (abs(dx) >= abs(dz)) Axis.X else Axis.Z
 
         val sx = if (sideLeft) x - dz else x + dz
         val sz = if (sideLeft) z + dx else z - dx
         if (region.isInRegion(sx, y, sz) && queries.isReplaceable(sx, y, sz)) {
+          val logSide = logPicker.pickBlock(region, sx, y, sz, trunkAxis) ?: continue
           region.setBlock(sx, y, sz, logSide)
         }
       }
 
       // step forward; if snaking is enabled, re-run the same deterministic turn logic
       if (allowSnake && i > 1) {
-        val r = mixSeed(region.ctx.worldContext.seed, x, 0, z, salt = (p.seed xor i.toLong()))
+        val r = HashUtil.mixSeed(region.ctx.worldContext.seed, x, 0, z, salt = (p.seed xor i.toLong()))
         val turn = ((r and 0xFFFF).toInt() < (snakeChance * 65535.0).toInt())
         if (turn) {
           val left = ((r ushr 16) and 1L) == 0L

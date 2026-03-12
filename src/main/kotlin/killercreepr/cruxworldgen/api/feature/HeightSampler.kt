@@ -49,20 +49,32 @@ class UniformHeight(val baseHeight : UniformHeightSampler) : HeightSampler {
   }
 }
 
-/** Triangle distribution peaking at center */
-class TriangleHeight(val baseHeight : UniformHeightSampler) : HeightSampler {
+/** Triangle distribution peaking at center
+ *  order=1 → uniform (no taper)
+ *  order=2 → triangle (current default)
+ *  order=4+ → tight bell, fast falloff
+ */
+class TriangleHeight(val baseHeight : UniformHeightSampler, val order: Int = 2) : HeightSampler {
   override fun sampleY(
     rng: Random,
     region: LimitedRegion,
     wx: Int,
     wz: Int
   ): Int {
-    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    /*val lo = baseHeight.sampleMinY(rng, region, wx, wz)
     val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
     if (hi < lo) return lo
     val a = rng.nextInt(hi - lo + 1)
     val b = rng.nextInt(hi - lo + 1)
-    return lo + (a + b) / 2
+    return lo + (a + b) / order*/
+
+    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
+    if (hi < lo) return lo
+    val range = hi - lo + 1
+    var sum = 0
+    repeat(order) { sum += rng.nextInt(range) }
+    return lo + sum / order
   }
 }
 

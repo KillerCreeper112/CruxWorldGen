@@ -6,9 +6,11 @@ import java.util.*
 
 data class OreConfig(
   val ore: BlockGetter,
-  val size: Int,
+  val minSize: Int,
+  val maxSize: Int,
   val canReplace: CanReplace,
   val discardChanceOnAirExposure: Double = 0.0, // optional
+  val sizeOrder: Int = 0, //negative = biased towards min, greater than 0 = biased towards max, 0 = uniform
 ){
   fun interface CanReplace{
     fun canReplace(region: LimitedRegion, rng: Random, x: Int, y: Int, z: Int): Boolean

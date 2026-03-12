@@ -1,12 +1,12 @@
-package killercreepr.cruxworldgen.test.decor
+package killercreepr.cruxworldgen.standard.decor
 
-import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
-import killercreepr.cruxworldgen.api.decor.*
+import killercreepr.cruxworldgen.api.decor.Decoration
+import killercreepr.cruxworldgen.api.decor.DecorationPass
+import killercreepr.cruxworldgen.api.decor.Placement
+import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
-import killercreepr.cruxworldgen.api.util.HashUtil.chance
-import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
-import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
+import killercreepr.cruxworldgen.api.util.HashUtil
 
 class SingleDeadTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
@@ -17,17 +17,17 @@ class SingleDeadTreeDecor(
 
   val minHeight: Int = 4,
   val maxHeight: Int = 9,
-  val log : DecorHolder<BlockData>,
+  val log : BlockPicker,
   val chanceSalt: Long
 ) : Decoration {
 
   override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
-    val s = mixSeed(
+    val s = HashUtil.mixSeed(
       seed = region.ctx.worldContext.seed,
       x = point.worldX, y = 0, z = point.worldZ,
       salt = chanceSalt
     )
-    return chance(s, chancePerPoint)
+    return HashUtil.chance(s, chancePerPoint)
   }
 
   override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
@@ -49,7 +49,7 @@ class SingleDeadTreeDecor(
     val airAbove = queries.airBlocksAbove(worldX, surfaceY, worldZ, maxCount = minAirAbove)
     if (airAbove < minAirAbove) return null
 
-    val height = chooseInt(point.seed xor 0x12345678L, minHeight, maxHeight)
+    val height = HashUtil.chooseInt(point.seed xor 0x12345678L, minHeight, maxHeight)
     return Placed(
       worldX = worldX,
       worldZ = worldZ,
@@ -68,7 +68,8 @@ class SingleDeadTreeDecor(
       val y = p.baseY + dy
       if (y < bounds.minY || y > bounds.maxY) break
       if (queries.isReplaceable(p.worldX, y, p.worldZ)) {
-        region.setBlock(p.worldX, y, p.worldZ, log.value(region, placement.seed))
+        val logBlock = log.pickBlock(region, p.worldX, y, p.worldZ) ?: continue
+        region.setBlock(p.worldX, y, p.worldZ, logBlock)
       }
     }
   }

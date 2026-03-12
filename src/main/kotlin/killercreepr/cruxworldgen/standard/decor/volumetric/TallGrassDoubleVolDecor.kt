@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.test.decor.volumetric
+package killercreepr.cruxworldgen.standard.decor.volumetric
 
 import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.biome.Biome

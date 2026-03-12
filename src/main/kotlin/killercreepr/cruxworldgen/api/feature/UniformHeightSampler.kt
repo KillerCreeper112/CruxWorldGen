@@ -76,3 +76,30 @@ class RelativeHeight(
     wy: Int
   ): Boolean = wy in sampleMinY(rng, region, 0, 0)..sampleMaxY(rng, region, 0,0)
 }
+
+/** Like TriangleHeight but the distribution peaks at lo rather than center.
+ *  Useful for ores that get more common toward the top (emeralds) or
+ *  bottom (ancient debris) of their range.
+ *  flipped=false → peak at lo (bottom of range)
+ *  flipped=true  → peak at hi (top of range)
+ */
+class SkewedHeight(
+  val baseHeight: UniformHeightSampler,
+  val order: Int = 2,
+  val flipped: Boolean = false
+) : HeightSampler {
+  override fun sampleY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
+    if (hi < lo) return lo
+    val range = hi - lo + 1
+    var min = range - 1
+    repeat(order) { min = minOf(min, rng.nextInt(range)) }
+    return if (flipped) lo + (range - 1 - min) else lo + min
+  }
+}
