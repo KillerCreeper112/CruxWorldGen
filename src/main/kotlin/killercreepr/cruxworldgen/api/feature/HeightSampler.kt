@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.api.feature
 
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import java.util.*
+import kotlin.math.absoluteValue
 
 interface HeightSampler {
   companion object{
@@ -97,5 +98,36 @@ class TrapezoidHeight(val baseHeight : UniformHeightSampler,
     val t = rng.nextInt(range + p)
     val v = (t - p / 2).coerceIn(0, range - 1)
     return lo + v
+  }
+}
+
+/** Like TriangleHeight but the distribution peaks at lo rather than center.
+ *
+ *  0 = uniform
+ *  > 0 = peak at hi
+ *  < 0 = peak at lo
+ */
+class SkewedHeight(
+  val baseHeight: UniformHeightSampler,
+  val order: Int = -2
+) : HeightSampler {
+  val sampledOrder = if(order > 0) order+1
+  else order-1
+
+  override fun sampleY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    val lo = baseHeight.sampleMinY(rng, region, wx, wz)
+    val hi = baseHeight.sampleMaxY(rng, region, wx, wz)
+    if (hi < lo) return lo
+    if(order == 0) return lo + rng.nextInt(hi - lo + 1)
+
+    val range = hi - lo + 1
+    var min = range - 1
+    repeat(sampledOrder.absoluteValue) { min = minOf(min, rng.nextInt(range)) }
+    return if (sampledOrder > 0) lo + (range - 1 - min) else lo + min
   }
 }
