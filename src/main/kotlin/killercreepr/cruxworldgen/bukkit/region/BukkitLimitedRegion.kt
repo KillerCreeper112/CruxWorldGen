@@ -11,8 +11,6 @@ import killercreepr.cruxworldgen.bukkit.BukkitAdaptor
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
-import killercreepr.cruxworldgen.bukkit.block.BukkitBlockSection
-import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
 import killercreepr.cruxworldgen.bukkit.context.BukkitTerrainQueries
 
 class BukkitLimitedRegion(

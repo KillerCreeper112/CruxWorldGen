@@ -72,7 +72,7 @@ class OreVeinFeature : Feature<OreConfig> {
 
         if(!cfg.canReplace.canReplace(region, rng,x, y, z)) continue
 
-        if (cfg.discardChanceOnAirExposure > 0.0) {
+        if (cfg.discardChanceOnAirExposure > 0.0 && rng.nextDouble() < cfg.discardChanceOnAirExposure) {
           val exposedToAir = CruxBlockFace.CARTESIAN.any { dir ->
             val xx = x + dir.modX
             val yy = y + dir.modY
@@ -80,7 +80,7 @@ class OreVeinFeature : Feature<OreConfig> {
             if(!region.isInRegion(xx, yy, zz)) return@any false
             region.terrainQueries.isEmpty(xx, yy, zz)
           }
-          if (exposedToAir && rng.nextDouble() < cfg.discardChanceOnAirExposure) continue
+          if (exposedToAir) continue
         }
 
         val block = cfg.ore.getBlock(region, rng, x, y, z) ?: continue
