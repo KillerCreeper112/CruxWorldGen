@@ -22,6 +22,7 @@ import killercreepr.cruxworldgen.core.structure.SimpleStructurePipeline
 import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.crux.block.CruxBlockResolver
+import killercreepr.cruxworldgen.crux.block.CruxBlockSectionReader
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
@@ -35,6 +36,8 @@ class CruxWorldGenPlugin : CruxPlugin() {
     BukkitBlockAdapter.multiResolver().registerResolve(
       "crux", CruxBlockResolver.INSTANCE
     )
+
+    BukkitBlockAdapter.multiReader().registerReader("crux", CruxBlockSectionReader.INSTANCE)
 
     lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS){ event ->
       event.registrar()

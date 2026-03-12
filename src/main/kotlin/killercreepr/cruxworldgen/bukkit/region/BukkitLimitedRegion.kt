@@ -9,6 +9,7 @@ import killercreepr.cruxworldgen.api.context.terrain.RegionBounds
 import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot
 import killercreepr.cruxworldgen.bukkit.BukkitAdaptor
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
+import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockSection
 import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
@@ -73,8 +74,7 @@ class BukkitLimitedRegion(
 
   override fun getBlock(x: Int, y: Int, z: Int): BlockSection {
     requireRead(x, y, z)
-    //todo
-    return BukkitBlockSection(BukkitDataBlockData(region.getBlockData(x,y,z)))
+    return BukkitBlockAdapter.reader().readBlock(this, x,y,z)
   }
 
   override fun getBiome(x: Int, y: Int, z: Int): Biome? {
