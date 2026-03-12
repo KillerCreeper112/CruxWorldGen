@@ -4,7 +4,6 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.Terrain2D
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
-import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.util.MathUtil
 import killercreepr.cruxworldgen.api.util.MathUtil.localXFromWorld
 import killercreepr.cruxworldgen.api.util.MathUtil.localZFromWorld

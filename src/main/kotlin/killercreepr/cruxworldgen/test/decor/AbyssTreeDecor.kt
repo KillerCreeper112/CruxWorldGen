@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.test.decor
 
-import killercreepr.crux.core.Crux
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration

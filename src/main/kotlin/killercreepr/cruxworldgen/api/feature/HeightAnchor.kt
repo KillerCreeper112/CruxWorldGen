@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.core.feature
+package killercreepr.cruxworldgen.api.feature
 
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 

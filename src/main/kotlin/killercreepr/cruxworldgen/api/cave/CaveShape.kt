@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.api.cave
 
-import killercreepr.crux.core.Crux
 import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 

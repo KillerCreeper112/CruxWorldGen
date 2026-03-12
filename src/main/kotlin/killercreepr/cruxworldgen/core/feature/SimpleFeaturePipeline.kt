@@ -3,6 +3,9 @@ package killercreepr.cruxworldgen.core.feature
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.LimitedRegion
+import killercreepr.cruxworldgen.api.feature.Feature
+import killercreepr.cruxworldgen.api.feature.FeaturePipeline
+import killercreepr.cruxworldgen.api.feature.PlacedFeature
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 
 class SimpleFeaturePipeline(

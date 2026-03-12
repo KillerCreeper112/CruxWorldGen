@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.core.generation.chunk
 
-import io.papermc.paper.util.ItemComponentSanitizer.override
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.TerrainSnapshot

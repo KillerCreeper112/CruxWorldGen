@@ -1,63 +1,75 @@
 package killercreepr.cruxworldgen.core.feature
 
+import killercreepr.cruxworldgen.api.feature.*
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.bukkit.block.BukkitDataBlockData
+import killercreepr.cruxworldgen.core.feature.ore.OreConfig
 import org.bukkit.Material
 
-val ORE_FEATURE = OreVeinFeature()
-
 val ironHigh = PlacedFeature(
-  feature = ORE_FEATURE,
+  feature = CoreFeatures.ORE_VEIN,
   cfg = OreConfig(
-    ore = BukkitBlockResolver.INSTANCE.resolve(Material.IRON_ORE),
+    ore = OreConfig.BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.IRON_ORE)),
     size = 9,
-    canReplace = {
-      val data = it.blockData()
+    canReplace = { region, rng, x, y, z ->
+      val block = region.getBlock(x, y, z)
+      val data = block.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig data.data.material.isSolid// data.data.material == Material.STONE
+      return@OreConfig data.data.material.isSolid
     }
   ),
   modifiers = listOf(
-    Repeat(20, XZHeight(TriangleHeight(
-      baseHeight = UniformHeightSampler.relative(0.5, 0.9)
-    )))
+    Repeat(20, XZHeight(
+      TriangleHeight(
+        baseHeight = UniformHeightSampler.relative(0.5, 0.9)
+      )
+    )
+    )
   )
 )
 
 val ironLow = PlacedFeature(
-  feature = ORE_FEATURE,
+  feature = CoreFeatures.ORE_VEIN,
   cfg = OreConfig(
-    ore = BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_IRON_ORE),
+    ore = OreConfig.BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_IRON_ORE)),
     size = 9,
-    canReplace = {
-      val data = it.blockData()
+    canReplace = {region, rng, x, y, z ->
+      val block = region.getBlock(x, y, z)
+      val data = block.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig data.data.material.isSolid//data.data.material == Material.STONE
+      return@OreConfig data.data.material.isSolid
     }
   ),
   modifiers = listOf(
-    Repeat(10, XZHeight(TrapezoidHeight(
-      baseHeight = UniformHeightSampler.relative(0.25, 0.75),
-      plateau = 24
-    )))
+    Repeat(10, XZHeight(
+      TrapezoidHeight(
+        baseHeight = UniformHeightSampler.relative(0.25, 0.75),
+        plateau = 24
+      )
+    )
+    )
   )
 )
 
 
 val diamondSkyIslands = PlacedFeature(
-  feature = ORE_FEATURE,
+  feature = CoreFeatures.ORE_VEIN,
   cfg = OreConfig(
-    ore = BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_DIAMOND_ORE),
+    ore = OreConfig.BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_DIAMOND_ORE)),
     size = 9,
-    canReplace = {
-      val data = it.blockData()
+    canReplace = {region, rng, x, y, z ->
+      val block = region.getBlock(x, y, z)
+      val data = block.blockData()
       if(data !is BukkitDataBlockData) return@OreConfig false
-      return@OreConfig data.data.material.isSolid// data.data.material == Material.STONE
+      return@OreConfig data.data.material.isSolid
     }
   ),
   modifiers = listOf(
-    Repeat(100, XZHeight(TriangleHeight(
-      baseHeight = UniformHeightSampler.relative(0.5, 0.8)
-    )))
+    Repeat(100, XZHeight(
+      TriangleHeight(
+        baseHeight = UniformHeightSampler.relative(0.5, 0.8)
+      )
+    )
+    )
   )
 )

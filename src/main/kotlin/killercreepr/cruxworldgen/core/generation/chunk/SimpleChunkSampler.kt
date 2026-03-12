@@ -25,7 +25,6 @@ import killercreepr.cruxworldgen.core.context.SimpleTerrain2D
 import killercreepr.cruxworldgen.core.context.SimpleTerrain3D
 import killercreepr.cruxworldgen.core.context.SimpleTerrainSnapshot
 import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
-import net.minecraft.world.level.levelgen.NoiseChunk
 import org.bukkit.generator.WorldInfo
 import java.util.*
 

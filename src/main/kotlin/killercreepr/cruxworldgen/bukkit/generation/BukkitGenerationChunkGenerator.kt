@@ -3,10 +3,9 @@ package killercreepr.cruxworldgen.bukkit.generation
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.Terrain3D
 import killercreepr.cruxworldgen.api.decor.DecorationPipeline
-import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
+import killercreepr.cruxworldgen.api.feature.FeaturePipeline
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.generation.chunk.ChunkSampler
 import killercreepr.cruxworldgen.api.generation.chunk.SampledChunk
@@ -20,17 +19,11 @@ import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.region.BukkitLimitedRegion
-import killercreepr.cruxworldgen.core.feature.FeaturePipeline
-import killercreepr.cruxworldgen.core.noise.BaseNoiseKeys
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.block.Biome
-import org.bukkit.generator.BiomeProvider
-import org.bukkit.generator.BlockPopulator
-import org.bukkit.generator.ChunkGenerator
-import org.bukkit.generator.LimitedRegion
-import org.bukkit.generator.WorldInfo
+import org.bukkit.generator.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -109,7 +102,7 @@ class BukkitGenerationChunkGenerator(
   //val cache = ConcurrentHashMap<Long, SampledChunk>(5000)
   val cache: Cache<Long, CachedChunk> = CacheBuilder.newBuilder()
     .maximumSize(5000)
-    .expireAfterAccess(2, TimeUnit.MINUTES)
+    .expireAfterAccess(30, TimeUnit.SECONDS)
     .concurrencyLevel(4)
     .build()
 

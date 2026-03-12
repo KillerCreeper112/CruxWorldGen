@@ -4,9 +4,8 @@ import killercreepr.crux.api.data.CruxKeyed
 import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.VolumetricDecoration
-import killercreepr.cruxworldgen.api.generation.GenerationLayer
+import killercreepr.cruxworldgen.api.feature.PlacedFeature
 import killercreepr.cruxworldgen.api.material.MaterialProvider
-import killercreepr.cruxworldgen.core.feature.PlacedFeature
 
 interface Biome {
   val shape: BiomeShape

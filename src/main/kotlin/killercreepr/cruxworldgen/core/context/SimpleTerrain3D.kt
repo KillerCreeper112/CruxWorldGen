@@ -3,7 +3,7 @@ package killercreepr.cruxworldgen.core.context
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.terrain.Terrain3D
 import killercreepr.cruxworldgen.api.util.MathUtil.blockIndex
-import java.util.BitSet
+import java.util.*
 
 class SimpleTerrain3D(
   val ctx : GenerateContext,
