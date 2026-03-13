@@ -73,7 +73,7 @@ class TallGrassTriVolDecor(
     for(i in 0..<height) {
       val block = when (i) {
         0 -> bottom.value()
-        height -> top.value()
+        height-1 -> top.value()
         else -> middle.value()
       }
       region.setBlock(p.worldX, p.baseY+i, p.worldZ, block)

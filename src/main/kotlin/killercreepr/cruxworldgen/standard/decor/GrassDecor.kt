@@ -10,7 +10,7 @@ import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil
 
-class GrassDecor(
+open class GrassDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
   val chancePerPoint: Double = 0.18,

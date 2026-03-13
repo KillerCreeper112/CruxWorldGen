@@ -12,7 +12,7 @@ import killercreepr.cruxworldgen.bukkit.block.picker.AxisBlockPicker
 import org.bukkit.Axis
 import kotlin.math.abs
 
-class FallenTreeDecor(
+open class FallenTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
   val chancePerPoint: Double = 0.10,

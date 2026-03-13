@@ -8,7 +8,7 @@ import killercreepr.cruxworldgen.api.decor.PropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil
 
-class SingleDeadTreeDecor(
+open class SingleDeadTreeDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
   val chancePerPoint: Double = 0.18,

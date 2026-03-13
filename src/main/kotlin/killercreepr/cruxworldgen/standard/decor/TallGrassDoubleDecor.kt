@@ -1,4 +1,4 @@
-package killercreepr.cruxworldgen.test.decor
+package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
@@ -12,7 +12,7 @@ import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.chooseInt
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
 
-class TallGrassDoubleDecor(
+open class TallGrassDoubleDecor(
   override val pass: DecorationPass = DecorationPass.SURFACE,
 
   val chancePerPoint: Double = 0.18,
@@ -68,9 +68,9 @@ class TallGrassDoubleDecor(
     val p = placement as Placed
     val height = p.height
 
-    for(i in 0..height) {
+    for(i in 0..<height) {
       val block = when (i) {
-        height -> top.value()
+        height-1 -> top.value()
         else -> bottom.value()
       }
       region.setBlock(p.worldX, p.baseY+i, p.worldZ, block)

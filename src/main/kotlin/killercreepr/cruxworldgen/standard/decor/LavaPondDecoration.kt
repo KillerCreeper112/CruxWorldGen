@@ -14,7 +14,7 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.random.Random
 
-class LavaPondDecoration(
+open class LavaPondDecoration(
   private val worldSalt: Long,
   private val chancePerPoint: Double = 0.10,
   private val minRadius: Int = 3,
