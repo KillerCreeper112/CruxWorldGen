@@ -26,6 +26,13 @@ object MathUtil {
     (cy * (cellsZ + 1) + cz) * (cellsX + 1) + cx
   fun cellYFromWorld(worldY : Int, cellSize : Int, minY : Int) = Math.floorDiv(worldY - minY, cellSize)
 
+  fun pseudoRandomInfluence(x: Int, y: Int, z: Int, seed: Int = 0): Double {
+    var h = x.toLong() * 374761393L + y.toLong() * 668265263L + z.toLong() * 0x27d4eb2dL + seed.toLong()
+    h = (h xor (h shr 13)) * 1274126177L
+    val unsigned = h xor (h shr 16)
+    return (unsigned and 0xFFFFFFFFL).toDouble() / 0xFFFFFFFFL
+  }
+
   /*fun rotateXZ(x: Double, z: Double, angleDegrees: Double): Pair<Double, Double> {
     val radians = angleDegrees * PI / 180.0
     val c = cos(radians)
