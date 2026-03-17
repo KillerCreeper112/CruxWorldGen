@@ -32,6 +32,18 @@ class OreVeinFeature : Feature<OreConfig> {
       }
     }
 
+    if (size == 0) {
+      val x = origin.x
+      val y = origin.y
+      val z = origin.z
+      if (!region.isInRegion(x, y, z)) return
+      if (!cfg.canReplace.canReplace(region, rng, x, y, z)) return
+
+      val block = cfg.ore.getBlock(region, rng, x, y, z) ?: return
+      region.setBlock(x, y, z, block)
+      return
+    }
+
     val half = size / 2.0
     val x0 = origin.x + dx * half
     val x1 = origin.x - dx * half
@@ -42,14 +54,17 @@ class OreVeinFeature : Feature<OreConfig> {
     val y1 = origin.y + rng.nextInt(3) - 1
 
     val steps = size.coerceAtLeast(1)
+    //val steps = size.coerceAtLeast(1)
     for (i in 0 until steps) {
-      val t = i / (steps - 1.0).coerceAtLeast(1.0)
+      val t = (i + 0.5) / steps.toDouble()
+      //val t = i / (steps - 1.0).coerceAtLeast(1.0)
       val cx = Curve.lerp(x0, x1, t)
       val cy = Curve.lerp(y0.toDouble(), y1.toDouble(), t)
       val cz = Curve.lerp(z0, z1, t)
 
       // radius varies along vein
       val r = (rng.nextDouble() * size / 16.0 + 1.0) * kotlin.math.sin(Math.PI * t)
+      //if (r < 0.45) continue
       val rx = r
       val ry = r
       val rz = r

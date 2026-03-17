@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.api.feature
 
-import killercreepr.cruxadvancements.core.stat.AdvancementStats.cfg
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import java.util.*
 
@@ -28,6 +27,35 @@ interface UniformHeightSampler{
   fun isWithinRange(rng: Random,
                     region: LimitedRegion,
                     wy : Int) : Boolean
+}
+
+class AddToMinYCenterUniformHeightSampler(
+  val minY: Int,
+  val maxY: Int
+): UniformHeightSampler {
+  override fun sampleMinY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    return region.centerBounds.minY + minY
+  }
+
+  override fun sampleMaxY(
+    rng: Random,
+    region: LimitedRegion,
+    wx: Int,
+    wz: Int
+  ): Int {
+    return region.centerBounds.minY + maxY
+  }
+
+  override fun isWithinRange(
+    rng: Random,
+    region: LimitedRegion,
+    wy: Int
+  ): Boolean = wy in sampleMinY(rng, region, 0, 0)..sampleMaxY(rng, region, 0,0)
 }
 
 /**

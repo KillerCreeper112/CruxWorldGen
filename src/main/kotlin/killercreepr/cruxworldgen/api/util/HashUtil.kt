@@ -78,6 +78,15 @@ object HashUtil {
     return positive.toDouble() / (Long.MAX_VALUE.toDouble() + 1.0)
   }
 
+  fun mix2D(seed: Long, x: Int, z: Int): Long {
+    var h = seed
+    h = h xor (x.toLong() * -0x61c8864680b583ebL)
+    h = h xor (z.toLong() * 0x9E3779B97F4A715L)
+    h = (h xor (h ushr 30)) * -0x40a7b892e31b1a47L
+    h = (h xor (h ushr 27)) * -0x6b2fb644ecceee15L
+    return h xor (h ushr 31)
+  }
+
   fun hashSigned01(seed: Long): Double {
     var v = seed
     v = (v xor (v ushr 30)) * -4658895280553007687L
