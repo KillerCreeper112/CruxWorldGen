@@ -521,7 +521,7 @@ data class SimpleChunkSampler(
               (((localZ - localMediumCellOriginZ).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
             val mty =
               (((blockY - mediumLocalCellOriginY).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
-            surfaceBlend.primaryBiome().caves!!.interpolateCacheUntyped(
+            surfaceBlend.primaryBiome().caves?.interpolateCacheUntyped(
               caveCache[c000],
               caveCache[c100],
               caveCache[c010],
@@ -534,10 +534,13 @@ data class SimpleChunkSampler(
             )
           }
 
-          val cavesMacro = generation.blendedBiomeDensityCavesWithCache(
-            ctx, surfaceBlend, worldX, blockY, worldZ, signalWriter,
-            caveCtx, caveCache
-          ).finalDensity() + caveDetailNoise.noise3D(worldX, blockY, worldZ) * 0.12
+          val cavesMacro = if(caveCache == null) 0.0
+          else {
+            generation.blendedBiomeDensityCavesWithCache(
+              ctx, surfaceBlend, worldX, blockY, worldZ, signalWriter,
+              caveCtx, caveCache
+            ).finalDensity() + caveDetailNoise.noise3D(worldX, blockY, worldZ) * 0.12
+          }
 
           /*val caveCtx = SimpleCaveContext(
             worldX, blockY, worldZ,
