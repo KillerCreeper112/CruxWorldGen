@@ -5,13 +5,13 @@ import killercreepr.cruxworldgen.api.context.CaveContext
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 
 open class SimpleCaveContext(
-  override val worldX: Int,
-  override val y: Int,
-  override val worldZ: Int,
-  override val surfaceY: Int,
-  override val depthBelowSurface: Int,
-  override val terrainDensity: Double,
-  override val edge: BiomeEdgeContext,
-  override val signalWriter : SignalWriter
+  override var worldX: Int = 0,
+  override var y: Int = 0,
+  override var worldZ: Int = 0,
+  override var surfaceY: Int = 0,
+  override var depthBelowSurface: Int = 0,
+  override var terrainDensity: Double = 0.0,
+  override var edge: BiomeEdgeContext,
+  override var signalWriter : SignalWriter
 ) : CaveContext {
 }

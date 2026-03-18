@@ -1,9 +1,9 @@
 package killercreepr.cruxworldgen.api.context.volumetric
 
 data class VolumeEnv(
-  val surfaceY: Int,
-  val depthBelowSurface: Int,     // surfaceY - y
-  val heightAboveSurface: Int,    // y - surfaceY
-  val terrainDensity: Double,     // macro + detail BEFORE cave carve/add
-  val seaLevel: Int
+  var surfaceY: Int = 0,
+  var depthBelowSurface: Int = 0,     // surfaceY - y
+  var heightAboveSurface: Int = 0,    // y - surfaceY
+  var terrainDensity: Double = 0.0,     // macro + detail BEFORE cave carve/add
+  var seaLevel: Int = 0
 )

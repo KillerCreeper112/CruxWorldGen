@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.core.generation.chunk
 
 import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
@@ -116,6 +117,40 @@ data class SimpleChunkSampler(
     }
   }
 
+  fun findApproximateSurfaceY(
+    ctx: GenerateContext,
+    biomeBlend: BiomeBlendSample,
+    worldX: Int,
+    worldZ: Int,
+  ): Int {
+    val minY = ctx.chunkContext.minHeight
+    val maxY = ctx.chunkContext.maxHeight - 1
+    val terrainDetailNoise = ctx.noise.get(BaseNoiseKeys.TerrainDetail)
+
+    fun densityAt(y: Int): Double {
+      val terrainMacro =
+        generation.blendedBiomeDensity(ctx, biomeBlend, worldX, y, worldZ, SignalHandler.DUMMY).finalDensity()
+      val detail = terrainDetailNoise.noise3D(worldX, y, worldZ) * 3.0
+      return terrainMacro + detail
+    }
+
+    val step = 4
+    var y = maxY
+
+    while (y >= minY) {
+      if (densityAt(y) > 0.0) {
+        val refineTop = minOf(maxY, y + step - 1)
+        for (yy in refineTop downTo (y + 1)) {
+          if (densityAt(yy) > 0.0) return yy
+        }
+        return y
+      }
+      y -= step
+    }
+
+    return minY
+  }
+
   fun sampleCellCorners(
     generateCtx: GenerateContext,
     chunkX: Int,
@@ -132,6 +167,11 @@ data class SimpleChunkSampler(
   ) {
     val chunkWidth = worldDetails.chunkWidth
     val chunkDepth = worldDetails.chunkDepth
+    val terrainDetailNoise = generateCtx.noise.get(BaseNoiseKeys.TerrainDetail)
+
+    val env = VolumeEnv(
+      seaLevel = generateCtx.chunkContext.seaLevel
+    )
 
     for (cellCornerX in 0..biomeCellCountX) {
       for (cellCornerZ in 0..biomeCellCountZ) {
@@ -144,24 +184,14 @@ data class SimpleChunkSampler(
         val worldX = chunkX * chunkWidth + localCornerX
         val worldZ = chunkZ * chunkDepth + localCornerZ
 
-        //
         val zone = generation.zones.sampleZone(generateCtx, worldX, worldZ)
         val surfaceBlend = zone.biomes.sampleBiomeBlend(generateCtx, worldX, worldZ)
-        /*val surfaceY = findSurfaceY(
-          generateCtx, surfaceBlend,
-          worldX, worldZ
-        )*/
 
         val columnIndex = cornerColumnIndex(cellCornerX, cellCornerZ, biomeCellCountX)
         surfaceBlendByCornerColumn[columnIndex] = surfaceBlend
-        //
 
-        //val columnIndex = columnIndex(sampleLocalX, sampleLocalZ, chunkWidth)
-        //val surfaceBlend = surfaceBiomeBlendByColumn[columnIndex]!!
-        //val surfaceY = surfaceYByColumn[columnIndex]
-
-
-        for (cellCornerY in 0..biomeCellCountY) {
+        var firstSolidCoarseY = Int.MIN_VALUE
+        for (cellCornerY in biomeCellCountY downTo 0) {
           val worldY = (minBlockY + cellCornerY * biomeCellSize).coerceIn(minBlockY, maxBlockY)
 
           val cornerIndex = cornerIndex(cellCornerX, cellCornerZ, cellCornerY, biomeCellCountX, biomeCellCountZ)
@@ -170,27 +200,54 @@ data class SimpleChunkSampler(
             .blendedBiomeDensity(generateCtx, surfaceBlend, worldX, worldY, worldZ, SignalHandler.DUMMY)
             .finalDensity()
 
-          /*val caveCtx = SimpleCaveContext(
-            worldX, worldY, worldZ,
-            0, 0,
-            terrainMacro, surfaceBlend.edgeContext,
-            SignalHandler.DUMMY
-          )*/
-
-          /*val caveMacro = generation
-            .blendedBiomeDensityCaves(generateCtx, surfaceBlend, worldX, worldY, worldZ, SignalHandler.DUMMY, caveCtx)
-            .finalDensity()*/
+          if (firstSolidCoarseY == Int.MIN_VALUE) {
+            val detail = terrainDetailNoise.noise3D(worldX, worldY, worldZ) * 3.0
+            val terrainFinal = terrainMacro + detail
+            if (terrainFinal > 0.0) {
+              firstSolidCoarseY = worldY
+            }
+          }
 
           densityTerrainMacroByCorner[cornerIndex] = terrainMacro
-          //densityCavesMacroByCorner[cornerIndex] = caveMacro
+        }
 
-          val env = VolumeEnv(
-            surfaceY = 0,//surfaceY,
-            depthBelowSurface = 0,//surfaceY - worldY,
-            heightAboveSurface = 0,//worldY - surfaceY,
-            terrainDensity = terrainMacro,
-            seaLevel = generateCtx.chunkContext.seaLevel
-          )
+        val surfaceY = if(firstSolidCoarseY == Int.MIN_VALUE) minBlockY
+        else firstSolidCoarseY /*if (firstSolidCoarseY == Int.MIN_VALUE) {
+          minBlockY
+        } else {
+          var refined = firstSolidCoarseY
+
+          val refineTop = minOf(maxBlockY, firstSolidCoarseY + biomeCellSize - 1)
+          for (yy in refineTop downTo (firstSolidCoarseY + 1)) {
+            val terrainMacro = generation
+              .blendedBiomeDensity(generateCtx, surfaceBlend, worldX, yy, worldZ, SignalHandler.DUMMY)
+              .finalDensity()
+
+            val detail = terrainDetailNoise.noise3D(worldX, yy, worldZ) * 3.0
+            val terrainFinal = terrainMacro + detail
+            if (terrainFinal > 0.0) {
+              refined = yy
+              break
+            }
+          }
+
+          refined
+        }*/
+
+        for(cellCornerY in 0..biomeCellCountY) {
+          val worldY = (minBlockY + cellCornerY * biomeCellSize).coerceIn(minBlockY, maxBlockY)
+
+
+          val cornerIndex = cornerIndex(cellCornerX, cellCornerZ, cellCornerY, biomeCellCountX, biomeCellCountZ)
+
+          val terrainMacro = densityTerrainMacroByCorner[cornerIndex]
+
+          env.apply {
+            this@apply.surfaceY = surfaceY
+            depthBelowSurface = surfaceY - worldY
+            heightAboveSurface = worldY - surfaceY
+            terrainDensity = terrainMacro
+          }
 
           val volBlend = generation.volumetricBiomes.sample(
             generateCtx, worldX, worldY, worldZ, surfaceBlend, env, SignalHandler.DUMMY
@@ -325,7 +382,11 @@ data class SimpleChunkSampler(
 
     val mediumCornerArraySize = (mediumCellCountX + 1) * (mediumCellCountZ + 1) * (mediumCellCountY + 1)
 
-    //val blockCache = arrayOfNulls<Any>(mediumCornerArraySize)
+    val fineEnv = VolumeEnv()
+    val caveCtx = SimpleCaveContext(
+      edge = BiomeEdgeContext.dummy(),
+      signalWriter = signalWriter
+    )
 
     for (localX in 0 until chunkWidth) {
       for (localZ in 0 until chunkDepth) {
@@ -333,21 +394,6 @@ data class SimpleChunkSampler(
         val worldZ = chunkZ * chunkDepth + localZ
 
         val columnIndex = columnIndex(localX, localZ, chunkWidth)
-        //val surfaceY = surfaceY[columnIndex]
-
-        val airAbove = IntArray(height)
-        val airBelow = IntArray(height)
-
-        val caveAirAbove = IntArray(height)
-        val caveAirBelow = IntArray(height)
-
-        /*computeAirRuns(
-          density, localX, localZ, minY, maxY, chunkWidth, chunkDepth, airAbove, airBelow,
-          caveAirAbove, caveAirBelow, terrain3D
-        )*/
-
-        val seaLevel = ctx.chunkContext.seaLevel
-        //val columnUnderwater = surfaceY < seaLevel
 
         val cellX = (localX / biomeCellSize).coerceIn(0, biomeCellCountX - 1)
         val cellZ = (localZ / biomeCellSize).coerceIn(0, biomeCellCountZ - 1)
@@ -366,6 +412,21 @@ data class SimpleChunkSampler(
 
         var baseSurfaceY = minY
         var foundBaseSurfaceY = false
+
+
+        val tx = (((localX - localCellOriginX).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+        val tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
+        val cornerColumnIndex = cornerColumnIndex(cellX, cellZ, biomeCellCountX)
+
+        val mtx =
+          (((localX - localMediumCellOriginX).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
+        val mtz =
+          (((localZ - localMediumCellOriginZ).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
+
+        val surfaceBlend = surfaceBlendByCornerColumn[cornerColumnIndex]!!
+        val primaryBiome = surfaceBlend.primaryBiome()
+        val primaryBiomeCaves = primaryBiome.caves
+
         for (blockY in maxY downTo minY) {
           val iy = blockY - minY
 
@@ -373,7 +434,6 @@ data class SimpleChunkSampler(
 
           val blockIndex = blockIndex(localX, localZ, blockY, minY, chunkWidth, chunkDepth)
           val cornerIndex = cornerIndex(cellX, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
-          val cornerColumnIndex = cornerColumnIndex(cellX, cellZ, biomeCellCountX)
 
           val mediumCellY = ((blockY - minY) / mediumCellSize).coerceIn(0, mediumCellCountY - 1)
           val mediumCornerIndex = cornerIndex(mediumCellX, mediumCellZ, mediumCellY, mediumCellCountX, mediumCellCountZ)
@@ -382,8 +442,6 @@ data class SimpleChunkSampler(
 
           val localCellOriginY = minY + cellY * biomeCellSize
 
-          val tx = (((localX - localCellOriginX).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
-          val tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
           val ty = (((blockY - localCellOriginY).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
 
           val detail = terrainDetailNoise.noise3D(worldX, blockY, worldZ) * 3.0
@@ -399,88 +457,60 @@ data class SimpleChunkSampler(
           if (terrainMacro > 0.0) {
             if (!foundBaseSurfaceY) {
               baseSurfaceY = blockY
-              //baseSurfaceYColumn[iy] = blockY
               foundBaseSurfaceY = true
             }
           }
-          /*if(blockCache[mediumCornerIndex] != null) continue
-
-          val surfaceBlend = surfaceBlendByCornerColumn[cornerColumnIndex]!!
-
-          val c000 = mediumCornerIndex
-          val c100 = cornerIndex(mediumCellX + 1, mediumCellZ, mediumCellY, mediumCellCountX, mediumCellCountZ)
-          val c010 = cornerIndex(mediumCellX, mediumCellZ + 1, mediumCellY, mediumCellCountX, mediumCellCountZ)
-          val c110 = cornerIndex(mediumCellX + 1, mediumCellZ + 1, mediumCellY, mediumCellCountX, mediumCellCountZ)
-
-          val c001 = cornerIndex(mediumCellX, mediumCellZ, mediumCellY + 1, mediumCellCountX, mediumCellCountZ)
-          val c101 = cornerIndex(mediumCellX + 1, mediumCellZ, mediumCellY + 1, mediumCellCountX, mediumCellCountZ)
-          val c011 = cornerIndex(mediumCellX, mediumCellZ + 1, mediumCellY + 1, mediumCellCountX, mediumCellCountZ)
-          val c111 = cornerIndex(mediumCellX + 1, mediumCellZ + 1, mediumCellY + 1, mediumCellCountX, mediumCellCountZ)
-
-          val mtx = (((localX - localMediumCellOriginX).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
-          val mtz = (((localZ - localMediumCellOriginZ).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
-          val mty = (((blockY - mediumLocalCellOriginY).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
-          blockCache[mediumCornerIndex] = surfaceBlend.primaryBiome().caves!!.interpolateCacheUntyped(
-            caveCache[c000],
-            caveCache[c100],
-            caveCache[c010],
-            caveCache[c110],
-            caveCache[c001],
-            caveCache[c101],
-            caveCache[c011],
-            caveCache[c111],
-            mtx, mty, mtz
-          )*/
         }
+
+        var currentCellY = Int.MIN_VALUE
+        var localCellOriginY = 0
+        var c000 = 0
+        var c100 = 0
+        var c010 = 0
+        var c110 = 0
+        var c001 = 0
+        var c101 = 0
+        var c011 = 0
+        var c111 = 0
 
         var setSurfaceY = false
         for (blockY in maxY downTo minY) {
           val iy = blockY - minY
-          val cellY = ((blockY - minY) / biomeCellSize).coerceIn(0, biomeCellCountY - 1)
+          //val cellY = ((blockY - minY) / biomeCellSize).coerceIn(0, biomeCellCountY - 1)
           val blockIndex = blockIndex(localX, localZ, blockY, minY, chunkWidth, chunkDepth)
-          val cornerIndex = cornerIndex(cellX, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
 
           val mediumCellY = ((blockY - minY) / mediumCellSize).coerceIn(0, mediumCellCountY - 1)
           val mediumCornerIndex = cornerIndex(mediumCellX, mediumCellZ, mediumCellY, mediumCellCountX, mediumCellCountZ)
 
           val mediumLocalCellOriginY = minY + mediumCellY * mediumCellSize
 
-          val cornerColumnIndex = cornerColumnIndex(cellX, cellZ, biomeCellCountX)
+          val cellY = ((blockY - minY) / biomeCellSize).coerceIn(0, biomeCellCountY - 1)
+          if (cellY != currentCellY) {
+            currentCellY = cellY
+            localCellOriginY = minY + cellY * biomeCellSize
 
-          val c000 = cornerIndex
-          val c100 = cornerIndex(cellX + 1, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
-          val c010 = cornerIndex(cellX, cellZ + 1, cellY, biomeCellCountX, biomeCellCountZ)
-          val c110 = cornerIndex(cellX + 1, cellZ + 1, cellY, biomeCellCountX, biomeCellCountZ)
+            c000 = cornerIndex(cellX, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
+            c100 = cornerIndex(cellX + 1, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
+            c010 = cornerIndex(cellX, cellZ + 1, cellY, biomeCellCountX, biomeCellCountZ)
+            c110 = cornerIndex(cellX + 1, cellZ + 1, cellY, biomeCellCountX, biomeCellCountZ)
+            c001 = cornerIndex(cellX, cellZ, cellY + 1, biomeCellCountX, biomeCellCountZ)
+            c101 = cornerIndex(cellX + 1, cellZ, cellY + 1, biomeCellCountX, biomeCellCountZ)
+            c011 = cornerIndex(cellX, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
+            c111 = cornerIndex(cellX + 1, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
+          }
+          //val localCellOriginY = minY + cellY * biomeCellSize
 
-          val c001 = cornerIndex(cellX, cellZ, cellY + 1, biomeCellCountX, biomeCellCountZ)
-          val c101 = cornerIndex(cellX + 1, cellZ, cellY + 1, biomeCellCountX, biomeCellCountZ)
-          val c011 = cornerIndex(cellX, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
-          val c111 = cornerIndex(cellX + 1, cellZ + 1, cellY + 1, biomeCellCountX, biomeCellCountZ)
-          val localCellOriginY = minY + cellY * biomeCellSize
-
-          val tx = (((localX - localCellOriginX).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
-          val tz = (((localZ - localCellOriginZ).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
           val ty = (((blockY - localCellOriginY).toDouble() + 0.5) / biomeCellSize.toDouble()).coerceIn(0.0, 1.0)
 
           val terrainMacro = baseTerrainDensityColumn[iy]
 
-          /*val cavesMacro = interpolatedCornerDensityAt(
-            localX, blockY, localZ,
-            minY,
-            mediumCellSize,
-            mediumCellCountX, mediumCellCountZ,
-            mediumCellCountY,
-            densityCavesMacroByCorner,
-            false
-          )*/// + caveDetailNoise.noise3D(worldX, blockY, worldZ) * 0.12
-
-          //val caves = Curve.smoothstep(threshold, threshold + ramp, cavesMacro)
-
-          val surfaceBlend = surfaceBlendByCornerColumn[cornerColumnIndex]!!
-
-          val fineEnv = VolumeEnv(
-            baseSurfaceY, 0, 0, 0.0, 0
-          )
+          fineEnv.apply {
+            surfaceY = baseSurfaceY
+            depthBelowSurface = baseSurfaceY - blockY
+            heightAboveSurface = blockY - baseSurfaceY
+            terrainDensity = terrainMacro
+            seaLevel = ctx.chunkContext.seaLevel
+          }
           val fineTerrain = generation.blendedFineBiomeDensity(
             ctx, surfaceBlend, worldX, blockY, worldZ,
             fineEnv,
@@ -495,13 +525,15 @@ data class SimpleChunkSampler(
               surfaceYByBlockColumn[columnIndex] = blockY
             }
           }
-          val caveCtx = SimpleCaveContext(
-            worldX, blockY, worldZ,
-            baseSurfaceY, baseSurfaceY - blockY,
-            terrain, surfaceBlend.edgeContext,
-            signalWriter
-          )
-          //val caveCache = blockCache[mediumCornerIndex]
+          caveCtx.apply {
+            this@apply.worldX = worldX
+            this@apply.y = blockY
+            this@apply.worldZ = worldZ
+            surfaceY = baseSurfaceY
+            depthBelowSurface = baseSurfaceY - blockY
+            terrainDensity = terrain
+            edge = surfaceBlend.edgeContext
+          }
 
           val caveCache = run {
             val c000 = mediumCornerIndex
@@ -515,13 +547,9 @@ data class SimpleChunkSampler(
             val c111 =
               cornerIndex(mediumCellX + 1, mediumCellZ + 1, mediumCellY + 1, mediumCellCountX, mediumCellCountZ)
 
-            val mtx =
-              (((localX - localMediumCellOriginX).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
-            val mtz =
-              (((localZ - localMediumCellOriginZ).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
             val mty =
               (((blockY - mediumLocalCellOriginY).toDouble() + 0.5) / mediumCellSize.toDouble()).coerceIn(0.0, 1.0)
-            surfaceBlend.primaryBiome().caves?.interpolateCacheUntyped(
+            primaryBiomeCaves?.interpolateCacheUntyped(
               caveCache[c000],
               caveCache[c100],
               caveCache[c010],
@@ -541,17 +569,6 @@ data class SimpleChunkSampler(
               caveCtx, caveCache
             ).finalDensity() + caveDetailNoise.noise3D(worldX, blockY, worldZ) * 0.12
           }
-
-          /*val caveCtx = SimpleCaveContext(
-            worldX, blockY, worldZ,
-            baseSurfaceY, baseSurfaceY - blockY,
-            terrain, surfaceBlend.edgeContext,
-            signalWriter
-          )
-          val cavesMacro = generation.blendedBiomeDensityCaves(
-            ctx, surfaceBlend, worldX, blockY, worldZ,
-            signalWriter,caveCtx
-          ).finalDensity()*/
 
           val terrainFinal = terrain + cavesMacro
 
@@ -575,11 +592,9 @@ data class SimpleChunkSampler(
             volumetricBlendByCorner[c111]!!,
             tx, ty, tz
           )
-          val volumeEnv = VolumeEnv(
-            0, 0, 0, 0.0, 0
-          )
+          fineEnv.terrainDensity = terrainFinal
           val volStack = generation.blendedVolumetricDensity(
-            ctx, volBlend, worldX, blockY, worldZ, volumeEnv,
+            ctx, volBlend, worldX, blockY, worldZ, fineEnv,
             signalWriter
           )
           val volumetricContribution = volStack.finalDensity()
@@ -589,7 +604,7 @@ data class SimpleChunkSampler(
 
           val materialBiome =
             if (!volBlend.isEmpty() && volumetricContribution > 0.01) volBlend.dominant()
-            else surfaceBlend.primaryBiome()
+            else primaryBiome
           primaryBiomeByBlock[blockIndex] = materialBiome
         }
       }

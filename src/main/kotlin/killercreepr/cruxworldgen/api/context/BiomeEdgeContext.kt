@@ -4,6 +4,9 @@ import killercreepr.cruxworldgen.core.context.SimpleBiomeEdgeContext
 
 interface BiomeEdgeContext{
   companion object{
+    private val DUMMY = biomeEdgeContext(0.0, 0.0)
+    fun dummy(): BiomeEdgeContext = DUMMY
+
     fun biomeEdgeContext(
       distanceToEdgeBlocks: Double,
       blendRadiusBlocks: Double
