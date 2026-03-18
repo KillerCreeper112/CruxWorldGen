@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import killercreepr.crux.core.plugin.CruxPlugin
 import killercreepr.crux.core.util.CruxWorldUtil
+import killercreepr.cruxworldgen.api.feature.RelativeHeightFilter
 import killercreepr.cruxworldgen.api.noise.NoiseAutoInstaller
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
@@ -23,6 +24,7 @@ import killercreepr.cruxworldgen.core.structure.SimpleStructureRegistry
 import killercreepr.cruxworldgen.core.zone.SimpleZoneRegistry
 import killercreepr.cruxworldgen.crux.block.CruxBlockResolver
 import killercreepr.cruxworldgen.crux.block.CruxBlockSectionReader
+import killercreepr.cruxworldgen.test.biome.volumetric.GlacialCaverns
 import killercreepr.cruxworldgen.test.zone.TestZone
 import org.bukkit.WorldCreator
 import org.bukkit.entity.Player
@@ -61,6 +63,9 @@ class CruxWorldGenPlugin : CruxPlugin() {
                     listOf(TestZone())
                   )
                   val volBiomes = VolumetricBiomeRegistry(listOf(
+                    GlacialCaverns(
+                      yRange = RelativeHeightFilter(0.0f, 0.5f)
+                    )
                     /*SmoothSkyIslandsV2(
                       yRange = RelativeHeightFilter(0.4f, 0.9f)
                     ),*/

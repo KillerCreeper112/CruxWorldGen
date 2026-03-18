@@ -58,6 +58,10 @@ data class VolBiomeBlendSample(
   }
 
   fun isEmpty() = weighted.isEmpty()
+
+  fun dominantWeighted(): WeightedVolBiome = weighted.maxBy { it.weight }
+
+  fun dominantWeight(): Double = weighted.maxBy { it.weight }.weight
   fun dominant(): VolumetricBiome = weighted.maxBy { it.weight }.biome
 
   fun weightOf(biome : Biome) : Double{

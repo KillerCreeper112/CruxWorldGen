@@ -5,6 +5,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.density.VolDensityStack
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.zone.ZoneRegistry
 import killercreepr.cruxworldgen.core.biome.volumetric.VolumetricBiomeRegistry
@@ -69,5 +70,5 @@ interface GenerationPipeline{
     worldX: Int, y: Int, worldZ: Int,
     env: VolumeEnv,
     signals: SignalWriter
-  ): DensityStack
+  ): VolDensityStack
 }

@@ -5,6 +5,7 @@ import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolBiomeBlendSample
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.density.VolDensityStack
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.generation.GenerationPipeline
 import killercreepr.cruxworldgen.api.signal.SignalWriter
@@ -165,23 +166,25 @@ class SimpleGenerationPipeline(
     worldX: Int, y: Int, worldZ: Int,
     env: VolumeEnv,
     signals: SignalWriter
-  ): DensityStack {
+  ): VolDensityStack {
     var base = 0.0
     var add = 0.0
     var carve = 0.0
+    var replaceMask = 0.0
 
     for (wb in volBlend.weighted) {
-      //todo val shape = wb.biome.shape(layer) ?: continue
       val s = wb.biome.shape.density(ctx, worldX, y, worldZ, env, signals) ?: continue
       base  += wb.weight * s.base
       add   += wb.weight * s.add
       carve += wb.weight * s.carve
+      replaceMask += wb.weight * s.replaceMask
     }
 
-    return DensityStack.densityStack(
-      base = 0.0,
+    return VolDensityStack.volDensityStack(
+      base = base,
       add = add,
-      carve = carve
+      carve = carve,
+      replaceMask = replaceMask.coerceIn(0.0, 1.0)
     )
   }
 }
