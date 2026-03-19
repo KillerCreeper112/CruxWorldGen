@@ -38,6 +38,27 @@ object HashUtil {
 
   fun mixSeed(
     seed: Long,
+    x: Int, z: Int,
+    salt: Long
+  ): Long {
+    var h = seed xor salt
+
+    // Accumulate all fields (multiplication overflow is intended)
+    h = h * PHI + x.toLong()
+    h = h * PHI + z.toLong()
+
+    // SplitMix64 finalizer (avalanche)
+    h = h xor (h ushr 30)
+    h *= 0xBF58476D1CE4E5B9uL.toLong()
+    h = h xor (h ushr 27)
+    h *= 0x94D049BB133111EBuL.toLong()
+    h = h xor (h ushr 31)
+
+    return h
+  }
+
+  fun mixSeed(
+    seed: Long,
     x: Int, y: Int, z: Int,
     salt: Long
   ): Long {

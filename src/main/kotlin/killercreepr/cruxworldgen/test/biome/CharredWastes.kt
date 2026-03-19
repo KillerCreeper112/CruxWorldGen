@@ -6,6 +6,7 @@ import killercreepr.cruxworldgen.api.biome.BiomeShape
 import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
 import killercreepr.cruxworldgen.api.biome.FineBiomeShape
 import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.block.BlockGetter
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
@@ -30,10 +31,10 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.extension.remap01
-import killercreepr.cruxworldgen.standard.cave.SpaghettiCaves
-import killercreepr.cruxworldgen.standard.cave.Standard3DCaves
-import killercreepr.cruxworldgen.standard.cave.WormCaves
+import killercreepr.cruxworldgen.standard.decor.BracketFungusDecor
+import killercreepr.cruxworldgen.standard.decor.FunnelMushroomDecor
 import org.bukkit.Material
+import kotlin.Double
 import kotlin.math.*
 
 class CharredWastes(
@@ -45,6 +46,44 @@ class CharredWastes(
     )
   ),
   override val decorations: List<Decoration> = listOf(
+    /*BrownMushroomDecor(
+      chancePerPoint = 0.1,
+      stemHeightMin = 12,
+      stemHeightMax = 36,
+      capRadiusMin = 8f,
+      capRadiusMax = 16f,
+      capHeightScaleMin = 0.12f,
+      capHeightScaleMax = 0.25f,
+      stemWanderStrength = 0.3f,
+      capNoise = Noise.BrownMushroomCap,
+      stemNoise = Noise.BrownMushroomStem,
+      capBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.BROWN_MUSHROOM_BLOCK)),
+      stemBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
+    )*/
+    /*PointedMushroomDecor(
+      chancePerPoint = 0.05,
+      stemHeightMin = 12,
+      stemHeightMax = 36,
+      capRadiusMin = 8f,
+      capRadiusMax = 16f,
+      stemWanderStrength = 0.3f,
+
+      rimCurlMin = 0.5,
+      rimCurlMax = 1.5,
+
+      rimDropFractionMin = 0.5,
+      rimDropFractionMax = 0.8,
+
+      capNoise = Noise.BrownMushroomCap,
+      stemNoise = Noise.BrownMushroomStem,
+      capBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
+      stemBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
+    )*/
+    BracketFungusDecor(
+      chancePerPoint = 0.1,
+      topBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
+      bottomBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
+    )
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): BlockData {
@@ -112,6 +151,12 @@ class CharredWastes(
   }
 
   object Noise : NoiseModule {
+    object BrownMushroomCap : NoiseKey {
+      override val id = "biome.charred_wastes.brown_mushroom.cap"
+    }
+    object BrownMushroomStem : NoiseKey {
+      override val id = "biome.charred_wastes.brown_mushroom.stem"
+    }
     object FissureWarp2D : NoiseKey {
       override val id = "biome.charred_wastes.fissure.warp2D"
     }
@@ -157,6 +202,22 @@ class CharredWastes(
     }
 
     override fun install(bank: NoiseBank) {
+      bank.register(BrownMushroomCap) { seed ->
+        NoiseField.Companion.noiseField(seed) {
+          frequency(0.015)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(3)
+        }
+      }
+      bank.register(BrownMushroomStem) { seed ->
+        NoiseField.Companion.noiseField(seed) {
+          frequency(0.07)
+            .noiseType(CruxNoise.NoiseType.OpenSimplex2)
+            .fractalType(CruxNoise.FractalType.FBm)
+            .fractalOctaves(2)
+        }
+      }
       bank.register(Base2D) { seed ->
         NoiseField.Companion.noiseField(seed) {
           frequency(0.0017) // big rolling, ~700 block wavelength
