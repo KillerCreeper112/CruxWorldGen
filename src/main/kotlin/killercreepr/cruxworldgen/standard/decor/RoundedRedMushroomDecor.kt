@@ -93,7 +93,7 @@ open class RoundedRedMushroomDecor(
     val rimCurl      = HashUtil.chooseDouble(rng, rimCurlMin, rimCurlMax);             rng = mixSeed(rng, 23L)
     val domeFlatten  = HashUtil.chooseDouble(rng, domeFlattenMin, domeFlattenMax)
 
-    val stemTopY     = p.worldY + stemHeight
+    val stemTopY = p.worldY + stemHeight - 1//todo maybe remove -1
     // Underside reference — the flat bottom of the cap center
     val undersideY   = stemTopY
     val rimDropBlocks = (capRadius * rimDrop)
@@ -196,8 +196,28 @@ open class RoundedRedMushroomDecor(
         // Final surface Y: dome lifts up, droop pulls edge down
         val surfaceY = undersideY + domeY - droopY + jitter
 
-        // Place a shell of `capThickness` blocks below the surface
+        //
+        val steepness = Curve.smoothstep(0.5, 1.0, t)
+        val gapPad = (steepness * (rimDropBlocks * 0.4 + capThickness + 1)).toInt()
+
+        val bottomOfCap = minOf(
+          (undersideY - droopY + jitter * 0.3).toInt() - gapPad,
+          surfaceY.toInt() - capThickness
+        )
+
         for (worldY in scanMin..scanMax) {
+          if (!region.isInRegion(bx, worldY, bz)) continue
+          if (!region.terrainQueries.isEmpty(bx, worldY, bz)) continue
+
+          if (worldY in bottomOfCap..surfaceY.toInt()) {
+            val block = capBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            region.setBlock(bx, worldY, bz, block)
+          }
+        }
+        //
+
+        // Place a shell of `capThickness` blocks below the surface
+        /*for (worldY in scanMin..scanMax) {
           if (!region.isInRegion(bx, worldY, bz)) continue
           if (!region.terrainQueries.isEmpty(bx, worldY, bz)) continue
 
@@ -208,7 +228,7 @@ open class RoundedRedMushroomDecor(
             val block = capBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
-        }
+        }*/
       }
     }
   }
