@@ -32,7 +32,9 @@ import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.extension.remap01
 import killercreepr.cruxworldgen.standard.decor.BracketFungusDecor
+import killercreepr.cruxworldgen.standard.decor.BrownMushroomDecor
 import killercreepr.cruxworldgen.standard.decor.FunnelMushroomDecor
+import killercreepr.cruxworldgen.standard.decor.RoundedRedMushroomDecor
 import org.bukkit.Material
 import kotlin.Double
 import kotlin.math.*
@@ -46,20 +48,18 @@ class CharredWastes(
     )
   ),
   override val decorations: List<Decoration> = listOf(
-    /*BrownMushroomDecor(
+    RoundedRedMushroomDecor(
       chancePerPoint = 0.1,
       stemHeightMin = 12,
       stemHeightMax = 36,
       capRadiusMin = 8f,
       capRadiusMax = 16f,
-      capHeightScaleMin = 0.12f,
-      capHeightScaleMax = 0.25f,
       stemWanderStrength = 0.3f,
       capNoise = Noise.BrownMushroomCap,
       stemNoise = Noise.BrownMushroomStem,
-      capBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.BROWN_MUSHROOM_BLOCK)),
+      capBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
       stemBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
-    )*/
+    ),
     /*PointedMushroomDecor(
       chancePerPoint = 0.05,
       stemHeightMin = 12,
@@ -79,11 +79,6 @@ class CharredWastes(
       capBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
       stemBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
     )*/
-    BracketFungusDecor(
-      chancePerPoint = 0.1,
-      topBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
-      bottomBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
-    )
   ),
   override val materialProvider: MaterialProvider = object : MaterialProvider {
     override fun chooseMaterial(context: MaterialContext): BlockData {
