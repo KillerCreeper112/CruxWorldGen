@@ -1,5 +1,9 @@
 package killercreepr.cruxworldgen.api.util
 
+import net.minecraft.core.SectionPos.x
+import net.minecraft.core.SectionPos.y
+import net.minecraft.core.SectionPos.z
+
 object HashUtil {
   const val HASH_SALT: Long = -7046029254386353131L //0x9E3779B97F4A7C15L
   const val HASH_MUL_X: Long = 7145483588892929177L
@@ -13,6 +17,23 @@ object HashUtil {
     val clamped = pTrue.coerceIn(0.0, 1.0)
     val r = chooseInt(seed, 0, 9999)
     return r < (clamped * 10000.0).toInt()
+  }
+
+  fun mixSeed(
+    seed: Long,
+    salt: Long
+  ): Long{
+    var h = seed xor salt
+
+    // Accumulate all fields (multiplication overflow is intended)
+
+    // SplitMix64 finalizer (avalanche)
+    h = h xor (h ushr 30)
+    h *= 0xBF58476D1CE4E5B9uL.toLong()
+    h = h xor (h ushr 27)
+    h *= 0x94D049BB133111EBuL.toLong()
+    h = h xor (h ushr 31)
+    return h
   }
 
   fun mixSeed(
@@ -95,6 +116,25 @@ object HashUtil {
     // map to [-1,1]
     val u = (v and Long.MAX_VALUE).toDouble() / Long.MAX_VALUE.toDouble()
     return u * 2.0 - 1.0
+  }
+
+  /** Deterministic random double in [min, max]. */
+  fun chooseDouble(seed: Long, min: Double, max: Double): Double {
+    if (max <= min) return min
+    return min + hash01(seed) * (max - min)
+  }
+
+  /** Deterministic random float in [min, max]. */
+  fun chooseFloat(seed: Long, min: Float, max: Float): Float {
+    if (max <= min) return min
+    return (min + hash01(seed).toFloat() * (max - min))
+  }
+
+  /** Deterministic random long in [min, max]. */
+  fun chooseLong(seed: Long, min: Long, max: Long): Long {
+    if (max <= min) return min
+    val range = max - min + 1
+    return min + ((seed and Long.MAX_VALUE) % range)
   }
 
   /** Deterministic random integer in [min-max]. */
