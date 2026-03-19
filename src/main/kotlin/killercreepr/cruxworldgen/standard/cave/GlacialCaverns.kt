@@ -22,6 +22,8 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.extension.remap01
 import killercreepr.cruxworldgen.standard.decor.volumetric.IcicleVolDecor
 import killercreepr.cruxworldgen.standard.decor.volumetric.StalactiteVolDecor
+import net.minecraft.core.SectionPos.x
+import net.minecraft.core.SectionPos.z
 import org.bukkit.Material
 import org.bukkit.block.Biome
 import kotlin.math.max
@@ -208,32 +210,39 @@ class GlacialCaverns(
       signals: SignalWriter
     ): VolDensityStack? {
       if (!yRange.isWithinRange(ctx, y)) return VolDensityStack.emptyStack()
-      val solidDensity = max(0.0, env.terrainDensity)
 
       val x = worldX
       val z = worldZ
 
-      val carveNoise = ctx.noise.get(noise.cavern3D)
+      val suitability = suitability(ctx, x, y, z, env, signals)
+      if (suitability <= 0.0) return VolDensityStack.emptyStack()
+
+      val solidDensity = max(0.0, env.terrainDensity)
 
       val wx = x + (ctx.noise.get(noise.warpX3D).noise3D(x,y,z) * 70.0)
       val wy = y + (ctx.noise.get(noise.warpY3D).noise3D(x,y,z) * 10.0)
       val wz = z + (ctx.noise.get(noise.warpZ3D).noise3D(x,y,z) * 70.0)
 
-      val raw = carveNoise.noise3D(wx, wy, wz)
+      val raw = ctx.noise.get(noise.cavern3D).noise3D(wx, wy, wz)
 
       val threshold = 0.3
       val ramp = 0.5
-
       val startRaw = threshold * 2.0 - 1.0
       val endRaw = (threshold + ramp) * 2.0 - 1.0
 
       if (raw <= startRaw) return VolDensityStack.emptyStack()
 
+// Full carve strength — suitability only gates the edge via the early return above
       val carveStrength = solidDensity + 0.8
       val shelf = ctx.noise.get(noise.shelf3D).noise3D(x * 0.8, y * 0.6, z * 0.8) * 12.0
+
+// Suitability thins out the edges by scaling the final output,
+// but doesn't interfere with whether a cave forms at all
+      val edgeFade = Curve.smoothstep(0.15, 0.6, suitability)
+
       if (raw >= endRaw) return VolDensityStack.volDensityStack(
-        add = shelf,
-        carve = carveStrength
+        add = shelf * edgeFade,
+        carve = carveStrength * edgeFade
       )
 
       val carveN = (raw + 1.0) * 0.5
@@ -241,9 +250,9 @@ class GlacialCaverns(
 
       val baseVariation = ctx.noise.get(noise.detail3D).noise3D(x * 0.5, y * 0.2, z * 0.5) * 0.1
       return VolDensityStack.volDensityStack(
-        base = baseVariation,
-        carve = carve * carveStrength,
-        add = shelf,
+        base = baseVariation * edgeFade,
+        carve = carve * carveStrength * edgeFade,
+        add = shelf * edgeFade,
         replaceMask = 0.0
       )
     }

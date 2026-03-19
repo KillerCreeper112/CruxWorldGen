@@ -605,17 +605,26 @@ data class SimpleChunkSampler(
           val normalDensity = terrainFinal + volumetricContribution
           val replacedDensity = volumetricContribution
 
-          val replace = volStack.replaceMask//smoothstep01(((volStack.replaceMask - 0.35) / 0.35).coerceIn(0.0, 1.0))
-          val density = Curve.lerp(normalDensity, replacedDensity, replace)
+          val dominantVolBiome = if (!volBlend.isEmpty()) volBlend.dominantWeighted() else null
+          val volWeight = dominantVolBiome?.weight ?: 0.0
+
+          val replace = volStack.replaceMask * volWeight
+          val density = if (volStack.replaceMask > 0.0) {
+            Curve.lerp(normalDensity, replacedDensity, replace)
+          } else {
+            normalDensity
+          }
+
+          //smoothstep01(((volStack.replaceMask - 0.35) / 0.35).coerceIn(0.0, 1.0))
+          //val density = Curve.lerp(normalDensity, replacedDensity, replace)
 
           densityByBlock[blockIndex] = density
 
           val materialBiome =
             if (!volBlend.isEmpty()) {
-              val dominant = volBlend.dominantWeighted()
-              if (replace > 0.25 || dominant.weight > 0.55){
+              if (replace > 0.25 || dominantVolBiome!!.weight > 0.55){
                 //Crux.logInfo("replace=$replace, replaceMask=${volStack.replaceMask}")
-                dominant.biome
+                dominantVolBiome!!.biome
               }
               else primaryBiome
             } else primaryBiome
