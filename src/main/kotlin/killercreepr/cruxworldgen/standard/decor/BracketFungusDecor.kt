@@ -50,8 +50,8 @@ open class BracketFungusDecor(
 
   val capSectorCount: Int = 7,
   val capSectorStrength: Double = 0.12,
-  val capColumnHeightJitter: Double = 0.3,
-  val capEdgeErosionChance: Double = 0.06,
+  val capColumnHeightJitter: Double = 0.0,
+  val capEdgeErosionChance: Double = 0.0,
 
   /** Scan up this many blocks from the prop point to find a wall */
   val wallScanRange: Int = 4,

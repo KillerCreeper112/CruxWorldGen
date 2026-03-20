@@ -47,7 +47,7 @@ open class BrownMushroomDecor(
 
   val chanceSalt: Long = CruxMath.random().nextLong(),
   override val pass: DecorationPass = DecorationPass.SURFACE
-) : Decoration {
+) : VolumetricDecoration.LazyImpl {
 
   /** Controls distribution. Examples: grid spacing, noise chance, biome-weight scaling */
   override fun shouldTry(
@@ -59,14 +59,34 @@ open class BrownMushroomDecor(
     return chance(s, chancePerPoint)
   }
 
+  override fun shouldTry(
+    region: LimitedRegion,
+    point: VolumetricPropPoint,
+    biomeBlend: BiomeBlendSample,
+    biome: Biome
+  ): Boolean {
+    val s = mixSeed(region.ctx.worldContext.seed, point.worldX, point.worldY,point.worldZ, chanceSalt)
+    return chance(s, chancePerPoint)
+  }
+
   /** Pattern scan: find an anchor/placement candidate */
   override fun findPlacement(
     region: LimitedRegion,
-    point: PropPoint,
+    point: VolumetricPropPoint,
+    biomeBlend: BiomeBlendSample,
+    biome: Biome
+  ): Placement? {
+    return findPlacement(region, point.worldX, point.worldY, point.worldZ, point.seed, biomeBlend)
+  }
+
+  fun findPlacement(
+    region: LimitedRegion,
+    x: Int,
+    y: Int,
+    z: Int,
+    seed: Long,
     biomeBlend: BiomeBlendSample
   ): Placement? {
-    val x = point.worldX
-    val z = point.worldZ
     val queries = region.terrainQueries
 
     val y = region.terrainSnapshot.terrain2D.surfaceY(x, z)
@@ -75,9 +95,23 @@ open class BrownMushroomDecor(
     if(!region.isInRegion(x, y+1, z)) return null
 
     if (queries.isSolid(x, y, z) && queries.isEmpty(x, y + 1, z)) {
-      return Placed(x, y + 1, z, point.seed)
+      return Placed(x, y + 1, z, seed)
     }
     return null
+  }
+
+  /** Pattern scan: find an anchor/placement candidate */
+  override fun findPlacement(
+    region: LimitedRegion,
+    point: PropPoint,
+    biomeBlend: BiomeBlendSample
+  ): Placement? {
+    val x = point.worldX
+    val z = point.worldZ
+
+    val y = region.terrainSnapshot.terrain2D.surfaceY(x, z)
+
+    return findPlacement(region, x, y, z, point.seed, biomeBlend)
   }
 
   override fun place(

@@ -1,11 +1,14 @@
 package killercreepr.cruxworldgen.standard.decor
 
+import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.block.BlockData
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.decor.PropPoint
+import killercreepr.cruxworldgen.api.decor.VolumetricDecoration
+import killercreepr.cruxworldgen.api.decor.VolumetricPropPoint
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil
 import killercreepr.cruxworldgen.bukkit.block.picker.AxisBlockPicker
@@ -30,25 +33,42 @@ open class FallenTreeDecor(
   val maxUnsupportedSegments: Int = 1, // allow tiny gaps (roots/rocks), but not floating logs
   val logPicker : AxisBlockPicker,
   val chanceSalt: Long
-) : Decoration {
+) : VolumetricDecoration.LazyImpl {
 
-  override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
+  override fun shouldTry(
+    region: LimitedRegion,
+    point: VolumetricPropPoint,
+    biomeBlend: BiomeBlendSample,
+    biome: Biome
+  ): Boolean {
     val s = HashUtil.mixSeed(
       seed = region.ctx.worldContext.seed,
-      x = point.worldX, y = 0, z = point.worldZ,
+      x = point.worldX, y = point.worldY, z = point.worldZ,
       salt = chanceSalt
     )
     return HashUtil.chance(s, chancePerPoint)
   }
 
-  override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
-    val worldX = point.worldX
-    val worldZ = point.worldZ
+  override fun shouldTry(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Boolean {
+    val s = HashUtil.mixSeed(
+      seed = region.ctx.worldContext.seed,
+      x = point.worldX, z = point.worldZ,
+      salt = chanceSalt
+    )
+    return HashUtil.chance(s, chancePerPoint)
+  }
 
+  fun findPlacement(
+    region: LimitedRegion,
+    worldX: Int,
+    surfaceY: Int,
+    worldZ: Int,
+    seed: Long,
+    biomeBlend: BiomeBlendSample
+  ): Placement?{
     val terrain2D = region.terrainSnapshot.terrain2D
     val queries = region.terrainQueries
 
-    val surfaceY = terrain2D.surfaceY(worldX, worldZ)
     val baseY = surfaceY + 1
     if (!region.isInRegion(worldX, baseY, worldZ)) return null
     if (!queries.isSolid(worldX, surfaceY, worldZ)) return null
@@ -59,10 +79,10 @@ open class FallenTreeDecor(
     val airAbove = queries.airBlocksAbove(worldX, surfaceY, worldZ, maxCount = minAirAbove)
     if (airAbove < minAirAbove) return null
 
-    val len = HashUtil.chooseInt(point.seed xor HashUtil.HASH_SALT, minLength, maxLength)
+    val len = HashUtil.chooseInt(seed xor HashUtil.HASH_SALT, minLength, maxLength)
 
     // Pick a direction (N/E/S/W) deterministically
-    val dirIdx = ((point.seed ushr 32) and 3L).toInt()
+    val dirIdx = ((seed ushr 32) and 3L).toInt()
     val (dx0, dz0) = when (dirIdx) {
       0 -> 1 to 0
       1 -> -1 to 0
@@ -113,7 +133,7 @@ open class FallenTreeDecor(
 
       // Step forward, maybe snake a little
       if (allowSnake && i > 1) {
-        val r = (HashUtil.mixSeed(region.ctx.worldContext.seed, x, 0, z, salt = (point.seed xor i.toLong())))
+        val r = (HashUtil.mixSeed(region.ctx.worldContext.seed, x, 0, z, salt = (seed xor i.toLong())))
         if ((r and 0xFFFF).toInt() < (snakeChance * 65535.0).toInt()) {
           // rotate 90° left or right
           val left = ((r ushr 16) and 1L) == 0L
@@ -136,8 +156,29 @@ open class FallenTreeDecor(
       dz = dz0,
       length = len,
       segYs = segYs,
-      seed = point.seed
+      seed = seed
     )
+  }
+
+  /** Pattern scan: find an anchor/placement candidate */
+  override fun findPlacement(
+    region: LimitedRegion,
+    point: VolumetricPropPoint,
+    biomeBlend: BiomeBlendSample,
+    biome: Biome
+  ): Placement? {
+    return findPlacement(region, point.worldX, point.worldY, point.worldZ, point.seed, biomeBlend)
+  }
+
+  override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {
+    val worldX = point.worldX
+    val worldZ = point.worldZ
+
+    val terrain2D = region.terrainSnapshot.terrain2D
+    val queries = region.terrainQueries
+
+    val surfaceY = terrain2D.surfaceY(worldX, worldZ)
+    return findPlacement(region, worldX, surfaceY, worldZ, point.seed, biomeBlend)
   }
 
   override fun place(region: LimitedRegion, placement: Placement, biomeBlend: BiomeBlendSample) {
