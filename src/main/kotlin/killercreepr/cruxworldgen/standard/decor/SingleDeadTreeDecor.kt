@@ -1,6 +1,7 @@
 package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.cruxworldgen.api.biome.Biome
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.*
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample

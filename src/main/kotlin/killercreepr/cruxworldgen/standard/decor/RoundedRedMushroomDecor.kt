@@ -1,13 +1,14 @@
 package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.crux.core.util.CruxMath
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.util.Curve
+import killercreepr.cruxworldgen.api.util.GenUtil
 import killercreepr.cruxworldgen.api.util.HashUtil
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
@@ -49,8 +50,8 @@ open class RoundedRedMushroomDecor(
   stemNoiseStrength: Double = 0.9,
   stemNoise: NoiseKey,
   capNoise: NoiseKey,
-  stemBlock: BlockGetter,
-  capBlock: BlockGetter,
+  stemBlock: BlockPicker,
+  capBlock: BlockPicker,
   chanceSalt: Long = CruxMath.random().nextLong(),
   pass: DecorationPass = DecorationPass.SURFACE
 ) : BrownMushroomDecor(
@@ -107,7 +108,7 @@ open class RoundedRedMushroomDecor(
     var centerZ = p.worldZ.toDouble()
     val iStemRadius = stemRadius.toInt() + 1
     val stemNoiseSource = region.ctx.noise.get(stemNoise)
-    val capBottomY = undersideY - rimDropBlocks.toInt() - 1
+    //val capBottomY = undersideY - rimDropBlocks.toInt() - 1
 
     for (dy in 0 until stemHeight) {
       val worldY = p.worldY + dy
@@ -133,7 +134,12 @@ open class RoundedRedMushroomDecor(
           val lz = bz - centerZ
           val noiseVal = stemNoiseSource.noise3D(bx, worldY, bz)
           if (lx * lx + lz * lz <= r2 * (1.0 + stemNoiseStrength * noiseVal)) {
-            val block = stemBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            if(dy == 0){
+              GenUtil.placeTillGround(region, region.ctx.random, bx, worldY, bz, stemBlock)
+              continue
+            }
+
+            val block = stemBlock.pickBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
         }
@@ -210,7 +216,7 @@ open class RoundedRedMushroomDecor(
           if (!region.terrainQueries.isEmpty(bx, worldY, bz)) continue
 
           if (worldY in bottomOfCap..surfaceY.toInt()) {
-            val block = capBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            val block = capBlock.pickBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
         }

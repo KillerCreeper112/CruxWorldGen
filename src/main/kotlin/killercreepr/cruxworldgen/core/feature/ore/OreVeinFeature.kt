@@ -39,7 +39,7 @@ class OreVeinFeature : Feature<OreConfig> {
       if (!region.isInRegion(x, y, z)) return
       if (!cfg.canReplace.canReplace(region, rng, x, y, z)) return
 
-      val block = cfg.ore.getBlock(region, rng, x, y, z) ?: return
+      val block = cfg.ore.pickBlock(region, rng, x, y, z) ?: return
       region.setBlock(x, y, z, block)
       return
     }
@@ -98,7 +98,7 @@ class OreVeinFeature : Feature<OreConfig> {
           if (exposedToAir) continue
         }
 
-        val block = cfg.ore.getBlock(region, rng, x, y, z) ?: continue
+        val block = cfg.ore.pickBlock(region, rng, x, y, z) ?: continue
         region.setBlock(x, y, z, block)
       }
     }

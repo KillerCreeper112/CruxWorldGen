@@ -1,7 +1,7 @@
 package killercreepr.cruxworldgen.standard.decor.volumetric
 
 import killercreepr.crux.core.util.CruxMath
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.biome.Biome
@@ -9,12 +9,11 @@ import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.util.HashUtil
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
-import kotlin.math.sqrt
 
 class StalactiteVolDecor(
   chancePerPoint: Double = 0.4,
   minAir: Int = 8,
-  block: BlockGetter,
+  block: BlockPicker,
   minLength: Int = 6,
   maxLength: Int = 20,
   baseSizeMin: Int = 1,
@@ -110,7 +109,7 @@ class StalactiteVolDecor(
           if (!region.isInRegion(wx, worldY, wz)) break
           if (!queries.isEmpty(wx, worldY, wz)) break
 
-          val block = block.getBlock(region, region.ctx.random, wx, worldY, wz) ?: break
+          val block = block.pickBlock(region, region.ctx.random, wx, worldY, wz) ?: break
           region.setBlock(wx, worldY, wz, block)
         }
       }

@@ -6,7 +6,7 @@ import killercreepr.cruxworldgen.api.biome.BiomeShape
 import killercreepr.cruxworldgen.api.biome.BiomeShapeProfile
 import killercreepr.cruxworldgen.api.biome.FineBiomeShape
 import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.cave.CaveProfile
 import killercreepr.cruxworldgen.api.cave.CaveShape
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
@@ -31,9 +31,6 @@ import killercreepr.cruxworldgen.api.util.NoiseShaper
 import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.extension.remap01
-import killercreepr.cruxworldgen.standard.decor.BracketFungusDecor
-import killercreepr.cruxworldgen.standard.decor.BrownMushroomDecor
-import killercreepr.cruxworldgen.standard.decor.FunnelMushroomDecor
 import killercreepr.cruxworldgen.standard.decor.RoundedRedMushroomDecor
 import org.bukkit.Material
 import kotlin.Double
@@ -57,8 +54,8 @@ class CharredWastes(
       stemWanderStrength = 0.3f,
       capNoise = Noise.BrownMushroomCap,
       stemNoise = Noise.BrownMushroomStem,
-      capBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
-      stemBlock = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
+      capBlock = BlockPicker.constant(BukkitBlockAdapter.resolver().resolve(Material.RED_MUSHROOM_BLOCK)),
+      stemBlock = BlockPicker.constant(BukkitBlockAdapter.resolver().resolve(Material.MUSHROOM_STEM))
     ),
     /*PointedMushroomDecor(
       chancePerPoint = 0.05,

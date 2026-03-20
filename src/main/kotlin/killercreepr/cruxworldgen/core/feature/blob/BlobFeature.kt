@@ -1,7 +1,7 @@
 package killercreepr.cruxworldgen.core.feature.blob
 
 import killercreepr.crux.core.util.CruxBlockFace
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.block.CanReplaceBlock
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.feature.Feature
@@ -9,7 +9,7 @@ import killercreepr.cruxworldgen.core.feature.BlockPos
 import java.util.*
 
 data class BlobConfig(
-  val material: BlockGetter,
+  val material: BlockPicker,
   val canReplace: CanReplaceBlock,
   val minRadius: Int = 2,
   val maxRadius: Int = 4,
@@ -64,7 +64,7 @@ class BlobFeature : Feature<BlobConfig> {
     val minZ = kotlin.math.floor(centerZ - radiusZ - cfg.irregularity).toInt()
     val maxZ = kotlin.math.floor(centerZ + radiusZ + cfg.irregularity).toInt()
 
-    val block = cfg.material.getBlock(region, rng, origin.x, origin.y, origin.z) ?: return
+    val block = cfg.material.pickBlock(region, rng, origin.x, origin.y, origin.z) ?: return
 
     for (x in minX..maxX) for (y in minY..maxY) for (z in minZ..maxZ) {
       if (!region.isInRegion(x, y, z)) continue

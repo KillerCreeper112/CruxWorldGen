@@ -4,12 +4,10 @@ import killercreepr.cruxgeneration.util.CruxNoise
 import killercreepr.cruxworldgen.api.biome.volumetric.VolumetricBiome
 import killercreepr.cruxworldgen.api.biome.volumetric.VolumetricBiomeShape
 import killercreepr.cruxworldgen.api.block.BlockData
-import killercreepr.cruxworldgen.api.block.BlockDataResolver
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.GenerateContext
 import killercreepr.cruxworldgen.api.context.MaterialContext
 import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
-import killercreepr.cruxworldgen.api.decor.VolumetricDecoration
 import killercreepr.cruxworldgen.api.density.VolDensityStack
 import killercreepr.cruxworldgen.api.feature.HeightFilter
 import killercreepr.cruxworldgen.api.material.MaterialProvider
@@ -21,9 +19,6 @@ import killercreepr.cruxworldgen.bukkit.block.BukkitBlockAdapter
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
 import killercreepr.cruxworldgen.extension.remap01
 import killercreepr.cruxworldgen.standard.decor.volumetric.IcicleVolDecor
-import killercreepr.cruxworldgen.standard.decor.volumetric.StalactiteVolDecor
-import net.minecraft.core.SectionPos.x
-import net.minecraft.core.SectionPos.z
 import org.bukkit.Material
 import org.bukkit.block.Biome
 import kotlin.math.max
@@ -35,11 +30,11 @@ class GlacialCaverns(
 
   override val volumetricDecorations = listOf(
     IcicleVolDecor(
-      block = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.ICE)),
+      block = BlockPicker.constant(BukkitBlockAdapter.resolver().resolve(Material.ICE)),
       yOffset = 1
     ),
     IcicleVolDecor(
-      block = BlockGetter.constant(BukkitBlockAdapter.resolver().resolve(Material.ICE)),
+      block = BlockPicker.constant(BukkitBlockAdapter.resolver().resolve(Material.ICE)),
       yOffset = 1
     )
   )

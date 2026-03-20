@@ -1,10 +1,10 @@
 package killercreepr.cruxworldgen.core.feature.ore
 
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.block.CanReplaceBlock
 
 data class OreConfig(
-  val ore: BlockGetter,
+  val ore: BlockPicker,
   val minSize: Int,
   val maxSize: Int,
   val canReplace: CanReplaceBlock,

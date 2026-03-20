@@ -2,7 +2,7 @@ package killercreepr.cruxworldgen.standard.decor.volumetric
 
 import killercreepr.crux.core.util.CruxMath
 import killercreepr.cruxworldgen.api.biome.Biome
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -16,7 +16,7 @@ import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
 open class IcicleVolDecor(
   val chancePerPoint: Double = 0.5,
   val minAir: Int = 7,
-  val block : BlockGetter,
+  val block : BlockPicker,
   val minLength: Int = 7,
   val maxLength: Int = 25,
   val baseSizeMin: Int = 1,
@@ -135,7 +135,7 @@ open class IcicleVolDecor(
           // Don't overwrite existing blocks (other decorations, stone, etc.)
           if (!queries.isEmpty(wx, worldY, wz)) break
 
-          val block = block.getBlock(region, region.ctx.random, wx, worldY, wz) ?: break
+          val block = block.pickBlock(region, region.ctx.random, wx, worldY, wz) ?: break
           region.setBlock(wx, worldY, wz, block)
         }
       }

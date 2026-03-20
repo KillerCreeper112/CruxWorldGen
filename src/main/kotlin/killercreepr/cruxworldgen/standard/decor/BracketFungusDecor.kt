@@ -1,7 +1,7 @@
 package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.crux.core.util.CruxMath
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
@@ -56,8 +56,8 @@ open class BracketFungusDecor(
   /** Scan up this many blocks from the prop point to find a wall */
   val wallScanRange: Int = 4,
 
-  val topBlock: BlockGetter,
-  val bottomBlock: BlockGetter,
+  val topBlock: BlockPicker,
+  val bottomBlock: BlockPicker,
 
   val chanceSalt: Long = CruxMath.random().nextLong(),
   override val pass: DecorationPass = DecorationPass.SURFACE
@@ -230,9 +230,9 @@ open class BracketFungusDecor(
 
             val isTop = dy == (thickness + topLift)
             val block = if (isTop)
-              topBlock.getBlock(region, region.ctx.random, bx, worldY, bz)
+              topBlock.pickBlock(region, region.ctx.random, bx, worldY, bz)
             else
-              bottomBlock.getBlock(region, region.ctx.random, bx, worldY, bz)
+              bottomBlock.pickBlock(region, region.ctx.random, bx, worldY, bz)
 
             block ?: continue
             region.setBlock(bx, worldY, bz, block)

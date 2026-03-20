@@ -1,6 +1,6 @@
 package killercreepr.cruxworldgen.core.feature
 
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.block.CanReplaceBlock
 import killercreepr.cruxworldgen.api.feature.*
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockResolver
@@ -12,7 +12,7 @@ import org.bukkit.Material
 val ironHigh = PlacedFeature(
   feature = CoreFeatures.ORE_VEIN,
   cfg = OreConfig(
-    ore = BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.IRON_ORE)),
+    ore = BlockPicker.constant(BukkitBlockResolver.INSTANCE.resolve(Material.IRON_ORE)),
     minSize = 5,
     maxSize = 9,
     canReplace = { region, rng, x, y, z ->
@@ -35,7 +35,7 @@ val ironHigh = PlacedFeature(
 val ironLow = PlacedFeature(
   feature = CoreFeatures.ORE_VEIN,
   cfg = OreConfig(
-    ore = BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_IRON_ORE)),
+    ore = BlockPicker.constant(BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_IRON_ORE)),
     minSize = 5,
     maxSize = 9,
     canReplace = {region, rng, x, y, z ->
@@ -59,7 +59,7 @@ val ironLow = PlacedFeature(
 val test = PlacedFeature(
   feature = CoreFeatures.BLOB,
   cfg = BlobConfig(
-    material = BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.GRANITE)),
+    material = BlockPicker.constant(BukkitBlockResolver.INSTANCE.resolve(Material.GRANITE)),
     canReplace = CanReplaceBlock.SOLID
   ),
   modifiers = listOf(
@@ -74,7 +74,7 @@ val test = PlacedFeature(
 val diamondSkyIslands = PlacedFeature(
   feature = CoreFeatures.ORE_VEIN,
   cfg = OreConfig(
-    ore = BlockGetter.constant(BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_DIAMOND_ORE)),
+    ore = BlockPicker.constant(BukkitBlockResolver.INSTANCE.resolve(Material.DEEPSLATE_DIAMOND_ORE)),
     minSize = 5,
     maxSize = 9,
     canReplace = {region, rng, x, y, z ->

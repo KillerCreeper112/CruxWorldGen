@@ -1,13 +1,14 @@
 package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.crux.core.util.CruxMath
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.util.Curve
+import killercreepr.cruxworldgen.api.util.GenUtil
 import killercreepr.cruxworldgen.api.util.HashUtil
 
 open class RedMushroomDecor(
@@ -45,8 +46,8 @@ open class RedMushroomDecor(
 
   stemNoise: NoiseKey,
   capNoise: NoiseKey,
-  stemBlock: BlockGetter,
-  capBlock: BlockGetter,
+  stemBlock: BlockPicker,
+  capBlock: BlockPicker,
   chanceSalt: Long = CruxMath.random().nextLong(),
   pass: DecorationPass = DecorationPass.SURFACE
 ) : BrownMushroomDecor(
@@ -131,7 +132,12 @@ open class RedMushroomDecor(
           val lz = bz - centerZ
           val noiseVal = stemNoiseSource.noise3D(bx, worldY, bz)
           if (lx * lx + lz * lz <= r2 * (1.0 + stemNoiseStrength * noiseVal)) {
-            val block = stemBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            if(dy == 0){
+              GenUtil.placeTillGround(region, region.ctx.random, bx, worldY, bz, stemBlock)
+              continue
+            }
+
+            val block = stemBlock.pickBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
         }
@@ -198,7 +204,7 @@ open class RedMushroomDecor(
           }
 
           if (inDome || inRim) {
-            val block = capBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            val block = capBlock.pickBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
         }

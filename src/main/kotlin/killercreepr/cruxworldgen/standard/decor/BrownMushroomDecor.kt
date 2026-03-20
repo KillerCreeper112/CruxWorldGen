@@ -2,11 +2,12 @@ package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.crux.core.util.CruxMath
 import killercreepr.cruxworldgen.api.biome.Biome
-import killercreepr.cruxworldgen.api.block.BlockGetter
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.*
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.noise.NoiseKey
+import killercreepr.cruxworldgen.api.util.GenUtil.placeTillGround
 import killercreepr.cruxworldgen.api.util.HashUtil
 import killercreepr.cruxworldgen.api.util.HashUtil.chance
 import killercreepr.cruxworldgen.api.util.HashUtil.mixSeed
@@ -37,8 +38,8 @@ open class BrownMushroomDecor(
   val stemNoise: NoiseKey,
   val capNoise: NoiseKey,
 
-  val stemBlock: BlockGetter,
-  val capBlock: BlockGetter,
+  val stemBlock: BlockPicker,
+  val capBlock: BlockPicker,
 
   val chanceSalt: Long = CruxMath.random().nextLong(),
   override val pass: DecorationPass = DecorationPass.SURFACE
@@ -160,7 +161,12 @@ open class BrownMushroomDecor(
 
           val noiseVal = stemNoiseSource.noise3D(bx, worldY, bz)
           if (dist2 <= r2 * (1.0 + stemNoiseStrength * noiseVal)) {
-            val block = stemBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            if(dy == 0){
+              placeTillGround(region, region.ctx.random, bx, worldY, bz, stemBlock)
+              continue
+            }
+
+            val block = stemBlock.pickBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
         }
@@ -197,7 +203,7 @@ open class BrownMushroomDecor(
 
           val noiseVal = capNoiseSource.noise3D(bx, worldY, bz)
           if (equationResult <= 1.0 + capNoiseStrength * noiseVal) {
-            val block = capBlock.getBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
+            val block = capBlock.pickBlock(region, region.ctx.random, bx, worldY, bz) ?: continue
             region.setBlock(bx, worldY, bz, block)
           }
         }
