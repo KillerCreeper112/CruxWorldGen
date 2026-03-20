@@ -49,7 +49,8 @@ open class SingleDeadTreeDecor(
     biomeBlend: BiomeBlendSample,
     biome: Biome
   ): Placement? {
-    return findPlacement(region, point.worldX, point.worldY, point.worldZ, point.seed, biomeBlend)
+    val y = region.terrainQueries.findNearestSolidWithAirAbove(point.worldX, point.worldY, point.worldZ) ?: return null
+    return findPlacement(region, point.worldX, y, point.worldZ, point.seed, biomeBlend)
   }
 
   fun findPlacement(

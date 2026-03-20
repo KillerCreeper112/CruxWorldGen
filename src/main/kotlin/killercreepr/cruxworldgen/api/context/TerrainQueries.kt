@@ -39,4 +39,16 @@ interface TerrainQueries{
 
   /** Utility: “near solid” for placing things inside caves so they hug walls. */
   fun nearSolid(worldX: Int, worldY: Int, worldZ: Int, radius: Int = 1): Boolean
+
+  fun findNearestSolidWithAirAbove(worldX: Int, worldY: Int, worldZ: Int, aboveRange: Int = 3, belowRange: Int = 3,
+                                   airAbove: Int = 1): Int?
+
+  fun findNearestSolidWithAirBelow(
+    worldX: Int,
+    worldY: Int,
+    worldZ: Int,
+    aboveRange: Int = 3,
+    belowRange: Int = 3,
+    airBelow: Int = 1
+  ): Int?
 }

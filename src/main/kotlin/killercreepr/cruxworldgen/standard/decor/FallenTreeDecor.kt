@@ -167,7 +167,9 @@ open class FallenTreeDecor(
     biomeBlend: BiomeBlendSample,
     biome: Biome
   ): Placement? {
-    return findPlacement(region, point.worldX, point.worldY, point.worldZ, point.seed, biomeBlend)
+    val y = region.terrainQueries.findNearestSolidWithAirAbove(point.worldX, point.worldY, point.worldZ,
+      aboveRange = 5, belowRange = 5) ?: return null
+    return findPlacement(region, point.worldX, y, point.worldZ, point.seed, biomeBlend)
   }
 
   override fun findPlacement(region: LimitedRegion, point: PropPoint, biomeBlend: BiomeBlendSample): Placement? {

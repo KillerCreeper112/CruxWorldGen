@@ -4,12 +4,7 @@ import killercreepr.crux.core.util.CruxMath
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.block.BlockGetter
 import killercreepr.cruxworldgen.api.context.LimitedRegion
-import killercreepr.cruxworldgen.api.decor.Decoration
-import killercreepr.cruxworldgen.api.decor.DecorationPass
-import killercreepr.cruxworldgen.api.decor.Placement
-import killercreepr.cruxworldgen.api.decor.PropPoint
-import killercreepr.cruxworldgen.api.decor.VolumetricDecoration
-import killercreepr.cruxworldgen.api.decor.VolumetricPropPoint
+import killercreepr.cruxworldgen.api.decor.*
 import killercreepr.cruxworldgen.api.generation.BiomeBlendSample
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.util.HashUtil
@@ -76,7 +71,8 @@ open class BrownMushroomDecor(
     biomeBlend: BiomeBlendSample,
     biome: Biome
   ): Placement? {
-    return findPlacement(region, point.worldX, point.worldY, point.worldZ, point.seed, biomeBlend)
+    val y = region.terrainQueries.findNearestSolidWithAirAbove(point.worldX, point.worldY, point.worldZ) ?: return null
+    return findPlacement(region, point.worldX, y, point.worldZ, point.seed, biomeBlend)
   }
 
   fun findPlacement(
@@ -88,8 +84,6 @@ open class BrownMushroomDecor(
     biomeBlend: BiomeBlendSample
   ): Placement? {
     val queries = region.terrainQueries
-
-    val y = region.terrainSnapshot.terrain2D.surfaceY(x, z)
 
     if (!region.isInRegion(x, y, z)) return null
     if(!region.isInRegion(x, y+1, z)) return null

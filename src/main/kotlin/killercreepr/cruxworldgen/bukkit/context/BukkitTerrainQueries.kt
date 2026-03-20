@@ -144,6 +144,66 @@ class BukkitTerrainQueries(
   ): Boolean {
     TODO("Not yet implemented")
   }
+
+  override fun findNearestSolidWithAirAbove(
+    worldX: Int,
+    worldY: Int,
+    worldZ: Int,
+    aboveRange: Int,
+    belowRange: Int,
+    airAbove: Int
+  ): Int? {
+    fun validSolid(y: Int): Boolean {
+      if (!region.isInRegion(worldX, y, worldZ)) return false
+      if (!isSolid(worldX, y, worldZ)) return false
+      return airBlocksAbove(worldX, y, worldZ, maxCount = airAbove) >= airAbove
+    }
+
+    val maxRange = maxOf(aboveRange, belowRange)
+
+    for (d in 0..maxRange) {
+      if (d <= aboveRange) {
+        val yTop = worldY + d
+        if (validSolid(yTop)) return yTop
+      }
+
+      if (d != 0 && d <= belowRange) {
+        val yBottom = worldY - d
+        if (validSolid(yBottom)) return yBottom
+      }
+    }
+    return null
+  }
+
+  override fun findNearestSolidWithAirBelow(
+    worldX: Int,
+    worldY: Int,
+    worldZ: Int,
+    aboveRange: Int,
+    belowRange: Int,
+    airBelow: Int
+  ): Int? {
+    fun validSolid(y: Int): Boolean {
+      if (!region.isInRegion(worldX, y, worldZ)) return false
+      if (!isSolid(worldX, y, worldZ)) return false
+      return airBlocksBelow(worldX, y, worldZ, maxCount = airBelow) >= airBelow
+    }
+
+    val maxRange = maxOf(aboveRange, belowRange)
+
+    for (d in 0..maxRange) {
+      if (d <= aboveRange) {
+        val yTop = worldY + d
+        if (validSolid(yTop)) return yTop
+      }
+
+      if (d != 0 && d <= belowRange) {
+        val yBottom = worldY - d
+        if (validSolid(yBottom)) return yBottom
+      }
+    }
+    return null
+  }
 }
 
 /*
