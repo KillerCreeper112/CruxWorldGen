@@ -888,9 +888,6 @@ class BukkitGenerationChunkGenerator(
               localZFromWorld(z, chunkDepth),
               y, sampledChunk.ctx.chunkContext.minHeight, chunkWidth, chunkDepth
             )]!!
-          },
-          {x, z ->
-            1//todo maybe not needed
           }
         )
       }

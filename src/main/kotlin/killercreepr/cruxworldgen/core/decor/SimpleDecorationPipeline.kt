@@ -14,8 +14,7 @@ class SimpleDecorationPipeline(override val grid: PropPointGrid) : DecorationPip
     chunkX: Int,
     chunkZ: Int,
     sampleBlendAt: (worldX: Int, worldZ: Int) -> BiomeBlendSample,
-    sampleBiomeAt: (Int, Int, Int) -> Biome,
-    sampleSurfaceYAt: (Int, Int) -> Int
+    sampleBiomeAt: (Int, Int, Int) -> Biome
   ){
     val ctx = region.ctx
     val points = grid.pointsForChunk(ctx, chunkX, chunkZ)
@@ -36,7 +35,7 @@ class SimpleDecorationPipeline(override val grid: PropPointGrid) : DecorationPip
         }
 
         runVolumetricDecorationsPass(
-          region, chunkX, chunkZ, points, pass, sampleBlendAt, sampleBiomeAt, sampleSurfaceYAt
+          region, chunkX, chunkZ, points, pass, sampleBlendAt, sampleBiomeAt
         )
       }
     }
@@ -49,8 +48,7 @@ class SimpleDecorationPipeline(override val grid: PropPointGrid) : DecorationPip
     points: List<PropPoint>,
     pass: DecorationPass,
     sampleBlendAt: (Int, Int) -> BiomeBlendSample,
-    sampleBiomeAt: (Int, Int, Int) -> Biome,
-    sampleSurfaceYAt: (Int, Int) -> Int
+    sampleBiomeAt: (Int, Int, Int) -> Biome
   ) {
     val minY = region.ctx.chunkContext.minHeight
     val maxY = region.ctx.chunkContext.maxHeight - 1

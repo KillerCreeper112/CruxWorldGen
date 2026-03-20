@@ -13,8 +13,7 @@ interface DecorationPipeline{
     chunkX: Int,
     chunkZ: Int,
     sampleBlendAt: (worldX: Int, worldZ: Int) -> BiomeBlendSample,
-    sampleBiomeAt: (Int, Int, Int) -> Biome,
-    sampleSurfaceYAt: (Int, Int) -> Int
+    sampleBiomeAt: (Int, Int, Int) -> Biome
   )
 
   fun runVolumetricDecorationsPass(
@@ -24,7 +23,6 @@ interface DecorationPipeline{
     points: List<PropPoint>,
     pass: DecorationPass,
     sampleBlendAt: (Int, Int) -> BiomeBlendSample,
-    sampleBiomeAt: (Int, Int, Int) -> Biome,
-    sampleSurfaceYAt: (Int, Int) -> Int
+    sampleBiomeAt: (Int, Int, Int) -> Biome
   )
 }
