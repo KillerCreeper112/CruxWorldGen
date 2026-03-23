@@ -7,7 +7,8 @@ import killercreepr.cruxworldgen.api.util.Curve
 import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 
 data class VolBiomeBlendSample(
-  val weighted: List<WeightedVolBiome>
+  val weighted: List<WeightedVolBiome>,
+  val strength: Double
 ) {
   companion object{
     fun interpolateVolBlend(
@@ -48,12 +49,18 @@ data class VolBiomeBlendSample(
         }
       }
 
-      if (sum <= 1e-8) {
-        return VolBiomeBlendSample(listOf())
+      val strength = Curve.trilerp(
+        c000.strength, c100.strength, c010.strength, c110.strength,
+        c001.strength, c101.strength, c011.strength, c111.strength,
+        tx, ty, tz
+      ).coerceIn(0.0, 1.0)
+
+      if (sum <= 1e-8 || strength <= 1e-8) {
+        return VolBiomeBlendSample(emptyList(), 0.0)
       }
 
       val normalized = out.map { it.copy(weight = it.weight / sum) }
-      return VolBiomeBlendSample(normalized)
+      return VolBiomeBlendSample(normalized, strength)
     }
   }
 

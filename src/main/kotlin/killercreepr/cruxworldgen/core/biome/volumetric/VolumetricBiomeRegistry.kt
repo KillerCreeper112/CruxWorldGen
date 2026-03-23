@@ -18,7 +18,7 @@ class VolumetricBiomeRegistry(
     env: VolumeEnv,
     signals: SignalWriter
   ): VolBiomeBlendSample {
-    if(biomes.isEmpty()) return VolBiomeBlendSample(listOf())
+    if(biomes.isEmpty()) return VolBiomeBlendSample(listOf(), 0.0)
     var sum = 0.0
     val tmp = ArrayList<WeightedVolBiome>(biomes.size)
 
@@ -30,9 +30,12 @@ class VolumetricBiomeRegistry(
       sum += s
     }
 
-    if (tmp.isEmpty() || sum <= 1e-9) return VolBiomeBlendSample(emptyList())
+    if (tmp.isEmpty() || sum <= 1e-9) return VolBiomeBlendSample(emptyList(), 0.0)
 
     // Normalize
-    return VolBiomeBlendSample(tmp.map { it.copy(weight = it.weight / sum) })
+    return VolBiomeBlendSample(
+      weighted = tmp.map { it.copy(weight = it.weight / sum) },
+      strength = sum
+    )
   }
 }

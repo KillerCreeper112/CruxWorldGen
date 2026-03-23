@@ -1,6 +1,5 @@
 package killercreepr.cruxworldgen.core.generation.chunk
 
-import killercreepr.crux.core.Crux
 import killercreepr.cruxworldgen.api.biome.Biome
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
@@ -14,7 +13,6 @@ import killercreepr.cruxworldgen.api.noise.NoiseBank
 import killercreepr.cruxworldgen.api.signal.SignalHandler
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve
-import killercreepr.cruxworldgen.api.util.Curve.smoothstep01
 import killercreepr.cruxworldgen.api.util.MathUtil.blockIndex
 import killercreepr.cruxworldgen.api.util.MathUtil.columnIndex
 import killercreepr.cruxworldgen.api.util.MathUtil.cornerColumnIndex
@@ -582,7 +580,6 @@ data class SimpleChunkSampler(
               terrain3D.caveAirByBlock[blockIndex] = true
             }
           }
-
           val volBlend = VolBiomeBlendSample.interpolateVolBlend(
             volumetricBlendByCorner[c000]!!,
             volumetricBlendByCorner[c100]!!,
@@ -599,17 +596,19 @@ data class SimpleChunkSampler(
             ctx, volBlend, worldX, blockY, worldZ, fineEnv,
             signalWriter
           )
-          val volumetricContribution = volStack.finalDensity()
-          //val density = terrainFinal + volumetricContribution
+
+          //val volWeight = dominantVolBiome?.weight ?: 0.0
+
+          val edgeFade = Curve.smoothstep(0.05, 0.35, volBlend.strength)
+
+          val volRaw = volStack.finalDensity()
+          val volumetricContribution = volRaw * edgeFade
 
           val normalDensity = terrainFinal + volumetricContribution
-          val replacedDensity = volumetricContribution
+          val replacedDensity = volRaw
 
-          val dominantVolBiome = if (!volBlend.isEmpty()) volBlend.dominantWeighted() else null
-          val volWeight = dominantVolBiome?.weight ?: 0.0
-
-          val replace = volStack.replaceMask * volWeight
-          val density = if (volStack.replaceMask > 0.0) {
+          val replace = volStack.replaceMask * edgeFade
+          val density = if (replace > 0.0) {
             Curve.lerp(normalDensity, replacedDensity, replace)
           } else {
             normalDensity
@@ -622,6 +621,7 @@ data class SimpleChunkSampler(
 
           val materialBiome =
             if (!volBlend.isEmpty()) {
+              val dominantVolBiome = if (!volBlend.isEmpty()) volBlend.dominantWeighted() else null
               if (replace > 0.25 || dominantVolBiome!!.weight > 0.55){
                 //Crux.logInfo("replace=$replace, replaceMask=${volStack.replaceMask}")
                 dominantVolBiome!!.biome
