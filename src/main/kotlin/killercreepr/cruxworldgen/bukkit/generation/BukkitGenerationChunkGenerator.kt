@@ -53,10 +53,21 @@ class BukkitGenerationChunkGenerator(
         val bukkit = biome.toBukkitBiome()
         if (!buildingBiomes.contains(bukkit)){
           buildingBiomes.add(bukkit)
-          BukkitRegistry.BIOME.register(biome)
         }
+        BukkitRegistry.BIOME.register(biome)
       }
     }
+
+
+    generation.volumetricBiomes.biomes.forEach { biome ->
+      if(biome !is BukkitBiome) return@forEach
+      val bukkit = biome.toBukkitBiome()
+      if (!buildingBiomes.contains(bukkit)){
+        buildingBiomes.add(bukkit)
+      }
+      BukkitRegistry.BIOME.register(biome)
+    }
+
     bukkitBiomes = buildingBiomes
   }
 
