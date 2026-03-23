@@ -1,10 +1,14 @@
 package killercreepr.cruxworldgen.test.biome
 
 import killercreepr.cruxworldgen.api.biome.BiomeShapeType
+import killercreepr.cruxworldgen.api.biome.volumetric.VolBiomeShapeType
 import killercreepr.cruxworldgen.api.context.BiomeEdgeContext
 import killercreepr.cruxworldgen.api.context.GenerateContext
+import killercreepr.cruxworldgen.api.context.volumetric.VolumeEnv
 import killercreepr.cruxworldgen.api.density.DensityBank
 import killercreepr.cruxworldgen.api.density.DensityStack
+import killercreepr.cruxworldgen.api.density.VolDensityBank
+import killercreepr.cruxworldgen.api.density.VolDensityStack
 import killercreepr.cruxworldgen.api.noise.NoiseKey
 import killercreepr.cruxworldgen.api.signal.SignalWriter
 import killercreepr.cruxworldgen.api.util.Curve.band01
@@ -28,7 +32,7 @@ class AbyssStartOverhang(
     Layer(center =  55.0, half = 26.0, weight = 0.95),
     Layer(center =  95.0, half = 30.0, weight = 0.75)
   )
-) : BiomeShapeType {
+) : BiomeShapeType, VolBiomeShapeType {
   data class Layer(val center: Double, val half: Double, val weight: Double)
   override fun density(
     ctx: GenerateContext,
@@ -40,6 +44,41 @@ class AbyssStartOverhang(
     baseStack: DensityStack,
     out: DensityBank
   ) {
+    density(ctx, worldX, y, worldZ, signalWriter, baseStack, out)
+  }
+
+  fun shelfGateJittered(
+    y: Int,
+    wx: Int,
+    wz: Int,
+    ctx: GenerateContext,
+    baseSpacing: Double,      // e.g. 28.0
+    spacingJitter: Double,    // e.g. 12.0 (adds +/- jitter)
+    halfWidth: Double         // e.g. 4.0
+  ): Double {
+    // Low-frequency field that changes slowly across the world
+    val jitter01 = ctx.noise.get(overhangWarp2D).noise2D(wx.toDouble(), wz.toDouble()) * 0.5 + 0.5
+    val spacing = (baseSpacing + (jitter01 * 2.0 - 1.0) * spacingJitter).coerceAtLeast(8.0)
+
+    // ALSO vary the center position a bit so bands don't align
+    val phaseWarp = ctx.noise.get(overhangWarp2D).noise2D(wx.toDouble() + 1000.0, wz.toDouble() - 1000.0) * spacing
+
+    val yp = (y.toDouble() + phaseWarp) / spacing
+    val phase = fract(yp)
+
+    val halfWidth01 = (halfWidth / spacing).coerceIn(0.01, 0.49)
+    return band01(center01 = 0.5, halfWidth01 = halfWidth01, t01 = phase)
+  }
+
+  fun density(
+    ctx: GenerateContext,
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    signalWriter: SignalWriter,
+    baseStack: DensityStack,
+    out: DensityBank
+  ){
     val baseDensity = out.base
 
     // 2) 3D domain warp
@@ -83,27 +122,17 @@ class AbyssStartOverhang(
     out.addAdditive((stacked))
   }
 
-  fun shelfGateJittered(
-    y: Int,
-    wx: Int,
-    wz: Int,
+  override fun density(
     ctx: GenerateContext,
-    baseSpacing: Double,      // e.g. 28.0
-    spacingJitter: Double,    // e.g. 12.0 (adds +/- jitter)
-    halfWidth: Double         // e.g. 4.0
-  ): Double {
-    // Low-frequency field that changes slowly across the world
-    val jitter01 = ctx.noise.get(overhangWarp2D).noise2D(wx.toDouble(), wz.toDouble()) * 0.5 + 0.5
-    val spacing = (baseSpacing + (jitter01 * 2.0 - 1.0) * spacingJitter).coerceAtLeast(8.0)
-
-    // ALSO vary the center position a bit so bands don't align
-    val phaseWarp = ctx.noise.get(overhangWarp2D).noise2D(wx.toDouble() + 1000.0, wz.toDouble() - 1000.0) * spacing
-
-    val yp = (y.toDouble() + phaseWarp) / spacing
-    val phase = fract(yp)
-
-    val halfWidth01 = (halfWidth / spacing).coerceIn(0.01, 0.49)
-    return band01(center01 = 0.5, halfWidth01 = halfWidth01, t01 = phase)
+    worldX: Int,
+    y: Int,
+    worldZ: Int,
+    env: VolumeEnv,
+    signalWriter: SignalWriter,
+    baseStack: VolDensityStack,
+    out: VolDensityBank
+  ) {
+    density(ctx, worldX, y, worldZ, signalWriter, baseStack, out)
   }
 }
 

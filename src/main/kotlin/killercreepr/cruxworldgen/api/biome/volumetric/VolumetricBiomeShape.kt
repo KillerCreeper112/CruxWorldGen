@@ -24,7 +24,7 @@ interface VolumetricBiomeShape : BiomeShape {
     worldZ: Int,
     edge: BiomeEdgeContext,
     signalWriter: SignalWriter
-  ): DensityStack = DensityStack.densityStack(0.0,0.0,0.0)
+  ): DensityStack = DensityStack.emptyStack()
 
   /** Optional extra cave carving influence. */
   /*fun carve(

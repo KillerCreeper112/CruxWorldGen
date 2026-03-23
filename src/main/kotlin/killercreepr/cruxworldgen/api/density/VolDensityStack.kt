@@ -18,4 +18,5 @@ interface VolDensityStack: DensityStack {
     private val empty = SimpleVolDensityStack(0.0, 0.0, 0.0, 0.0)
   }
   val replaceMask: Double
+  override fun toBank(): VolDensityBank
 }
