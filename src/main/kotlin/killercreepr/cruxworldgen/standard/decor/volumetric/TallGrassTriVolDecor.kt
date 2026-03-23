@@ -1,8 +1,7 @@
 package killercreepr.cruxworldgen.standard.decor.volumetric
 
-import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.biome.Biome
-import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.DecorationPass
 import killercreepr.cruxworldgen.api.decor.Placement
@@ -20,9 +19,9 @@ class TallGrassTriVolDecor(
   val maxSlope01: Double = 1.0,
   val minHeight: Int = 2,
   val maxHeight: Int = 3,
-  val top : Holder<BlockData>,
-  val middle : Holder<BlockData>,
-  val bottom : Holder<BlockData>,
+  val top : BlockPicker,
+  val middle : BlockPicker,
+  val bottom : BlockPicker,
   val chanceSalt: Long
 ) : VolumetricDecoration {
 
@@ -71,11 +70,12 @@ class TallGrassTriVolDecor(
     val height = p.height
 
     for(i in 0..<height) {
+      val y = p.baseY+i
       val block = when (i) {
-        0 -> bottom.value()
-        height-1 -> top.value()
-        else -> middle.value()
-      }
+        0 -> bottom.pickBlock(region, p.worldX, y, p.worldZ)
+        height-1 -> top.pickBlock(region, p.worldX, y, p.worldZ)
+        else -> middle.pickBlock(region, p.worldX, y, p.worldZ)
+      } ?: break
       region.setBlock(p.worldX, p.baseY+i, p.worldZ, block)
     }
   }

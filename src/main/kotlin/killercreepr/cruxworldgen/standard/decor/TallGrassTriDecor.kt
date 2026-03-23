@@ -2,6 +2,7 @@ package killercreepr.cruxworldgen.standard.decor
 
 import killercreepr.crux.api.data.Holder
 import killercreepr.cruxworldgen.api.block.BlockData
+import killercreepr.cruxworldgen.api.block.BlockPicker
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
 import killercreepr.cruxworldgen.api.decor.DecorationPass
@@ -19,9 +20,9 @@ open class TallGrassTriDecor(
   val maxSlope01: Double = 1.0,
   val minHeight: Int = 2,
   val maxHeight: Int = 3,
-  val top : Holder<BlockData>,
-  val middle : Holder<BlockData>,
-  val bottom : Holder<BlockData>,
+  val top : BlockPicker,
+  val middle : BlockPicker,
+  val bottom : BlockPicker,
   val chanceSalt: Long
 ) : Decoration {
 
@@ -70,12 +71,15 @@ open class TallGrassTriDecor(
     val height = p.height
 
     for(i in 0..<height) {
+      val y = p.baseY + i
+
       val block = when (i) {
-        0 -> bottom.value()
-        height-1 -> top.value()
-        else -> middle.value()
-      }
-      region.setBlock(p.worldX, p.baseY+i, p.worldZ, block)
+        0 -> bottom
+        height-1 -> top
+        else -> middle
+      }.pickBlock(region, p.worldX, y, p.worldZ)?: break
+
+      region.setBlock(p.worldX, y, p.worldZ, block)
     }
   }
   data class Placed(
