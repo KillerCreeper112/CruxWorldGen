@@ -572,14 +572,6 @@ data class SimpleChunkSampler(
 
           val terrainFinal = terrain + cavesMacro
 
-          //surface Y is before caves
-          if (terrain > 0.0) {
-            solidNoCavesByBlock[blockIndex] = true
-
-            if (terrainFinal <= 0.0) {
-              terrain3D.caveAirByBlock[blockIndex] = true
-            }
-          }
           val volBlend = VolBiomeBlendSample.interpolateVolBlend(
             volumetricBlendByCorner[c000]!!,
             volumetricBlendByCorner[c100]!!,
@@ -597,20 +589,24 @@ data class SimpleChunkSampler(
             signalWriter
           )
 
-          //val volWeight = dominantVolBiome?.weight ?: 0.0
-
-          val edgeFade = Curve.smoothstep(0.05, 0.35, volBlend.strength)
+          //a = where blending starts
+          //b = where it reaches full strength
+          val edgeFade = Curve.smoothstep(0.0, 0.75, volBlend.strength)
 
           val volRaw = volStack.finalDensity()
           val volumetricContribution = volRaw * edgeFade
+
+          val terrain2: Double
 
           val normalDensity = terrainFinal + volumetricContribution
           val replacedDensity = volRaw
 
           val replace = volStack.replaceMask * edgeFade
           val density = if (replace > 0.0) {
+            terrain2 = Curve.lerp(terrain + volumetricContribution, replacedDensity, replace)
             Curve.lerp(normalDensity, replacedDensity, replace)
           } else {
+            terrain2 = terrain + volumetricContribution
             normalDensity
           }
 
@@ -618,6 +614,15 @@ data class SimpleChunkSampler(
           //val density = Curve.lerp(normalDensity, replacedDensity, replace)
 
           densityByBlock[blockIndex] = density
+
+          //surface Y is before caves
+          if (terrain2 > 0.0) {
+            solidNoCavesByBlock[blockIndex] = true
+
+            if (terrainFinal <= 0.0) {
+              terrain3D.caveAirByBlock[blockIndex] = true
+            }
+          }
 
           val materialBiome =
             if (!volBlend.isEmpty()) {
