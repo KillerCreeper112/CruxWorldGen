@@ -25,6 +25,7 @@ open class Group3DDecor(
   val maxPickAmount: Int = 7,
 
   val applyChildChance: Boolean = false,
+  val biomeCheck: Boolean = true,
 
   val chancePerPoint: Double = 0.2,
   val chanceSalt: Long = CruxMath.random().nextLong(),
@@ -83,6 +84,8 @@ open class Group3DDecor(
     p as Placed
     if (decorations.isEmpty()) return
 
+    val baseBiome = region.getBiome(p.x, p.y, p.z)
+
     val chosen = LinkedHashSet<Triple<Int, Int, Int>>()
 
     val minRadiusSq = minRadius * minRadius
@@ -105,6 +108,8 @@ open class Group3DDecor(
         val y = p.y + dy
         val z = p.z + dz
         if(!region.isInRegion(x, y,z)) continue
+        val checkBiome = region.getBiome(x, y, z)
+        if(biomeCheck && checkBiome != baseBiome) continue
         val triple = Triple(x, y, z)
 
         if (!chosen.add(triple)) continue

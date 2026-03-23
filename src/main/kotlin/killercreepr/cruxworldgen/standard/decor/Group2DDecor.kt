@@ -22,6 +22,7 @@ open class Group2DDecor(
   val maxPickAmount: Int = 7,
 
   val applyChildChance: Boolean = false,
+  val biomeCheck: Boolean = true,
 
   val chancePerPoint: Double = 0.2,
   val chanceSalt: Long = CruxMath.random().nextLong(),
