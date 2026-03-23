@@ -19,6 +19,7 @@ import killercreepr.cruxworldgen.bukkit.biome.BukkitBiome
 import killercreepr.cruxworldgen.bukkit.block.BukkitBlockData
 import killercreepr.cruxworldgen.bukkit.context.BukkitMaterialContext
 import killercreepr.cruxworldgen.bukkit.region.BukkitLimitedRegion
+import killercreepr.cruxworldgen.bukkit.registry.BukkitRegistry
 import killercreepr.cruxworldgen.core.signal.SimpleSignalWriter
 import org.bukkit.Material
 import org.bukkit.World
@@ -50,7 +51,10 @@ class BukkitGenerationChunkGenerator(
       zone.biomes.biomes.forEach { biome ->
         if (biome !is BukkitBiome) return@forEach
         val bukkit = biome.toBukkitBiome()
-        if (!buildingBiomes.contains(bukkit)) buildingBiomes.add(bukkit)
+        if (!buildingBiomes.contains(bukkit)){
+          buildingBiomes.add(bukkit)
+          BukkitRegistry.BIOME.register(biome)
+        }
       }
     }
     bukkitBiomes = buildingBiomes

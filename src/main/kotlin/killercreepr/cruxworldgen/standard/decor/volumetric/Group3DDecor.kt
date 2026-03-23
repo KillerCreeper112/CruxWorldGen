@@ -24,7 +24,7 @@ open class Group3DDecor(
   val minPickAmount: Int = 3,
   val maxPickAmount: Int = 7,
 
-  val ignoreChance: Boolean = true,
+  val applyChildChance: Boolean = false,
 
   val chancePerPoint: Double = 0.2,
   val chanceSalt: Long = CruxMath.random().nextLong(),
@@ -81,37 +81,58 @@ open class Group3DDecor(
     biome: Biome
   ) {
     p as Placed
-    val randomSeed = mixSeed(p.seed, p.x, p.y, p.z, coordinateSalt)
+    if (decorations.isEmpty()) return
 
-    val chosen = mutableSetOf<Triple<Int, Int, Int>>()
-    for(i in 0..<p.pickAmount){
+    val chosen = LinkedHashSet<Triple<Int, Int, Int>>()
 
-      for(x in 0..16){
-        val x = p.x + HashUtil.chooseInt(randomSeed, minRadius, maxRadius)
-        val y = p.y + HashUtil.chooseInt(randomSeed, minYRadius, maxYRadius)
-        val z = p.z + HashUtil.chooseInt(randomSeed, minRadius, maxRadius)
-        val pair = Triple(x, y, z)
-        if(chosen.contains(pair)) continue
-        chosen.add(pair)
+    val minRadiusSq = minRadius * minRadius
+    val maxRadiusSq = maxRadius * maxRadius
+    val baseSeed = mixSeed(p.seed, p.x, p.y, p.z, coordinateSalt)
+
+    for (i in 0 until p.pickAmount) {
+      for (attempt in 0 until 16) {
+        val seed = mixSeed(baseSeed, i, attempt, coordinateSalt)
+
+        val dx = HashUtil.chooseInt(seed xor 0x9E3779B97F4A715L, -maxRadius, maxRadius)
+        val dy = HashUtil.chooseInt(seed xor 0xC2B2A3D27D4EB4FL, -maxYRadius, maxYRadius)
+        val dz = HashUtil.chooseInt(seed xor 0x165667B19E3779F9L, -maxRadius, maxRadius)
+
+        val horizontalDist2 = dx * dx + dz * dz
+        if (horizontalDist2 !in minRadiusSq..maxRadiusSq) continue
+        if (kotlin.math.abs(dy) !in minYRadius..maxYRadius) continue
+
+        val x = p.x + dx
+        val y = p.y + dy
+        val z = p.z + dz
+        if(!region.isInRegion(x, y,z)) continue
+        val triple = Triple(x, y, z)
+
+        if (!chosen.add(triple)) continue
         break
       }
     }
 
     for ((x, y, z) in chosen) {
-      val decor = decorations.randomOrNull() ?: continue
+      val pointSeed = mixSeed(p.seed, x, y, z, coordinateSalt)
+
+      val decorIndex = HashUtil.chooseInt(pointSeed, 0, decorations.lastIndex)
+      val decor = decorations.getOrNull(decorIndex) ?: continue
+
       val point = SimpleVolumetricPropPoint(
-        x, y, z, region.ctx.wrapLocalX(x), region.ctx.wrapLocalZ(z),
-        mixSeed(p.seed, x, z, coordinateSalt)
+        x,
+        y,
+        z,
+        region.ctx.wrapLocalX(x),
+        region.ctx.wrapLocalZ(z),
+        pointSeed
       )
-      if(!ignoreChance){
-        if(!decor.shouldTry(region, point, biomeBlend, biome)) continue
-      }
+
+      if (applyChildChance && !decor.shouldTry(region, point, biomeBlend, biome)) continue
 
       val decorPlacement = decor.findPlacement(region, point, biomeBlend, biome) ?: continue
       decor.place(region, decorPlacement, biomeBlend, biome)
     }
   }
-
   data class Placed(
     val seed: Long,
     val x: Int,

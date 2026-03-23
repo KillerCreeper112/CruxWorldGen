@@ -1,5 +1,6 @@
 package killercreepr.cruxworldgen.standard.decor
 
+import killercreepr.crux.core.Crux
 import killercreepr.crux.core.util.CruxMath
 import killercreepr.cruxworldgen.api.context.LimitedRegion
 import killercreepr.cruxworldgen.api.decor.Decoration
@@ -20,7 +21,7 @@ open class Group2DDecor(
   val minPickAmount: Int = 3,
   val maxPickAmount: Int = 7,
 
-  val ignoreChance: Boolean = true,
+  val applyChildChance: Boolean = false,
 
   val chancePerPoint: Double = 0.2,
   val chanceSalt: Long = CruxMath.random().nextLong(),
@@ -72,30 +73,50 @@ open class Group2DDecor(
     biomeBlend: BiomeBlendSample
   ) {
     p as Placed
-    val randomSeed = HashUtil.mixSeed(p.seed, p.x, p.z, coordinateSalt)
 
-    val chosen = mutableSetOf<Pair<Int, Int>>()
-    for(i in 0..<p.pickAmount){
+    val chosen = LinkedHashSet<Pair<Int, Int>>()
 
-      for(x in 0..16){
-        val x = p.x + HashUtil.chooseInt(randomSeed, minRadius, maxRadius)
-        val z = p.z + HashUtil.chooseInt(randomSeed, minRadius, maxRadius)
-        val pair = Pair(x, z)
-        if(chosen.contains(pair)) continue
-        chosen.add(pair)
+    for (i in 0 until p.pickAmount) {
+      for (attempt in 0 until 16) {
+        val seed = HashUtil.mixSeed(
+          HashUtil.mixSeed(p.seed, p.x, p.z, coordinateSalt),
+          i,
+          attempt,
+          coordinateSalt
+        )
+
+        val dx = HashUtil.chooseInt(seed xor 0x9E3779B97F4A7C5L, -maxRadius, maxRadius)
+        val dz = HashUtil.chooseInt(seed xor 0xC2B2AED27D4EB4FL, -maxRadius, maxRadius)
+
+        val dist2 = dx * dx + dz * dz
+        if (dist2 < minRadius * minRadius || dist2 > maxRadius * maxRadius) continue
+
+        val x = p.x + dx
+        val z = p.z + dz
+        if(!region.isInRegion(x, z)) continue
+
+        val pair = x to z
+
+        if (!chosen.add(pair)) continue
         break
       }
     }
 
     for ((x, z) in chosen) {
-      val decor = decorations.randomOrNull() ?: continue
+      val pointSeed = HashUtil.mixSeed(p.seed, x, z, coordinateSalt)
+
+      val decorIndex = HashUtil.chooseInt(pointSeed, 0, decorations.lastIndex)
+      val decor = decorations.getOrNull(decorIndex) ?: continue
+
       val point = SimplePropPoint(
-        x, z, region.ctx.wrapLocalX(x), region.ctx.wrapLocalZ(z),
-        HashUtil.mixSeed(p.seed, x, z, coordinateSalt)
+        x,
+        z,
+        region.ctx.wrapLocalX(x),
+        region.ctx.wrapLocalZ(z),
+        pointSeed
       )
-      if(!ignoreChance){
-        if(!decor.shouldTry(region, point, biomeBlend)) continue
-      }
+
+      if (applyChildChance && !decor.shouldTry(region, point, biomeBlend)) continue
 
       val decorPlacement = decor.findPlacement(region, point, biomeBlend) ?: continue
       decor.place(region, decorPlacement, biomeBlend)
