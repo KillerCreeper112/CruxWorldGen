@@ -18,6 +18,7 @@ interface SampledChunk{
   val densityByBlock: DoubleArray
   val surfaceYByBlockColumn: IntArray
   val primaryBiomeByBlock: Array<Biome?>
+  val materialBiomeByBlock: Array<Biome?>
   val solidNoCavesByBlock: BitSet
 
 

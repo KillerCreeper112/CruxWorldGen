@@ -19,6 +19,7 @@ data class SimpleSampledChunk(
   override val densityByBlock: DoubleArray,
   override val primaryBiomeByBlock: Array<Biome?>,
   override val solidNoCavesByBlock: BitSet,
+  override val materialBiomeByBlock: Array<Biome?>,
   /*override val ctx: GenerateContext,
   override val density: DoubleArray,
   override val surfaceY: IntArray,

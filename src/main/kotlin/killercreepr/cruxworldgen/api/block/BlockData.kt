@@ -4,6 +4,7 @@ interface BlockData {
   companion object{
     val EMPTY : BlockData = Empty
     val NONE : BlockData = None
+    val PRIMARY_BIOME : BlockData = PrimaryBiome
   }
 
   fun isLiquid(): Boolean
@@ -24,5 +25,13 @@ interface BlockData {
     override fun isSolid(): Boolean = false
 
     override fun isEmpty(): Boolean = true
+  }
+
+  object PrimaryBiome : BlockData {
+    override fun isLiquid(): Boolean = false
+
+    override fun isSolid(): Boolean = false
+
+    override fun isEmpty(): Boolean = false
   }
 }

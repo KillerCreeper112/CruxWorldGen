@@ -365,6 +365,7 @@ data class SimpleChunkSampler(
     volumetricBlendByCorner: Array<VolBiomeBlendSample?>,
     densityByBlock: DoubleArray,
     primaryBiomeByBlock: Array<Biome?>,
+    primaryMaterialBiomeByBlock: Array<Biome?>,
     surfaceYByBlockColumn: IntArray,
     solidNoCavesByBlock: BitSet,
     terrain3D: SimpleTerrain3D,
@@ -624,16 +625,17 @@ data class SimpleChunkSampler(
             }
           }
 
+          val primaryBiome = primaryBiome
           val materialBiome =
             if (!volBlend.isEmpty()) {
               val dominantVolBiome = if (!volBlend.isEmpty()) volBlend.dominantWeighted() else null
               if (replace > 0.25 || dominantVolBiome!!.weight > 0.55){
                 //Crux.logInfo("replace=$replace, replaceMask=${volStack.replaceMask}")
                 dominantVolBiome!!.biome
-              }
-              else primaryBiome
+              } else primaryBiome
             } else primaryBiome
-          primaryBiomeByBlock[blockIndex] = materialBiome
+          primaryBiomeByBlock[blockIndex] = primaryBiome
+          primaryMaterialBiomeByBlock[blockIndex] = materialBiome
         }
       }
     }
@@ -712,6 +714,7 @@ data class SimpleChunkSampler(
 
     val densityByBlock = DoubleArray(blockArraySize)
     val primaryBiomeByBlock = arrayOfNulls<Biome?>(blockArraySize)
+    val primaryMaterialBiomeByBlock = arrayOfNulls<Biome?>(blockArraySize)
 
     val terrain2D = SimpleTerrain2D(
       generation, generateCtx,
@@ -745,6 +748,7 @@ data class SimpleChunkSampler(
       volumetricBlendByCorner,
       densityByBlock,
       primaryBiomeByBlock,
+      primaryMaterialBiomeByBlock,
       surfaceYByBlockColumn,
       solidNoCavesByBlock,
       terrain3D,
@@ -763,7 +767,8 @@ data class SimpleChunkSampler(
       surfaceYByBlockColumn,
       densityByBlock,
       primaryBiomeByBlock,
-      solidNoCavesByBlock
+      solidNoCavesByBlock,
+      primaryMaterialBiomeByBlock
     )
 
     /*val chunkBlockWidth = worldDetails.chunkWidth

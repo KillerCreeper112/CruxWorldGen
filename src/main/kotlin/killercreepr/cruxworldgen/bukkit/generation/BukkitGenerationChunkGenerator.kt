@@ -198,8 +198,8 @@ class BukkitGenerationChunkGenerator(
 
     for (localX in 0 until chunkWidth) {
       for (localZ in 0 until chunkDepth) {
-        val worldX = chunkX * chunkWidth + localX
-        val worldZ = chunkZ * chunkDepth + localZ
+        //val worldX = chunkX * chunkWidth + localX
+        //val worldZ = chunkZ * chunkDepth + localZ
 
         val columnIndex = columnIndex(localX, localZ, chunkWidth)
         val surfaceY = sampledChunk.surfaceYByBlockColumn[columnIndex]
@@ -224,14 +224,14 @@ class BukkitGenerationChunkGenerator(
         val cellX = (localX / biomeCellSize).coerceIn(0, biomeCellCountX - 1)
         val cellZ = (localZ / biomeCellSize).coerceIn(0, biomeCellCountZ - 1)
 
-        val localCellOriginX = cellX * biomeCellSize
-        val localCellOriginZ = cellZ * biomeCellSize
+        /*val localCellOriginX = cellX * biomeCellSize
+        val localCellOriginZ = cellZ * biomeCellSize*/
         for (blockY in maxY downTo minY) {
           val cellY = ((blockY - minY) / biomeCellSize).coerceIn(0, biomeCellCountY - 1)
 
           val blockIndex = blockIndex(localX, localZ, blockY, minY, chunkWidth, chunkDepth)
           val cornerIndex = cornerIndex(cellX, cellZ, cellY, biomeCellCountX, biomeCellCountZ)
-          val cornerColumnIndex = cornerColumnIndex(cellX, cellZ, biomeCellCountX)
+          //val cornerColumnIndex = cornerColumnIndex(cellX, cellZ, biomeCellCountX)
 
           val airAboveHere = airRun
 
@@ -245,7 +245,7 @@ class BukkitGenerationChunkGenerator(
           }
 
           val density = sampledChunk.densityByBlock[blockIndex]
-          val materialBiome = sampledChunk.primaryBiomeByBlock[blockIndex]!!
+          val materialBiome = sampledChunk.materialBiomeByBlock[blockIndex]!!
 
           val iy = blockY - minY
           val depthBelowSurface = surfaceY - blockY
@@ -279,9 +279,20 @@ class BukkitGenerationChunkGenerator(
             airRun = airAboveHere,
           )
 
-          val block = materialBiome.materialProvider.chooseMaterial(materialContext)
-          if (block != BlockData.NONE) {
-            setBlock(chunkData, localX, blockY, localZ, block)
+          val chosen = materialBiome.materialProvider.chooseMaterial(materialContext)
+
+          val finalBlock = when (chosen) {
+            BlockData.PRIMARY_BIOME -> {
+              sampledChunk.primaryBiomeByBlock[blockIndex]
+                ?.materialProvider
+                ?.chooseMaterial(materialContext)
+                ?: BlockData.NONE
+            }
+            else -> chosen
+          }
+
+          if (finalBlock != BlockData.NONE) {
+            setBlock(chunkData, localX, blockY, localZ, finalBlock)
           }
         }
       }
@@ -829,7 +840,7 @@ class BukkitGenerationChunkGenerator(
 
          val localX = localXFromWorld(x, worldDetails.chunkWidth)
          val localZ = localZFromWorld(z, worldDetails.chunkDepth)
-         val biome = cache.primaryBiomeByBlock[blockIndex(localX, localZ, y, worldInfo.minHeight, worldDetails.chunkWidth, worldDetails.chunkDepth)]
+         val biome = cache.materialBiomeByBlock[blockIndex(localX, localZ, y, worldInfo.minHeight, worldDetails.chunkWidth, worldDetails.chunkDepth)]
            ?: return Biome.PLAINS
          if(biome is BukkitBiome) return biome.toBukkitBiome()
          return Biome.PLAINS
@@ -866,7 +877,7 @@ class BukkitGenerationChunkGenerator(
             zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
           },
           { wx, wy, wz ->
-            sampledChunk.primaryBiomeByBlock[blockIndex(
+            sampledChunk.materialBiomeByBlock[blockIndex(
               localXFromWorld(wx, chunkWidth),
               localZFromWorld(wz, chunkDepth),
               wy, sampledChunk.ctx.chunkContext.minHeight,
@@ -883,7 +894,7 @@ class BukkitGenerationChunkGenerator(
             zone.biomes.sampleBiomeBlend(region.ctx, wx, wz)
           },
           {x,y,z ->
-            sampledChunk.primaryBiomeByBlock[blockIndex(
+            sampledChunk.materialBiomeByBlock[blockIndex(
               localXFromWorld(x, chunkWidth),
               localZFromWorld(z, chunkDepth),
               y, sampledChunk.ctx.chunkContext.minHeight, chunkWidth, chunkDepth
