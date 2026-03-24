@@ -65,6 +65,16 @@ open class Group3DDecor(
       minPickAmount, maxPickAmount
     )
     if(pickAmount < 1) return null
+    return findPlacement(region, point, biomeBlend, biome, pickAmount)
+  }
+
+  open fun findPlacement(
+    region: LimitedRegion,
+    point: VolumetricPropPoint,
+    biomeBlend: BiomeBlendSample,
+    biome: Biome,
+    pickAmount: Int
+  ): Placement?{
     return Placed(
       seed = point.seed,
       x = point.worldX,
